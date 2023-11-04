@@ -16,7 +16,6 @@ import {
 import { OrbitControls } from "https://unpkg.com/three@0.127.0/examples/jsm/controls/OrbitControls.js";
 import { OBJLoader } from "https://unpkg.com/three@0.127.0/examples/jsm/loaders/OBJLoader.js";
 
-
 let renderer;
 let camera;
 const buttons = [];
@@ -102,6 +101,7 @@ function loadModel(scene) {
       metalness: 0.2,
       color: 0xC8AD7F,
     });
+
 
     object.traverse(function (child) {
       if (child instanceof Mesh) {
