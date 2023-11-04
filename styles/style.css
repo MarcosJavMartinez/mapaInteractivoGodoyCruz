@@ -1,0 +1,90 @@
+body {
+  background-color: #000;
+  margin: 0;
+  overflow: hidden;
+  cursor: grab;
+  font-family: sans-serif;
+  padding: 0;
+}
+
+body:active {
+  cursor: grabbing;
+}
+
+a {
+  cursor: pointer;
+}
+
+h2{
+  font-weight: 900;
+}
+
+p{
+  font-weight: 100;
+}
+
+ .info-panel {
+   padding: 2%;
+   width: 25%;
+   color: gray ;
+   position: fixed;
+   border-radius: 5px;
+   top: 20px;
+   left: 20px;
+   background-color: rgba(255, 255, 255, 0.9);
+   border: none;
+   max-height: 90vh; /* Define una altura máxima del 80% de la altura de la ventana */
+   overflow-y: auto; /* Agrega una barra de desplazamiento vertical cuando sea necesario */
+   /* Estilos para ocultar la barra de desplazamiento en navegadores webkit */
+   scrollbar-width: thin; /* Ancho del scrollbar */
+   scrollbar-color: transparent transparent; /* Color del scrollbar */
+   /* Estilos específicos de Webkit para ocultar la barra de desplazamiento */
+   &::-webkit-scrollbar {
+   width: 6px; /* Ancho de la barra de desplazamiento */
+   }
+   &::-webkit-scrollbar-thumb {
+   background-color: transparent; /* Color del thumb (el "deslizador") */
+   }
+
+   }
+  .info-panel img{
+    width: 100%;    
+    border-radius: 5px;
+  }
+
+  .marker-title {
+    position: absolute;
+    bottom: 15em; /* Ajusta la posición vertical para que el título quede abajo */
+    left: 10px; /* Ajusta la posición horizontal para que el título quede a la derecha */
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 16px;
+    z-index: 1;
+  }
+
+  .info-panel video{
+    width: 100%;
+  }
+  
+  .info-panel div{
+    width: 100%;
+  }
+
+ .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+
+button{
+  float: right;
+  cursor: pointer;
+  color: gray;
+  border: none;
+  background: none;
+}
