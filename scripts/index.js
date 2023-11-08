@@ -48,19 +48,19 @@ function init() {
 
   // Luz Spotlight
   const spotlight = new SpotLight(0xffffff);
-  spotlight.position.set(-5, 4, 1);
+  spotlight.position.set(0, 50, 0);
   spotlight.castShadow = true;
-  spotlight.distance = 30;
-  spotlight.angle = Math.PI / 0.8;
-  spotlight.penumbra = 0.8; // Sombras suaves
+  spotlight.distance = 10000;
+  spotlight.angle = Math.PI / 0.2;
+  spotlight.penumbra = 0.2; // Sombras suaves
   spotlight.target.position.copy(new Vector3(-1, -6, 0));
-  spotlight.intensity = 1;
+  spotlight.intensity = 0.9;
 
-  spotlight.shadow.mapSize.width = 2048;
-  spotlight.shadow.mapSize.height = 2048;
+  spotlight.shadow.mapSize.width = 8000;
+  spotlight.shadow.mapSize.height = 8000;
   spotlight.shadow.bias = -0.001;
   spotlight.shadow.camera.near = 1;
-  spotlight.shadow.camera.far = 200;
+  spotlight.shadow.camera.far = 20000;
   renderer.shadowMap.enabled = true;
   scene.add(spotlight);
 
@@ -91,10 +91,12 @@ function init() {
 function loadModel(scene) {
 
   const loader = new OBJLoader();
-  loader.load('models/18.1.Compañiademaria.obj', (object) => {
+  loader.load('models/untitled.obj', (object) => {
     object.scale.multiplyScalar(0.1);
-    object.position.y = -1;
-    object.position.x = -6;
+    
+    object.position.y = -2;
+    object.position.x = 3;
+    object.position.z = -19;
 
     const modelMaterial = new MeshStandardMaterial({
       roughness: 0.8,
@@ -124,19 +126,19 @@ function loadModel(scene) {
       "images/M-18/18.1.Compañiademaria/18.1.colegiocompañiademaria.3.jpg",
 
       `
-      <p>Con su tradicional sede de calle Rivadavia y Sargento Cabral, en la actualidad ubicado en Azopardo 206, es uno de los centros educativos más antiguos del departamento de Godoy Cruz, fue la primera escuela de gestión privada de la zona. Se fundó en el año 1905 como colegio de instrucción primaria de niñas. Los terrenos donde se asentó la institución fueron donados por la señora Olaya Pescara de Tomba.</p>
+      <p>Este colegio estaba ubicado originalmente en la calle Rivadavia y Sargento Cabral en terrenos donados por la Sra Olaya Pescara de Tomba. Actualmente se encuentra en Azopardo 206. Es uno de los centros educativos más antiguos del departamento de Godoy Cruz, fue la primera escuela de gestión privada de la zona. Se fundó en el año 1905 como colegio de instrucción primaria de niñas.</p>
 
-      <p>El antiguo Colegio de la Compañía de María de Godoy Cruz, antes de ser afectado por el terremoto de 1985, tenía un terreno más extenso que el actual y distinta disposición de sus dependencias. El ingreso a la institución se realizaba por calle Rivadavia. Detrás del muro de rejas y pilastras que circundaba toda la propiedad, se visualizaba un jardín externo desde donde se accedía al colegio, la capilla y distintos ambientes.</p>
+      <p>El antiguo Colegio de la Compañía de María de Godoy Cruz, antes de ser afectado por el terremoto de 1985, tenía un terreno más extenso que el actual y distinta disposición de sus dependencias. El ingreso se realizaba por calle Rivadavia. Detrás del muro de rejas y pilastras que circundaba toda la propiedad, se visualizaba un jardín externo por el cual se accedía al colegio, la capilla y distintos ambientes.</p>
   
-      <p>En el interior de la edificación, se hallaban galerías que se abrían a patios internos a modo de claustro, aquí funcionaban las aulas. En uno de estos patios internos, se encontraba la escultura del Sagrado Corazón de Jesús sobre un gran pedestal -que hoy en día se sigue apreciando en la institución-. Sobre la misma línea de la calle Rivadavia, se observaba también el ingreso a la capilla. La edificación era de planta basilical con una sola nave y techo a dos aguas. Su exterior destacaba por la fachada con un gran portal de ingreso, resuelto por un arco de medio punto. El conjunto remataba con un frontón triangular, ornamentado con arcos de medio punto, que circundaban todo el perímetro de la construcción.</p>
+      <p>En el interior de la edificación, estaba organizado con galerías que se abrían a patios internos a modo de claustros donde funcionaban las aulas. En uno de estos patios internos, se encontraba la escultura del Sagrado Corazón de Jesús sobre un gran pedestal -que hoy en día se sigue apreciando en la institución-. Sobre la misma línea de la calle Rivadavia, se observaba también el ingreso a la capilla. La edificación del templo era de planta basilical con una sola nave y techo a dos aguas. Su exterior destacaba por la fachada con un gran portal de ingreso resuelto con un arco de medio punto. El conjunto remataba con un frontón triangular, ornamentado con arcos de medio punto que circundaban todo el perímetro de la construcción. Dicha capilla ya no existe en la actualidad.</p>
   
-      <p>Texto: María Virginia Goldar/ Andrea Segura.</p>
-      <p>Fuentes:</p>
+      <p><strong>Texto:</strong> María Virginia Goldar/ Andrea Segura.</p>
+      <p><strong>Fuentes:</strong></p>
       <ul>
           <li>Archivo fotográfico del Colegio Compañia de María de Godoy Cruz</li>
           <li>Testimonios de personal del Colegio: Alicia Rey, Laura Deloche</li>
       </ul>
-      <p>Bibliografía:</p>
+      <p><strong>Bibliografía:</strong></p>
       <ul>
           <li>Mastrangelo, F. (2016). <i>Godoy Cruz, una historia: del barrio de San Vicente a la ciudad de hoy</i>. Victorioso Ediciones.</li>
       </ul>
@@ -174,7 +176,8 @@ function loadModel(scene) {
 
      createMarker(
       object,
-      new Vector3(4, 25, 1.7),
+      //x/y/z
+      new Vector3(-35, 20, 195),
       "Título 2",
       null,
       "Texto de ejemplo 2",
@@ -216,11 +219,20 @@ const raycaster = new Raycaster();
 const mouse = new Vector2();
 
 document.body.addEventListener('click', onClick);
-
-
+document.body.addEventListener('touchstart', onTouchStart);
 
 function onClick(event) {
   event.preventDefault();
+  handleTouchEvent(event);
+}
+
+function onTouchStart(event) {
+  event.preventDefault();
+  handleTouchEvent(event.changedTouches[0]);
+}
+
+
+function handleTouchEvent(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
@@ -237,7 +249,6 @@ function onClick(event) {
     }
   }
 }
-
 
 
 
