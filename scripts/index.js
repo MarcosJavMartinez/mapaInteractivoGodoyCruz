@@ -1,99 +1,34 @@
-import {
-  Color,
-  Mesh,
-  MeshStandardMaterial,
-  PerspectiveCamera,
-  sRGBEncoding,
-  SphereBufferGeometry,
-  Scene,
-  WebGLRenderer,
-  Raycaster,
-  Vector2,
-  Vector3,
-  SpotLight,
-  AmbientLight,
-} from "https://unpkg.com/three@0.127.0/build/three.module.js";
-import { OrbitControls } from "https://unpkg.com/three@0.127.0/examples/jsm/controls/OrbitControls.js";
+import { Color, PerspectiveCamera, Scene, SphereBufferGeometry, MeshStandardMaterial, Mesh, Raycaster, Vector2, Vector3 } from "https://unpkg.com/three@0.127.0/build/three.module.js";
+import { setupLights } from './lightModule.js';
+import { setupRenderer, setupCamera, render } from "./renderModule.js";
 import { OBJLoader } from "https://unpkg.com/three@0.127.0/examples/jsm/loaders/OBJLoader.js";
+import { currentInfoPanel, showContent, hideCurrentInfoPanel } from './infoPanelModule.js';
 
 let renderer;
 let camera;
 const buttons = [];
-let currentInfoPanel = null;
-const exteriorImages = ["exterior1.jpg", "exterior2.jpg", "exterior3.jpg"];
-const interiorImages = ["interior1.jpg", "interior2.jpg", "interior3.jpg"];
-
 
 init();
-
-
-
-
 function init() {
-//RENDER
-  renderer = new WebGLRenderer();
-  renderer.outputEncoding = sRGBEncoding;
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  document.body.appendChild(renderer.domElement);
+  // RENDER
+  renderer = setupRenderer();
 
   const scene = new Scene();
   scene.background = new Color(0x464646);
-
-  //LUCES
-
-  // Luz Ambiental
-  const ambientLight = new AmbientLight(0x999998);
-  scene.add(ambientLight);
-
-  // Luz Spotlight
-  const spotlight = new SpotLight(0xffffff);
-  spotlight.position.set(0, 50, 0);
-  spotlight.castShadow = true;
-  spotlight.distance = 10000;
-  spotlight.angle = Math.PI / 0.2;
-  spotlight.penumbra = 0.2; // Sombras suaves
-  spotlight.target.position.copy(new Vector3(-1, -6, 0));
-  spotlight.intensity = 0.9;
-
-  spotlight.shadow.mapSize.width = 8000;
-  spotlight.shadow.mapSize.height = 8000;
-  spotlight.shadow.bias = -0.001;
-  spotlight.shadow.camera.near = 1;
-  spotlight.shadow.camera.far = 20000;
-  renderer.shadowMap.enabled = true;
-  scene.add(spotlight);
-
-  // Spotlight representación Visible
-  const spotlightGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-  const spotlightMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  const spotlightMesh = new THREE.Mesh(spotlightGeometry, spotlightMaterial);
-  spotlightMesh.position.copy(spotlight.position);
-  scene.add(spotlightMesh);
-
-  //CAMARA
-  camera = new PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000000);
-  camera.position.set(0, 0, 3);
-  const controls = new OrbitControls(camera, renderer.domElement);
-  renderer.setAnimationLoop(() => {
-    renderer.render(scene, camera);
-  });
-
- //CARGA ESCENA
+  // LUCES
+  setupLights(scene, renderer);
+  // CAMARA
+  camera = setupCamera(renderer);
+  // Renderización utilizando la función importada
+  render(scene, camera, renderer);
+  // CARGA ESCENA
   loadModel(scene);
 }
-
-
-
-
-
-//CARGA OBJETOS
+// CARGA OBJETOS
 function loadModel(scene) {
-
   const loader = new OBJLoader();
   loader.load('models/untitled.obj', (object) => {
     object.scale.multiplyScalar(0.1);
-    
     object.position.y = -2;
     object.position.x = 3;
     object.position.z = -19;
@@ -104,7 +39,6 @@ function loadModel(scene) {
       color: 0xC8AD7F,
     });
 
-
     object.traverse(function (child) {
       if (child instanceof Mesh) {
         child.material = modelMaterial;
@@ -113,13 +47,10 @@ function loadModel(scene) {
 
     scene.add(object);
 
-
-
     //MARKERS CARGAINFO
-
     createMarker(
       object,
-      new Vector3(60.5, 18, -11.3),
+      new Vector3(290, 20, 195),
 
       "Compañia de María",
 
@@ -188,11 +119,6 @@ function loadModel(scene) {
   });
 }
 
-
-
-
-
-
 //CREADOR MARKER
 function createMarker(model, position, title, imageUrl, text, exteriorImages, interiorImages) {
   const sphereGeometry = new SphereBufferGeometry(1.5, 32, 32); // El primer parámetro es el radio de la esfera
@@ -214,7 +140,6 @@ function createMarker(model, position, title, imageUrl, text, exteriorImages, in
 }
 
 
-
 const raycaster = new Raycaster();
 const mouse = new Vector2();
 
@@ -231,7 +156,6 @@ function onTouchStart(event) {
   handleTouchEvent(event.changedTouches[0]);
 }
 
-
 function handleTouchEvent(event) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -245,101 +169,13 @@ function handleTouchEvent(event) {
     const exteriorImages = button.userData.exteriorImages;
     const interiorImages = button.userData.interiorImages;
     if (title || imageUrl || text || (exteriorImages && interiorImages)) {
-      showContent(title, imageUrl, text, exteriorImages, interiorImages);
+      showContent(title, imageUrl, text, exteriorImages, interiorImages, currentInfoPanel);
     }
   }
 }
 
-
-
-function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
-  hideCurrentInfoPanel();
-
-  const panel = document.createElement("div");
-  panel.className = "info-panel";
-
-  const closeButton = document.createElement("button");
-  closeButton.textContent = "X";
-  closeButton.addEventListener("click", hideCurrentInfoPanel);
-  panel.appendChild(closeButton);
-
-  if (title) {
-    const titleElement = document.createElement("h2");
-    titleElement.textContent = title;
-    panel.appendChild(titleElement);
-  }
-
-  if (imageUrl) {
-    const image = document.createElement("img");
-    image.src = imageUrl;
-    panel.appendChild(image);
-  }
-
-  if (text) {
-    const textElement = document.createElement("div");
-    textElement.innerHTML = text; // Usar innerHTML para interpretar HTML
-    panel.appendChild(textElement);
-  
-    
-  const Link = textElement.querySelector('a');
-  if (Link) {
-    Link.addEventListener("click", (e) => {
-     e.preventDefault();
-    window.open(Link.href, "_blank");
-   });
-   }
-  }
-
-
-
-  if (exteriorImages && exteriorImages.length > 0) {
-    const exteriorGallery = document.createElement("div");
-    exteriorGallery.className = "image-gallery";
-    for (const imageUrl of exteriorImages) {
-      const image = document.createElement("img");
-      image.src = imageUrl;
-      image.addEventListener("click", () => {
-        const zoomedWindow = window.open(imageUrl, "Zoomed Image", "width=800, height=600");
-        if (zoomedWindow) {
-          zoomedWindow.focus();
-        } else {
-          alert("Tu navegador ha bloqueado la ventana emergente. Por favor, permite ventanas emergentes para ver la imagen ampliada.");
-        }
-      });
-      exteriorGallery.appendChild(image);
-    }
-    panel.appendChild(exteriorGallery);
-  }
-
-
-
-  if (interiorImages && interiorImages.length > 0) {
-    const interiorGallery = document.createElement("div");
-    interiorGallery.className = "image-gallery";
-    for (const imageUrl of interiorImages) {
-      const image = document.createElement("img");
-      image.src = imageUrl;
-      image.addEventListener("click", () => {
-        const zoomedWindow = window.open(imageUrl, "Zoomed Image", "width=800, height=600");
-        if (zoomedWindow) {
-          zoomedWindow.focus();
-        } else {
-          alert("Tu navegador ha bloqueado la ventana emergente. Por favor, permite ventanas emergentes para ver la imagen ampliada.");
-        }
-      });
-      interiorGallery.appendChild(image);
-    }
-    panel.appendChild(interiorGallery);
-  }
-
-  document.body.appendChild(panel);
-  currentInfoPanel = panel;
-}
-
-function hideCurrentInfoPanel() {
-  if (currentInfoPanel) {
-    document.body.removeChild(currentInfoPanel);
-    currentInfoPanel = null;
-  }
-}
+window.addEventListener('load', () => {
+  document.body.addEventListener('click', onClick);
+  document.body.addEventListener('touchstart', onTouchStart);
+});
 

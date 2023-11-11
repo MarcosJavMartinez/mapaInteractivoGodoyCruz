@@ -1,0 +1,241 @@
+import {
+  Color,
+  Mesh,
+  MeshStandardMaterial,
+  PerspectiveCamera,
+  sRGBEncoding,
+  BoxBufferGeometry,
+  CylinderBufferGeometry,
+  Scene,
+  WebGLRenderer,
+  Raycaster,
+  Vector2,
+  Vector3,
+  SpotLight,
+  AmbientLight,
+} from "https://unpkg.com/three@0.127.0/build/three.module.js";
+import { OrbitControls } from "https://unpkg.com/three@0.127.0/examples/jsm/controls/OrbitControls.js";
+import { OBJLoader } from "https://unpkg.com/three@0.127.0/examples/jsm/loaders/OBJLoader.js";
+
+let renderer;
+let camera;
+const buttons = [];
+let currentInfoPanel = null;
+
+init();
+
+function init() {
+  // Renderizador
+  renderer = new WebGLRenderer();
+  renderer.outputEncoding = sRGBEncoding;
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  document.body.appendChild(renderer.domElement);
+
+  const scene = new Scene();
+  scene.background = new Color(0x464646);
+
+  // Luces
+
+  // Luz Ambiental
+  const ambientLight = new AmbientLight(0x999999);
+  scene.add(ambientLight);
+
+  // Luz Spotlight
+  const spotlight = new SpotLight(0xffffff);
+  spotlight.position.set(-5, 4, 1);
+  spotlight.castShadow = true;
+  spotlight.distance = 30;
+  spotlight.angle = Math.PI / 0.8;
+  spotlight.penumbra = 0.8; // Sombras suaves
+  spotlight.target.position.copy(new Vector3(-1, -6, 0));
+  spotlight.intensity = 1;
+
+  spotlight.shadow.mapSize.width = 2048;
+  spotlight.shadow.mapSize.height = 2048;
+  spotlight.shadow.bias = -0.001;
+  spotlight.shadow.camera.near = 1;
+  spotlight.shadow.camera.far = 200;
+  renderer.shadowMap.enabled = true;
+  scene.add(spotlight);
+
+  // Spotlight representación Visible
+  const spotlightGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+  const spotlightMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const spotlightMesh = new THREE.Mesh(spotlightGeometry, spotlightMaterial);
+  spotlightMesh.position.copy(spotlight.position);
+  scene.add(spotlightMesh);
+
+  // Cámara
+  camera = new PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 10000);
+  camera.position.set(0, 0, 3);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  renderer.setAnimationLoop(() => {
+    renderer.render(scene, camera);
+  });
+
+  // Cargador de escena
+  loadModel(scene);
+}
+
+// Cargador de objetos
+function loadModel(scene) {
+  const loader = new OBJLoader();
+  loader.load('Compañia de María.obj', (object) => {
+    object.scale.multiplyScalar(0.1);
+    object.position.y = -1;
+    object.position.x = -6;
+
+    const modelMaterial = new MeshStandardMaterial({
+      roughness: 0.8,
+      metalness: 0.2,
+      color: 0xC8AD7F,
+    });
+
+    object.traverse(function (child) {
+      if (child instanceof Mesh) {
+        child.material = modelMaterial;
+      }
+    });
+
+    scene.add(object);
+
+    // (x, y, z)
+    createMarker(
+      object,
+      new Vector3(60.5, 18, -11.3),
+      "Título 1",
+      "img1.jpg",
+      "Lorem ipsum dolor sit amet consectetur adipiscing elit massa elementum, malesuada per commodo iaculis pharetra potenti velit ridiculus, fames dictum quisque tortor vel est ultricies pretium. Faucibus rhoncus cum inceptos netus class proin rutrum hac parturient, nostra suspendisse fringilla ad tempor fermentum cursus sociis condimentum, semper magnis torquent pulvinar nullam dapibus egestas blandit. Tristique cubilia eu euismod aenean morbi hendrerit quam sociosqu, enim varius nam mi aptent sagittis maecenas ligula conubia, nunc habitasse nisl ac tincidunt augue dignissim. Montes mus porta nec vivamus luctus, justo suscipit diam tellus turpis sollicitudin, vehicula dui imperdiet curabitur. Metus interdum porttitor fusce convallis dis ante in nascetur arcu curae, feugiat purus platea tempus ultrices laoreet venenatis cras placerat natoque duis, vulputate vitae eleifend at vestibulum auctor mollis lacus urna risus, litora a himenaeos mauris primis et congue viverra odio. Phasellus etiam ullamcorper volutpat lectus libero felis molestie non sem, erat ornare facilisi accumsan donec dictumst lacinia mattis consequat integer, habitant sapien sodales eros penatibus praesent lobortis aliquet. Bibendum id taciti nulla nisi neque aliquam orci, pellentesque magna ut facilisis quis eget, senectus posuere sed leo scelerisque nibh. Gravida ullamcorper molestie malesuada maecenas tellus odio sodales rutrum, vel dis facilisis a cum erat. Metus felis vehicula habitasse pulvinar nibh mattis praesent, hendrerit senectus rhoncus cursus fermentum risus himenaeos, sociis fringilla velit ac id fusce. Bibendum placerat magnis lobortis est justo feugiat urna laoreet aliquam, commodo auctor cras torquent nunc interdum mus sagittis nascetur, orci enim platea ornare pretium venenatis eleifend non. Potenti tempus ut tincidunt ultrices euismod quam primis dictum dictumst magna blandit, habitant cubilia montes tortor purus semper posuere netus conubia volutpat egestas nullam, aptent mauris diam eros porttitor hac turpis eget lectus dui. Pellentesque leo phasellus integer sociosqu natoque vitae convallis duis fames ante, neque nisl at taciti sollicitudin elementum lacinia faucibus et",
+      "https://es.wikipedia.org/wiki/Anexo:Edificios_m%C3%A1s_antiguos_de_Argentina",
+      "https://www.youtube.com/embed/h6kMrT6cigY?si=Q-WjozYttuz5QZ_h"
+    );
+
+
+
+
+    createMarker(
+      object,
+       new Vector3(4, 15, 1.7),
+        "Título 2",
+         null,
+         "", "https://enlace2.com", ""
+         );
+
+
+    createMarker(
+      object,
+      new Vector3(-6, 0, 4),
+      "Título 3",
+      null,
+      "Texto de ejemplo 2",
+      "https://enlace3.com",
+      "https://youtube.com/embed/w-iBgr-4EfI?si=TV-sIBNXRLsu2Rz5"
+    );
+  });
+}
+
+function createMarker(model, position, title, imageUrl, text, linkUrl, videoUrl) {
+  const cylinderGeometry = new CylinderBufferGeometry(2.5, 2.5, 1, 32);
+  const customMaterial = new MeshStandardMaterial({
+    color: 0xffff00, // Cambia el color
+    opacity: 0.9,
+    transparent: true,
+  });
+
+  const marker = new Mesh(cylinderGeometry, customMaterial);
+  marker.position.copy(position);
+  marker.rotation.x = Math.PI / 2; // Gira el cilindro para que esté en posición vertical
+  marker.userData.title = title;
+  marker.userData.imageUrl = imageUrl;
+  marker.userData.text = text;
+  marker.userData.linkUrl = linkUrl;
+  marker.userData.videoUrl = videoUrl;
+  model.add(marker);
+  buttons.push(marker);
+}
+
+const raycaster = new Raycaster();
+const mouse = new Vector2();
+
+document.body.addEventListener('click', onClick);
+
+function onClick(event) {
+  event.preventDefault();
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(buttons);
+  if (intersects.length > 0) {
+    const button = intersects[0].object;
+    const title = button.userData.title;
+    const imageUrl = button.userData.imageUrl;
+    const text = button.userData.text;
+    const linkUrl = button.userData.linkUrl;
+    const videoUrl = button.userData.videoUrl;
+    if (title || imageUrl || text || linkUrl || videoUrl) {
+      showContent(title, imageUrl, text, linkUrl, videoUrl);
+    }
+  }
+}
+
+function showContent(title, imageUrl, text, linkUrl, videoUrl) {
+  hideCurrentInfoPanel();
+
+  const panel = document.createElement("div");
+  panel.className = "info-panel";
+
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "X";
+  closeButton.addEventListener("click", hideCurrentInfoPanel);
+  panel.appendChild(closeButton);
+
+  if (title) {
+    const titleElement = document.createElement("h2");
+    titleElement.textContent = title;
+    panel.appendChild(titleElement);
+  }
+
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.src = imageUrl;
+    panel.appendChild(image);
+  }
+
+  if (text) {
+    const textElement = document.createElement("p");
+    textElement.textContent = text;
+    panel.appendChild(textElement);
+  }
+
+  if (linkUrl) {
+    const link = document.createElement("a");
+    link.href = linkUrl;
+    link.textContent = "Ir al enlace";
+    panel.appendChild(link);
+  }
+
+  if (videoUrl) {
+    if (videoUrl.includes("youtube.com")) {
+      const iframe = document.createElement("iframe");
+      iframe.src = videoUrl;
+      iframe.setAttribute("allowfullscreen", "");
+      panel.appendChild(iframe);
+    } else {
+      const errorText = document.createElement("div");
+      errorText.textContent = "Enlace de video no válido";
+      panel.appendChild(errorText);
+    }
+  }
+
+  document.body.appendChild(panel);
+  currentInfoPanel = panel;
+}
+
+function hideCurrentInfoPanel() {
+  if (currentInfoPanel) {
+    document.body.removeChild(currentInfoPanel);
+    currentInfoPanel = null;
+  }
+}
+
