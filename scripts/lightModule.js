@@ -1,16 +1,9 @@
-import {
-    AmbientLight,
-    SpotLight,
-    SphereGeometry,
-    MeshBasicMaterial,
-    Mesh,
-    Vector3,
-  } from "https://unpkg.com/three@0.127.0/build/three.module.js";
-  
-  export function setupLights(scene, renderer) {
-    // Luz Ambiental
-    const ambientLight = new AmbientLight(0x999998);
-    scene.add(ambientLight);
+import { AmbientLight, SpotLight, SphereGeometry, MeshBasicMaterial, Mesh, Vector3 } from "https://unpkg.com/three@0.127.0/build/three.module.js";
+
+export function setupLights(scene, renderer) {
+  // Luz Ambiental
+  const ambientLight = new AmbientLight(0x999998);
+  scene.add(ambientLight);
   
     // Luz Spotlight
     const spotlight = new SpotLight(0xffffff);

@@ -1,5 +1,4 @@
-// infoPanelModule.js
-
+//INFO PANEL
 let currentInfoPanel = null;
 
 export {
