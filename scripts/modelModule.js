@@ -1,27 +1,28 @@
+//modelModule.js 
+
 import {MeshStandardMaterial  ,Mesh, Vector3 } from "https://unpkg.com/three@0.127.0/build/three.module.js";
 import { OBJLoader } from 'https://unpkg.com/three@0.127.0/examples/jsm/loaders/OBJLoader.js';
-
 export function loadModels(scene, buttons) {
   const modelsToLoad = [
 
     //transparente Agua
     {
-      path: 'models/untitled.obj',
+      path: 'models/VOLUMENES NEKO.obj',
       position: new Vector3(3, -2, -19),
       scale: new Vector3(0.1, 0.1, 0.1),
       materialProps: {
         roughness: 1, // Reducir la rugosidad para simular vidrio
         metalness: 0.1, // Reducir la metalicidad para simular vidrio
         color: 0xC8Affff,
-        opacity: 0.5, // Valor de opacidad menor para transparencia
+        opacity: 0.9, // Valor de opacidad menor para transparencia
         transparent: true, // Hacer el material transparente
         depthWrite: false, // Evitar que el material escriba en el buffer de profundidad para transparencia correcta
       },
     },
    //Carton Clasico
     {
-      path: 'models/untitled.obj',
-      position: new Vector3(9, 10, -19),
+      path: null,
+      position: new Vector3(3, -2, -19),
       scale: new Vector3(0.1, 0.1, 0.1),
       materialProps: {
         roughness: 0.8, // Aumentar la rugosidad para dar una apariencia más áspera
@@ -33,10 +34,10 @@ export function loadModels(scene, buttons) {
       },
     },
 
-
+//models/untitled.obj
     {
-      path: 'models/untitled.obj',
-      position: new Vector3(12, 20, -19),
+      path:null,
+      position: new Vector3(3, -2, -19),
       scale: new Vector3(0.1, 0.1, 0.1),
       materialProps: {
       roughness: 0.8, // Aumentar la rugosidad para dar una apariencia más áspera
@@ -49,9 +50,9 @@ export function loadModels(scene, buttons) {
     },
 
     
-    //Carton Clasico oscuro 
+    //Carton Clasico oscuro
     {
-      path: 'models/untitled.obj',
+      path: null,
       position: new Vector3(15, 30, -19),
       scale: new Vector3(0.1, 0.1, 0.1),
       materialProps: {

@@ -1,3 +1,4 @@
+//eventModule.js
 import { Raycaster, Vector2 } from "https://unpkg.com/three@0.127.0/build/three.module.js";
 import { showContent } from './infoPanelModule.js';
 
