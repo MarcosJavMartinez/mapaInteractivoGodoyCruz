@@ -1,36 +1,28 @@
 //infoPanelModule.js
-
 let currentInfoPanel = null;
-
 export {
   currentInfoPanel,
   showContent,
   hideCurrentInfoPanel
 };
-
 function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
   hideCurrentInfoPanel();
-
   const panel = document.createElement("div");
   panel.className = "info-panel";
-
   const closeButton = document.createElement("button");
   closeButton.textContent = "X";
   closeButton.addEventListener("click", hideCurrentInfoPanel);
   panel.appendChild(closeButton);
-
   if (title) {
     const titleElement = document.createElement("h2");
     titleElement.textContent = title;
     panel.appendChild(titleElement);
   }
-
   if (imageUrl) {
     const image = document.createElement("img");
     image.src = imageUrl;
     panel.appendChild(image);
   }
-
   if (text) {
     const textElement = document.createElement("div");
     textElement.innerHTML = text;
@@ -44,7 +36,6 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
       });
     }
   }
-
   if (exteriorImages && exteriorImages.length > 0) {
     const exteriorGallery = document.createElement("div");
     exteriorGallery.className = "image-gallery";
@@ -63,7 +54,6 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
     }
     panel.appendChild(exteriorGallery);
   }
-
   if (interiorImages && interiorImages.length > 0) {
     const interiorGallery = document.createElement("div");
     interiorGallery.className = "image-gallery";
@@ -82,11 +72,9 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
     }
     panel.appendChild(interiorGallery);
   }
-
   document.body.appendChild(panel);
   currentInfoPanel = panel;
 }
-
 function hideCurrentInfoPanel() {
   if (currentInfoPanel) {
     document.body.removeChild(currentInfoPanel);

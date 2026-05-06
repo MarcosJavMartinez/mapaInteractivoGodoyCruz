@@ -1,33 +1,60 @@
-//lightModule.js
-import { AmbientLight, SpotLight, SphereGeometry, MeshBasicMaterial, Mesh, Vector3 } from "https://unpkg.com/three@0.127.0/build/three.module.js";
+import {
+  AmbientLight,
+  DirectionalLight,
+  HemisphereLight,
+  PCFSoftShadowMap,
+} from "https://unpkg.com/three@0.127.0/build/three.module.js";
 
 export function setupLights(scene, renderer) {
-  // Luz Ambiental
-  const ambientLight = new AmbientLight(0x999998);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+
+  const skyLight = new HemisphereLight(0xcfe4ff, 0x7b6754, 0.58);
+  scene.add(skyLight);
+
+  const ambientLight = new AmbientLight(0xfff1dd, 0.045);
   scene.add(ambientLight);
-  
-    // Luz Spotlight
-    const spotlight = new SpotLight(0xffffff);
-    spotlight.position.set(0, 50, 0);
-    spotlight.castShadow = true;
-    spotlight.distance = 10000;
-    spotlight.angle = Math.PI / 0.2;
-    spotlight.penumbra = 0.2; // Sombras suaves
-    spotlight.target.position.copy(new Vector3(-1, -6, 0));
-    spotlight.intensity = 0.9;
-  
-    spotlight.shadow.mapSize.width = 8000;
-    spotlight.shadow.mapSize.height = 8000;
-    spotlight.shadow.bias = -0.001;
-    spotlight.shadow.camera.near = 1;
-    spotlight.shadow.camera.far = 20000;
-    renderer.shadowMap.enabled = true;
-    scene.add(spotlight);
-  
-    // Spotlight representación Visible
-    const spotlightGeometry = new SphereGeometry(0.1, 32, 32);
-    const spotlightMaterial = new MeshBasicMaterial({ color: 0xffffff });
-    const spotlightMesh = new Mesh(spotlightGeometry, spotlightMaterial);
-    spotlightMesh.position.copy(spotlight.position);
-    scene.add(spotlightMesh);
-  }
+
+  const sunLight = createDirectionalLight({
+    position: [-160, 220, 180],
+    target: [-30, 0, 40],
+    color: 0xfff0d0,
+    intensity: 1.45,
+    shadowSize: 4096,
+    shadowBounds: 220,
+    castShadow: true,
+  });
+  scene.add(sunLight);
+  scene.add(sunLight.target);
+
+  const coolFillLight = createDirectionalLight({
+    position: [180, 90, -220],
+    target: [-40, 0, 20],
+    color: 0xd6e6ff,
+    intensity: 0.24,
+    shadowSize: 1024,
+    shadowBounds: 300,
+    castShadow: false,
+  });
+  scene.add(coolFillLight);
+  scene.add(coolFillLight.target);
+}
+
+function createDirectionalLight({ position, target, color, intensity, shadowSize, shadowBounds, castShadow }) {
+  const light = new DirectionalLight(color, intensity);
+  light.position.set(...position);
+  light.target.position.set(...target);
+  light.castShadow = castShadow;
+  light.shadow.mapSize.width = shadowSize;
+  light.shadow.mapSize.height = shadowSize;
+  light.shadow.camera.near = 1;
+  light.shadow.camera.far = 650;
+  light.shadow.camera.left = -shadowBounds;
+  light.shadow.camera.right = shadowBounds;
+  light.shadow.camera.top = shadowBounds;
+  light.shadow.camera.bottom = -shadowBounds;
+  light.shadow.bias = -0.0008;
+  light.shadow.normalBias = 0.06;
+  light.shadow.radius = 1.5;
+  return light;
+}

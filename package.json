@@ -1,0 +1,8 @@
+{
+  "name": "mapa-interactivo-godoy-cruz",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node local-server.js"
+  }
+}

@@ -1,28 +1,73 @@
-<!--index.html-->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles/style.css">
-    <script src="https://unpkg.com/three@0.127.0/build/three.min.js"></script>
-
-    <title>Document</title>
-    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles/style.css">
+  <script src="https://unpkg.com/three@0.127.0/build/three.min.js"></script>
+  <title>Hasta 1950</title>
 </head>
-<body>  
-  <div id='root'></div>
-
-  <!-- Botón en la esquina superior derecha -->
+<body>
+  <div class="loader">
+    <div class="loader-content">
+      <img src="images/LOGO-MUVI-V3.png" alt="MUVI Godoy Cruz">
+      <p class="loader-kicker">Recorrido patrimonial interactivo</p>
+      <h1>Hasta 1950</h1>
+      <div class="loader-circle" aria-hidden="true"></div>
+      <p class="loader-status">Cargando recorrido...</p>
+      <button class="loader-start-button" type="button" disabled>Comenzar experiencia</button>
+    </div>
+  </div>
+  <div id="root"></div>
+  <div class="help-overlay" aria-hidden="true">
+    <section class="help-panel" role="dialog" aria-labelledby="help-title" aria-modal="true">
+      <p class="help-kicker">Antes de explorar</p>
+      <h2 id="help-title">Como navegar el mapa</h2>
+      <div class="help-grid">
+        <div class="help-item">
+          <span class="help-icon">1</span>
+          <p>Arrastra sobre el mapa para girar la vista y recorrer el entorno.</p>
+        </div>
+        <div class="help-item">
+          <span class="help-icon">2</span>
+          <p>Usa la rueda del mouse o el gesto de pinza para acercarte y alejarte.</p>
+        </div>
+        <div class="help-item">
+          <span class="help-icon">3</span>
+          <p>Haz click en los marcadores para ver fotos, historia y enfocar la fachada.</p>
+        </div>
+      </div>
+      <button class="help-start-button" type="button">Entendido, explorar</button>
+    </section>
+  </div>
+  <div class="about-overlay" aria-hidden="true">
+    <section class="about-panel" role="dialog" aria-labelledby="about-title" aria-modal="true">
+      <button class="about-close-button" type="button" aria-label="Cerrar">X</button>
+      <p class="about-kicker">Equipo del proyecto</p>
+      <h2 id="about-title">Quienes somos</h2>
+      <div class="about-columns">
+        <article>
+          <h3>Investigacion historica</h3>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Dos investigadoras recopilaron fuentes, fotografias y relatos para reconstruir la memoria urbana de Godoy Cruz.</p>
+        </article>
+        <article>
+          <h3>Programacion y direccion</h3>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. La programacion, direccion tecnica, seleccion de tecnologia y articulacion general de la experiencia estuvieron a cargo del desarrollo web interactivo.</p>
+        </article>
+        <article>
+          <h3>Modelado arquitectonico</h3>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cuatro arquitectos trabajaron en el modelado tridimensional de edificios, volumenes y piezas patrimoniales del recorrido.</p>
+        </article>
+      </div>
+    </section>
+  </div>
   <button class="back-to-top-button">Volver</button>
-
-  <!-- Contenedor para el pequeño footer -->
   <footer class="footer">
-    <p>© 2023 Tu Sitio Web | Todos los derechos reservados</p>
+    <p>&copy; 2023 MUVI Godoy Cruz</p>
+    <nav class="footer-nav" aria-label="Navegacion secundaria">
+      <button class="about-open-button" type="button">Quienes somos</button>
+    </nav>
   </footer>
-
   <script src="scripts/index.js" type="module"></script>
 </body>
 </html>
-
-
