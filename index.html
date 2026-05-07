@@ -4,23 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="styles/style.css">
-  <script src="https://unpkg.com/three@0.127.0/build/three.min.js"></script>
+  <script src="vendor/three/build/three.min.js"></script>
   <title>Hasta 1950</title>
 </head>
 <body>
-  <div class="loader">
+  <div class="loader active">
     <div class="loader-content">
       <img src="images/LOGO-MUVI-V3.png" alt="MUVI Godoy Cruz">
       <p class="loader-kicker">Recorrido patrimonial interactivo</p>
-      <h1>Hasta 1950</h1>
+      <h1>1950</h1>
       <div class="loader-circle" aria-hidden="true"></div>
       <p class="loader-status">Cargando recorrido...</p>
       <button class="loader-start-button" type="button" disabled>Comenzar experiencia</button>
+      <label class="quality-selector-label" for="quality-selector">Calidad grafica</label>
+      <select class="quality-selector" id="quality-selector">
+        <option value="performance">Rendimiento</option>
+        <option value="balanced">Equilibrado</option>
+        <option value="high">Alta calidad</option>
+      </select>
     </div>
   </div>
   <div id="root"></div>
   <div class="help-overlay" aria-hidden="true">
     <section class="help-panel" role="dialog" aria-labelledby="help-title" aria-modal="true">
+      <button class="dialog-close-button help-close-button" type="button" aria-label="Cerrar">X</button>
       <p class="help-kicker">Antes de explorar</p>
       <h2 id="help-title">Como navegar el mapa</h2>
       <div class="help-grid">
@@ -42,7 +49,7 @@
   </div>
   <div class="about-overlay" aria-hidden="true">
     <section class="about-panel" role="dialog" aria-labelledby="about-title" aria-modal="true">
-      <button class="about-close-button" type="button" aria-label="Cerrar">X</button>
+      <button class="dialog-close-button about-close-button" type="button" aria-label="Cerrar">X</button>
       <p class="about-kicker">Equipo del proyecto</p>
       <h2 id="about-title">Quienes somos</h2>
       <div class="about-columns">

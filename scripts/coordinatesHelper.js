@@ -1,5 +1,5 @@
 //coordinatesHelper.js
-import { Vector3 } from "https://unpkg.com/three@0.127.0/build/three.module.js";
+import { Vector3 } from "../vendor/three/build/three.module.js";
 
 export function showCoordinatesNoMarker(event, camera) {
   const mouse = new Vector2();

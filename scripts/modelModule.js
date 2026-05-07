@@ -1,18 +1,23 @@
 //modelModule
-import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.127.0/examples/jsm/loaders/GLTFLoader.js';
-import { LoadingManager, MeshStandardMaterial, Mesh, Vector3 } from "https://unpkg.com/three@0.127.0/build/three.module.js";
-import { OBJLoader } from 'https://unpkg.com/three@0.127.0/examples/jsm/loaders/OBJLoader.js';
+import { GLTFLoader } from "../vendor/three/examples/jsm/loaders/GLTFLoader.js";
+import { LoadingManager, MeshStandardMaterial, Mesh, Vector3 } from "../vendor/three/build/three.module.js";
+import { OBJLoader } from "../vendor/three/examples/jsm/loaders/OBJLoader.js";
+import { getQualitySettings } from "./qualityModule.js";
 
 const DEFAULT_MODEL_COLOR = 0xd8c9aa;
 const LEGACY_CARDBOARD_COLOR = 0xc8ad7f;
 
 export function loadModels(scene, options = {}) {
+  const quality = options.quality || getQualitySettings();
   const manager = new LoadingManager();
   manager.onProgress = (url, itemsLoaded, itemsTotal) => {
     options.onProgress?.(url, itemsLoaded, itemsTotal);
   };
   manager.onLoad = () => {
     options.onLoad?.();
+  };
+  manager.onError = (url) => {
+    options.onError?.(url);
   };
 
   const objLoader = new OBJLoader(manager);
@@ -354,7 +359,7 @@ modelsToLoad.forEach((model) => {
       model.path,
       (object) => {
         try {
-          setupObject(object, model, scene);
+          setupObject(object, model, scene, quality);
         } catch (error) {
           console.error('Error al configurar el objeto:', error);
         }
@@ -369,7 +374,7 @@ modelsToLoad.forEach((model) => {
       model.path,
       (gltf) => {
         try {
-          setupObject(gltf.scene, model, scene);
+          setupObject(gltf.scene, model, scene, quality);
         } catch (error) {
           console.error('Error al configurar el objeto:', error);
         }
@@ -381,7 +386,7 @@ modelsToLoad.forEach((model) => {
     );
   }
 });
-function setupObject(object, model, scene) {
+function setupObject(object, model, scene, quality) {
     object.scale.copy(model.scale);
     object.position.copy(model.position);
   
@@ -410,7 +415,7 @@ function setupObject(object, model, scene) {
       if (child.isMesh || child instanceof Mesh) {
         child.material = tuneMaterialForRealisticLight(child.material, fallbackMaterial, roughness, metalness);
 
-        child.castShadow = !isBaseModel && !isTransparentModel;
+        child.castShadow = quality.modelCastShadows && !isBaseModel && !isTransparentModel;
         child.receiveShadow = true;
       }
     });

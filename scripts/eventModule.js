@@ -1,6 +1,7 @@
 //eventModule.js
-import { Raycaster, Vector2, Vector3 } from "https://unpkg.com/three@0.127.0/build/three.module.js";
+import { Raycaster, Vector2, Vector3 } from "../vendor/three/build/three.module.js";
 import { showContent } from './infoPanelModule.js';
+import { getQualitySettings } from "./qualityModule.js";
 const raycaster = new Raycaster();
 const mouse = new Vector2();
 let activeCameraAnimation = null;
@@ -9,10 +10,12 @@ const MAP_CENTER = new Vector3(-55, 0, 45);
 const FACADE_VIEW_DISTANCE = 42;
 const FACADE_VIEW_HEIGHT = 18;
 const CAMERA_ANIMATION_DURATION = 900;
+let lastPointerRaycast = 0;
 
-export function setupEventListeners(buttons, camera, currentInfoPanel) {
+export function setupEventListeners(buttons, camera, currentInfoPanel, quality = getQualitySettings()) {
   document.body.addEventListener('click', (event) => onClick(event, buttons, camera, currentInfoPanel));
   document.body.addEventListener('touchstart', (event) => onTouchStart(event, buttons, camera, currentInfoPanel));
+  document.body.addEventListener('pointermove', (event) => onPointerMove(event, buttons, camera, quality));
 }
 function onClick(event, buttons, camera, currentInfoPanel) {
   event.preventDefault();
@@ -40,6 +43,19 @@ function handleTouchEvent(event, buttons, camera, currentInfoPanel) {
       showContent(title, imageUrl, text, exteriorImages, interiorImages, currentInfoPanel);
     }
   }
+}
+
+function onPointerMove(event, buttons, camera, quality) {
+  const now = performance.now();
+  if (now - lastPointerRaycast < quality.pointerRaycastInterval) return;
+  lastPointerRaycast = now;
+
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObjects(buttons);
+  document.body.classList.toggle("is-over-marker", intersects.length > 0);
 }
 
 function focusCameraOnMarker(camera, marker) {

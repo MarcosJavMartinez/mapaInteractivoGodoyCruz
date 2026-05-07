@@ -2,12 +2,14 @@ import {
   AmbientLight,
   DirectionalLight,
   HemisphereLight,
+  BasicShadowMap,
   PCFSoftShadowMap,
-} from "https://unpkg.com/three@0.127.0/build/three.module.js";
+} from "../vendor/three/build/three.module.js";
+import { getQualitySettings } from "./qualityModule.js";
 
-export function setupLights(scene, renderer) {
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = PCFSoftShadowMap;
+export function setupLights(scene, renderer, quality = getQualitySettings()) {
+  renderer.shadowMap.enabled = quality.shadowMap !== "off";
+  renderer.shadowMap.type = quality.shadowMap === "pcf-soft" ? PCFSoftShadowMap : BasicShadowMap;
 
   const skyLight = new HemisphereLight(0xcfe4ff, 0x7b6754, 0.58);
   scene.add(skyLight);
@@ -20,9 +22,9 @@ export function setupLights(scene, renderer) {
     target: [-30, 0, 40],
     color: 0xfff0d0,
     intensity: 1.45,
-    shadowSize: 4096,
+    shadowSize: quality.sunShadowSize,
     shadowBounds: 220,
-    castShadow: true,
+    castShadow: quality.shadowMap !== "off",
   });
   scene.add(sunLight);
   scene.add(sunLight.target);

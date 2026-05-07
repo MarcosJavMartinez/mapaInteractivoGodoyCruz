@@ -1,5 +1,5 @@
 //markerModule.js
-import {Sprite, SpriteMaterial, TextureLoader, Vector3  } from 'https://unpkg.com/three@0.127.0/build/three.module.js';
+import { Sprite, SpriteMaterial, TextureLoader, Vector3 } from "../vendor/three/build/three.module.js";
 
 let buttons = [];
 export function createMarkers(scene, buttons) {
