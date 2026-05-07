@@ -107,6 +107,9 @@ function openImageViewer(images, startIndex = 0) {
 
   const image = document.createElement("img");
   image.alt = "";
+  image.addEventListener("click", () => {
+    image.classList.toggle("is-zoomed");
+  });
   image.addEventListener("load", () => {
     const isLandscape = image.naturalWidth >= image.naturalHeight;
     image.classList.toggle("is-landscape", isLandscape);
@@ -156,7 +159,7 @@ function openImageViewer(images, startIndex = 0) {
     clearTimeout(imageTransitionTimer);
 
     const setImage = () => {
-      image.classList.remove("is-landscape", "is-portrait");
+      image.classList.remove("is-landscape", "is-portrait", "is-zoomed");
       image.src = images[currentIndex];
       counter.textContent = `${currentIndex + 1} / ${images.length}`;
       previousButton.hidden = images.length <= 1;
