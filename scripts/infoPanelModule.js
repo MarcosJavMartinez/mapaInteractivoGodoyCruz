@@ -1,5 +1,7 @@
-//infoPanelModule.js
 let currentInfoPanel = null;
+let activeImageViewerKeyHandler = null;
+let activeImageViewerCleanup = null;
+
 export {
   currentInfoPanel,
   showContent,
@@ -83,6 +85,7 @@ function openImageViewer(images, startIndex = 0) {
 
   closeImageViewer();
   let currentIndex = Math.min(Math.max(0, startIndex), images.length - 1);
+  let imageTransitionTimer = null;
 
   const overlay = document.createElement("div");
   overlay.className = "image-viewer-overlay";
@@ -95,29 +98,86 @@ function openImageViewer(images, startIndex = 0) {
   const closeButton = document.createElement("button");
   closeButton.className = "dialog-close-button image-viewer-close";
   closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Cerrar visor de imagenes");
   closeButton.textContent = "X";
   closeButton.addEventListener("click", closeImageViewer);
 
+  const stage = document.createElement("div");
+  stage.className = "image-viewer-stage";
+
   const image = document.createElement("img");
   image.alt = "";
+  image.addEventListener("load", () => {
+    const isLandscape = image.naturalWidth >= image.naturalHeight;
+    image.classList.toggle("is-landscape", isLandscape);
+    image.classList.toggle("is-portrait", !isLandscape);
+  });
+
   const counter = document.createElement("p");
   counter.className = "image-viewer-counter";
+
+  const controls = document.createElement("div");
+  controls.className = "image-viewer-controls";
 
   const previousButton = document.createElement("button");
   previousButton.className = "image-viewer-nav image-viewer-prev";
   previousButton.type = "button";
+  previousButton.setAttribute("aria-label", "Ver imagen anterior");
   previousButton.textContent = "<";
 
   const nextButton = document.createElement("button");
   nextButton.className = "image-viewer-nav image-viewer-next";
   nextButton.type = "button";
+  nextButton.setAttribute("aria-label", "Ver imagen siguiente");
   nextButton.textContent = ">";
 
-  const updateImage = () => {
-    image.src = images[currentIndex];
-    counter.textContent = `${currentIndex + 1} / ${images.length}`;
-    previousButton.hidden = images.length <= 1;
-    nextButton.hidden = images.length <= 1;
+  const thumbnails = document.createElement("div");
+  thumbnails.className = "image-viewer-thumbnails";
+  const thumbnailButtons = images.map((imageUrl, index) => {
+    const thumbnailButton = document.createElement("button");
+    thumbnailButton.className = "image-viewer-thumbnail";
+    thumbnailButton.type = "button";
+    thumbnailButton.setAttribute("aria-label", `Ver imagen ${index + 1}`);
+
+    const thumbnailImage = document.createElement("img");
+    thumbnailImage.src = imageUrl;
+    thumbnailImage.alt = "";
+
+    thumbnailButton.appendChild(thumbnailImage);
+    thumbnailButton.addEventListener("click", () => {
+      currentIndex = index;
+      updateImage();
+    });
+    thumbnails.appendChild(thumbnailButton);
+    return thumbnailButton;
+  });
+
+  const updateImage = (useTransition = true) => {
+    clearTimeout(imageTransitionTimer);
+
+    const setImage = () => {
+      image.classList.remove("is-landscape", "is-portrait");
+      image.src = images[currentIndex];
+      counter.textContent = `${currentIndex + 1} / ${images.length}`;
+      previousButton.hidden = images.length <= 1;
+      nextButton.hidden = images.length <= 1;
+      thumbnails.hidden = images.length <= 1;
+      thumbnailButtons.forEach((button, index) => {
+        button.classList.toggle("active", index === currentIndex);
+      });
+    };
+
+    if (!useTransition || !image.src) {
+      setImage();
+      image.classList.remove("is-changing");
+      return;
+    }
+
+    image.classList.add("is-changing");
+    imageTransitionTimer = setTimeout(() => {
+      setImage();
+      requestAnimationFrame(() => image.classList.remove("is-changing"));
+    }, 120);
   };
 
   const showPrevious = () => {
@@ -130,19 +190,50 @@ function openImageViewer(images, startIndex = 0) {
     updateImage();
   };
 
+  activeImageViewerKeyHandler = (event) => {
+    if (event.key === "Escape") {
+      closeImageViewer();
+      return;
+    }
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      showPrevious();
+      return;
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      showNext();
+    }
+  };
+
   previousButton.addEventListener("click", showPrevious);
   nextButton.addEventListener("click", showNext);
-  updateImage();
+  document.addEventListener("keydown", activeImageViewerKeyHandler);
+  activeImageViewerCleanup = () => clearTimeout(imageTransitionTimer);
+  updateImage(false);
 
   frame.appendChild(closeButton);
-  frame.appendChild(previousButton);
-  frame.appendChild(image);
-  frame.appendChild(nextButton);
-  frame.appendChild(counter);
+  stage.appendChild(image);
+  frame.appendChild(stage);
+  controls.appendChild(previousButton);
+  controls.appendChild(counter);
+  controls.appendChild(nextButton);
+  frame.appendChild(controls);
+  frame.appendChild(thumbnails);
   overlay.appendChild(frame);
   document.body.appendChild(overlay);
 }
 
 function closeImageViewer() {
+  activeImageViewerCleanup?.();
+  activeImageViewerCleanup = null;
+
+  if (activeImageViewerKeyHandler) {
+    document.removeEventListener("keydown", activeImageViewerKeyHandler);
+    activeImageViewerKeyHandler = null;
+  }
+
   document.querySelectorAll(".image-viewer-overlay").forEach((viewer) => viewer.remove());
 }
