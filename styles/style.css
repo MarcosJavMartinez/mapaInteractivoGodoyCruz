@@ -412,6 +412,7 @@ p {
 }
 .image-viewer-stage {
   position: relative;
+  grid-row: 1;
   display: grid;
   place-items: center;
   width: 100%;
@@ -453,6 +454,9 @@ p {
   box-shadow: 0 0.45rem 1rem rgba(0, 0, 0, 0.24);
 }
 .image-viewer-controls {
+  position: relative;
+  z-index: 2;
+  grid-row: 2;
   display: flex;
   align-items: center;
   gap: 0;
@@ -497,6 +501,9 @@ p {
   text-align: center;
 }
 .image-viewer-thumbnails {
+  position: relative;
+  z-index: 2;
+  grid-row: 3;
   display: flex;
   align-items: center;
   gap: 0.45rem;
