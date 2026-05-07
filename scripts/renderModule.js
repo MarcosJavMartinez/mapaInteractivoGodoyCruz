@@ -9,6 +9,9 @@ import {
 import { OrbitControls } from "../vendor/three/examples/jsm/controls/OrbitControls.js";
 import { getQualitySettings } from "./qualityModule.js";
 
+const IDLE_AUTO_ROTATE_DELAY = 22000;
+const IDLE_AUTO_ROTATE_SPEED = 0.18;
+
 export function setupRenderer(quality = getQualitySettings()) {
   const renderer = new WebGLRenderer({
     antialias: true,
@@ -41,6 +44,7 @@ export function setupCamera(renderer, quality = getQualitySettings()) {
   controls.minPolarAngle = 0.12;
   controls.maxPolarAngle = Math.PI * 0.48;
   controls.maxTargetRadius = 240;
+  setupIdleAutoRotate(controls, renderer.domElement);
   camera.userData.controls = controls;
   return camera;
 }
@@ -78,4 +82,42 @@ function getPixelRatio(quality) {
 
 function getShadowMapType(quality) {
   return quality.shadowMap === "pcf-soft" ? PCFSoftShadowMap : BasicShadowMap;
+}
+
+function setupIdleAutoRotate(controls, interactionTarget) {
+  let idleTimer = null;
+
+  controls.autoRotate = false;
+  controls.autoRotateSpeed = IDLE_AUTO_ROTATE_SPEED;
+
+  const scheduleAutoRotate = () => {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (isExperienceOverlayOpen()) {
+        scheduleAutoRotate();
+        return;
+      }
+
+      controls.autoRotate = true;
+    }, IDLE_AUTO_ROTATE_DELAY);
+  };
+
+  const stopAutoRotate = () => {
+    controls.autoRotate = false;
+    scheduleAutoRotate();
+  };
+
+  controls.addEventListener("start", stopAutoRotate);
+  interactionTarget.addEventListener("pointerdown", stopAutoRotate, { passive: true });
+  interactionTarget.addEventListener("wheel", stopAutoRotate, { passive: true });
+  interactionTarget.addEventListener("touchstart", stopAutoRotate, { passive: true });
+  window.addEventListener("keydown", stopAutoRotate);
+
+  scheduleAutoRotate();
+}
+
+function isExperienceOverlayOpen() {
+  return Boolean(document.querySelector(
+    ".loader.active, .help-overlay.active, .about-overlay.active, .image-viewer-overlay"
+  ));
 }
