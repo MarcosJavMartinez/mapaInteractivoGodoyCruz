@@ -24,14 +24,25 @@
       </select>
     </div>
   </div>
-  <div id="root"></div>
-  <nav class="app-toolbar" aria-label="Controles del recorrido">
-    <div class="sun-control">
-      <span class="sun-control-label">Amanecer</span>
-      <input class="sun-slider" type="range" min="0" max="100" value="15" aria-label="Direccion del sol">
-      <span class="sun-control-label">Atardecer</span>
+  <header class="site-header">
+    <div class="app-toolbar" aria-label="Controles del recorrido">
+      <div class="sun-control">
+        <span class="sun-control-label">Amanecer</span>
+        <input class="sun-slider" type="range" min="0" max="100" value="15" aria-label="Direccion del sol">
+        <span class="sun-control-label">Atardecer</span>
+      </div>
     </div>
-  </nav>
+    <a class="site-brand" href="#" aria-label="Inicio MUVI Godoy Cruz">
+      <img src="images/LOGO-MUVI-V3.png" alt="MUVI Godoy Cruz">
+      <span>Hasta 1950</span>
+    </a>
+    <nav class="site-nav site-nav-right" aria-label="Navegacion principal">
+      <a href="#root">Recorrido</a>
+      <button class="help-open-button" type="button">Ayuda</button>
+      <button class="about-open-button" type="button">Quienes somos</button>
+    </nav>
+  </header>
+  <div id="root"></div>
   <div class="help-overlay" aria-hidden="true">
     <section class="help-panel" role="dialog" aria-labelledby="help-title" aria-modal="true">
       <button class="dialog-close-button help-close-button" type="button" aria-label="Cerrar">X</button>
@@ -77,10 +88,16 @@
   </div>
   <button class="back-to-top-button">Volver</button>
   <footer class="footer">
-    <p>&copy; 2023 MUVI Godoy Cruz</p>
+    <div>
+      <strong>MUVI Godoy Cruz</strong>
+      <p>Recorrido patrimonial interactivo hasta 1950.</p>
+    </div>
     <nav class="footer-nav" aria-label="Navegacion secundaria">
+      <a href="#root">Recorrido</a>
+      <button class="help-open-button" type="button">Ayuda</button>
       <button class="about-open-button" type="button">Quienes somos</button>
     </nav>
+    <p class="footer-copy">&copy; 2023 MUVI Godoy Cruz</p>
   </footer>
   <script src="scripts/index.js" type="module"></script>
 </body>

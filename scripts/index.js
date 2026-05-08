@@ -3,7 +3,6 @@ import { setupLights } from "./lightModule.js";
 import { setupRenderer, setupCamera, setupResizeHandler, render } from "./renderModule.js";
 import { loadModels } from "./modelModule.js";
 import { createMarkers } from "./markerModule.js";
-import { currentInfoPanel } from "./infoPanelModule.js";
 import { setupEventListeners } from "./eventModule.js";
 import { setupQualitySelector } from "./qualityModule.js";
 
@@ -15,15 +14,18 @@ let camera;
 document.addEventListener("DOMContentLoaded", () => {
   const loader = document.querySelector(".loader");
   const loaderStartButton = document.querySelector(".loader-start-button");
+  const loaderStatus = document.querySelector(".loader-status");
   const helpOverlay = document.querySelector(".help-overlay");
+  const helpOpenButtons = document.querySelectorAll(".help-open-button");
   const helpStartButton = document.querySelector(".help-start-button");
   const helpCloseButton = document.querySelector(".help-close-button");
   const aboutOverlay = document.querySelector(".about-overlay");
-  const aboutOpenButton = document.querySelector(".about-open-button");
+  const aboutOpenButtons = document.querySelectorAll(".about-open-button");
   const aboutCloseButton = document.querySelector(".about-close-button");
   const qualitySelector = document.querySelector(".quality-selector");
   const sunSlider = document.querySelector(".sun-slider");
   const quality = setupQualitySelector(qualitySelector, { reloadOnChange: true });
+
   loader.classList.add("active");
   let experienceReady = false;
 
@@ -41,29 +43,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loaderStartButton?.addEventListener("click", () => {
     loader.classList.remove("active");
-    helpOverlay?.classList.add("active");
-    helpOverlay?.setAttribute("aria-hidden", "false");
+    setOverlayActive(helpOverlay, true);
   });
 
-  helpStartButton?.addEventListener("click", () => {
-    helpOverlay?.classList.remove("active");
-    helpOverlay?.setAttribute("aria-hidden", "true");
-  });
-
-  helpCloseButton?.addEventListener("click", () => {
-    helpOverlay?.classList.remove("active");
-    helpOverlay?.setAttribute("aria-hidden", "true");
-  });
-
-  aboutOpenButton?.addEventListener("click", () => {
-    aboutOverlay?.classList.add("active");
-    aboutOverlay?.setAttribute("aria-hidden", "false");
-  });
-
-  aboutCloseButton?.addEventListener("click", () => {
-    aboutOverlay?.classList.remove("active");
-    aboutOverlay?.setAttribute("aria-hidden", "true");
-  });
+  bindOverlayControls(helpOverlay, helpOpenButtons, [helpStartButton, helpCloseButton]);
+  bindOverlayControls(aboutOverlay, aboutOpenButtons, [aboutCloseButton]);
 
   renderer = setupRenderer(quality);
 
@@ -84,14 +68,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   render(scene, camera, renderer, quality, buttons);
 
-  const loaderStatus = document.querySelector(".loader-status");
-
   const loadingFallback = setTimeout(() => {
     markExperienceReady("Ya puedes comenzar; algunos modelos seguiran cargando.");
   }, 12000);
 
   createMarkers(scene, buttons);
-  setupEventListeners(buttons, camera, currentInfoPanel, quality);
+  setupEventListeners(buttons, camera, quality);
   markExperienceReady("Puedes comenzar; los modelos se cargaran en segundo plano.");
 
   setTimeout(() => {
@@ -111,3 +93,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }, 250);
 });
+
+function bindOverlayControls(overlay, openButtons, closeButtons) {
+  openButtons.forEach((button) => {
+    button.addEventListener("click", () => setOverlayActive(overlay, true));
+  });
+
+  closeButtons.forEach((button) => {
+    button?.addEventListener("click", () => setOverlayActive(overlay, false));
+  });
+}
+
+function setOverlayActive(overlay, isActive) {
+  if (!overlay) return;
+
+  overlay.classList.toggle("active", isActive);
+  overlay.setAttribute("aria-hidden", String(!isActive));
+}

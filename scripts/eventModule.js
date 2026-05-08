@@ -1,12 +1,13 @@
-//eventModule.js
 import { Raycaster, Vector2, Vector3 } from "../vendor/three/build/three.module.js";
-import { showContent } from './infoPanelModule.js';
+import { showContent } from "./infoPanelModule.js";
 import { getQualitySettings } from "./qualityModule.js";
+
 const raycaster = new Raycaster();
 const mouse = new Vector2();
 let activeCameraAnimation = null;
 let activeMarker = null;
 let hoveredMarker = null;
+let lastPointerRaycast = 0;
 
 const MAP_CENTER = new Vector3(-55, 0, 45);
 const FACADE_VIEW_DISTANCE = 42;
@@ -14,25 +15,32 @@ const FACADE_VIEW_HEIGHT = 18;
 const CAMERA_ANIMATION_DURATION = 900;
 const DEFAULT_MARKER_COLOR = 0xffffff;
 const ACTIVE_MARKER_COLOR = 0xffd35a;
-let lastPointerRaycast = 0;
 
-export function setupEventListeners(buttons, camera, currentInfoPanel, quality = getQualitySettings()) {
-  document.body.addEventListener('click', (event) => onClick(event, buttons, camera, currentInfoPanel));
-  document.body.addEventListener('touchstart', (event) => onTouchStart(event, buttons, camera, currentInfoPanel));
-  document.body.addEventListener('pointermove', (event) => onPointerMove(event, buttons, camera, quality));
+export function setupEventListeners(buttons, camera, quality = getQualitySettings()) {
+  document.body.addEventListener("click", (event) => onClick(event, buttons, camera));
+  document.body.addEventListener("touchstart", (event) => onTouchStart(event, buttons, camera));
+  document.body.addEventListener("pointermove", (event) => onPointerMove(event, buttons, camera, quality));
 }
-function onClick(event, buttons, camera, currentInfoPanel) {
+
+function onClick(event, buttons, camera) {
+  if (!isSceneEvent(event)) return;
+
   event.preventDefault();
-  handleTouchEvent(event, buttons, camera, currentInfoPanel);
+  handleTouchEvent(event, buttons, camera);
 }
-function onTouchStart(event, buttons, camera, currentInfoPanel) {
+
+function onTouchStart(event, buttons, camera) {
+  if (!isSceneEvent(event)) return;
+
   event.preventDefault();
-  handleTouchEvent(event.changedTouches[0], buttons, camera, currentInfoPanel);
+  handleTouchEvent(event.changedTouches[0], buttons, camera);
 }
-function handleTouchEvent(event, buttons, camera, currentInfoPanel) {
+
+function handleTouchEvent(event, buttons, camera) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
+
   const intersects = raycaster.intersectObjects(buttons);
   if (intersects.length > 0) {
     const button = intersects[0].object;
@@ -44,8 +52,9 @@ function handleTouchEvent(event, buttons, camera, currentInfoPanel) {
     const text = button.userData.text;
     const exteriorImages = button.userData.exteriorImages;
     const interiorImages = button.userData.interiorImages;
-    if (title || imageUrl || text || (exteriorImages && interiorImages)) {
-      showContent(title, imageUrl, text, exteriorImages, interiorImages, currentInfoPanel);
+
+    if (title || imageUrl || text || exteriorImages?.length || interiorImages?.length) {
+      showContent(title, imageUrl, text, exteriorImages, interiorImages);
     }
   }
 }
@@ -60,6 +69,12 @@ function setActiveMarker(marker) {
 }
 
 function onPointerMove(event, buttons, camera, quality) {
+  if (!isSceneEvent(event)) {
+    setHoveredMarker(null);
+    document.body.classList.remove("is-over-marker");
+    return;
+  }
+
   const now = performance.now();
   if (now - lastPointerRaycast < quality.pointerRaycastInterval) return;
   lastPointerRaycast = now;
@@ -72,6 +87,10 @@ function onPointerMove(event, buttons, camera, quality) {
   const marker = intersects[0]?.object || null;
   setHoveredMarker(marker);
   document.body.classList.toggle("is-over-marker", Boolean(marker));
+}
+
+function isSceneEvent(event) {
+  return event.target instanceof HTMLCanvasElement;
 }
 
 function setHoveredMarker(marker) {

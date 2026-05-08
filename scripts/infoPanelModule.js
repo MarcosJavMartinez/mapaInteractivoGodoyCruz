@@ -1,32 +1,34 @@
 let currentInfoPanel = null;
 let activeImageViewerKeyHandler = null;
 let activeImageViewerCleanup = null;
+let activeInfoPanelOutsideClickHandler = null;
+let activeInfoPanelOutsideClickTimer = null;
 
-export {
-  currentInfoPanel,
-  showContent,
-  hideCurrentInfoPanel
-};
+const PANEL_CLOSE_ANIMATION_MS = 220;
+
+export { showContent, hideCurrentInfoPanel };
+
 function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
   hideCurrentInfoPanel();
+
   const primaryImages = imageUrl ? [imageUrl] : [];
   const exteriorGalleryImages = (exteriorImages || []).filter(Boolean);
   const interiorGalleryImages = (interiorImages || []).filter(Boolean);
   const galleryImages = [...primaryImages, ...exteriorGalleryImages, ...interiorGalleryImages];
   const exteriorStartIndex = primaryImages.length;
   const interiorStartIndex = primaryImages.length + exteriorGalleryImages.length;
+
   const panel = document.createElement("div");
   panel.className = "info-panel";
-  const closeButton = document.createElement("button");
-  closeButton.className = "dialog-close-button info-panel-close";
-  closeButton.textContent = "X";
-  closeButton.addEventListener("click", hideCurrentInfoPanel);
-  panel.appendChild(closeButton);
+
+  panel.appendChild(createCloseButton("info-panel-close", hideCurrentInfoPanel));
+
   if (title) {
     const titleElement = document.createElement("h2");
     titleElement.textContent = title;
     panel.appendChild(titleElement);
   }
+
   if (imageUrl) {
     const image = document.createElement("img");
     image.src = imageUrl;
@@ -34,50 +36,96 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
     image.addEventListener("click", () => openImageViewer(galleryImages, 0));
     panel.appendChild(image);
   }
+
   if (text) {
     const textElement = document.createElement("div");
     textElement.innerHTML = text;
     panel.appendChild(textElement);
 
-    const Link = textElement.querySelector('a');
-    if (Link) {
-      Link.addEventListener("click", (e) => {
-        e.preventDefault();
-        window.open(Link.href, "_blank");
+    const link = textElement.querySelector("a");
+    if (link) {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        window.open(link.href, "_blank");
       });
     }
   }
+
   if (exteriorGalleryImages.length > 0) {
-    const exteriorGallery = document.createElement("div");
-    exteriorGallery.className = "image-gallery";
-    exteriorGalleryImages.forEach((imageUrl, index) => {
-      const image = document.createElement("img");
-      image.src = imageUrl;
-      image.addEventListener("click", () => openImageViewer(galleryImages, exteriorStartIndex + index));
-      exteriorGallery.appendChild(image);
-    });
-    panel.appendChild(exteriorGallery);
+    panel.appendChild(createImageGallery(exteriorGalleryImages, galleryImages, exteriorStartIndex));
   }
+
   if (interiorGalleryImages.length > 0) {
-    const interiorGallery = document.createElement("div");
-    interiorGallery.className = "image-gallery";
-    interiorGalleryImages.forEach((imageUrl, index) => {
-      const image = document.createElement("img");
-      image.src = imageUrl;
-      image.addEventListener("click", () => openImageViewer(galleryImages, interiorStartIndex + index));
-      interiorGallery.appendChild(image);
-    });
-    panel.appendChild(interiorGallery);
+    panel.appendChild(createImageGallery(interiorGalleryImages, galleryImages, interiorStartIndex));
   }
+
   document.body.appendChild(panel);
+  requestAnimationFrame(() => panel.classList.add("active"));
   currentInfoPanel = panel;
+  watchInfoPanelOutsideClicks(panel);
 }
+
 function hideCurrentInfoPanel() {
   closeImageViewer();
+  stopWatchingInfoPanelOutsideClicks();
+
   if (currentInfoPanel) {
-    document.body.removeChild(currentInfoPanel);
+    const panel = currentInfoPanel;
+    panel.classList.remove("active");
+    setTimeout(() => {
+      if (panel.parentNode) {
+        panel.parentNode.removeChild(panel);
+      }
+    }, PANEL_CLOSE_ANIMATION_MS);
     currentInfoPanel = null;
   }
+}
+
+function createCloseButton(className, onClick) {
+  const button = document.createElement("button");
+  button.className = `dialog-close-button ${className}`;
+  button.type = "button";
+  button.setAttribute("aria-label", "Cerrar");
+  button.textContent = "X";
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function createImageGallery(images, galleryImages, startIndex) {
+  const gallery = document.createElement("div");
+  gallery.className = "image-gallery";
+
+  images.forEach((imageUrl, index) => {
+    const image = document.createElement("img");
+    image.src = imageUrl;
+    image.addEventListener("click", () => openImageViewer(galleryImages, startIndex + index));
+    gallery.appendChild(image);
+  });
+
+  return gallery;
+}
+
+function watchInfoPanelOutsideClicks(panel) {
+  activeInfoPanelOutsideClickTimer = setTimeout(() => {
+    if (currentInfoPanel !== panel) return;
+
+    activeInfoPanelOutsideClickHandler = (event) => {
+      if (!currentInfoPanel || currentInfoPanel.contains(event.target)) return;
+      hideCurrentInfoPanel();
+    };
+
+    document.addEventListener("click", activeInfoPanelOutsideClickHandler);
+  }, 0);
+}
+
+function stopWatchingInfoPanelOutsideClicks() {
+  clearTimeout(activeInfoPanelOutsideClickTimer);
+  activeInfoPanelOutsideClickTimer = null;
+
+  if (!activeInfoPanelOutsideClickHandler) return;
+
+  document.removeEventListener("click", activeInfoPanelOutsideClickHandler);
+  activeInfoPanelOutsideClickHandler = null;
 }
 
 function openImageViewer(images, startIndex = 0) {
@@ -95,12 +143,8 @@ function openImageViewer(images, startIndex = 0) {
   frame.className = "image-viewer-frame";
   frame.addEventListener("click", (event) => event.stopPropagation());
 
-  const closeButton = document.createElement("button");
-  closeButton.className = "dialog-close-button image-viewer-close";
-  closeButton.type = "button";
+  const closeButton = createCloseButton("image-viewer-close", closeImageViewer);
   closeButton.setAttribute("aria-label", "Cerrar visor de imagenes");
-  closeButton.textContent = "X";
-  closeButton.addEventListener("click", closeImageViewer);
 
   const stage = document.createElement("div");
   stage.className = "image-viewer-stage";
