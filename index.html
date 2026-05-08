@@ -14,8 +14,8 @@
       <p class="loader-kicker">Recorrido patrimonial interactivo</p>
       <h1>1950</h1>
       <div class="loader-circle" aria-hidden="true"></div>
-      <p class="loader-status">Cargando recorrido...</p>
       <button class="loader-start-button" type="button" disabled>Comenzar experiencia</button>
+      <p class="loader-status">Cargando recorrido...</p>
       <label class="quality-selector-label" for="quality-selector">Calidad grafica</label>
       <select class="quality-selector" id="quality-selector">
         <option value="performance">Rendimiento</option>
@@ -34,9 +34,14 @@
     </div>
     <a class="site-brand" href="#" aria-label="Inicio MUVI Godoy Cruz">
       <img src="images/LOGO-MUVI-V3.png" alt="MUVI Godoy Cruz">
-      <span>Hasta 1950</span>
+      <span>1950</span>
     </a>
-    <nav class="site-nav site-nav-right" aria-label="Navegacion principal">
+    <button class="menu-toggle-button" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="site-nav">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="site-nav site-nav-right" id="site-nav" aria-label="Navegacion principal">
       <a href="#root">Recorrido</a>
       <button class="help-open-button" type="button">Ayuda</button>
       <button class="about-open-button" type="button">Quienes somos</button>
@@ -88,7 +93,7 @@
   </div>
   <button class="back-to-top-button">Volver</button>
   <footer class="footer">
-    <div>
+    <div class="footer-info">
       <strong>MUVI Godoy Cruz</strong>
       <p>Recorrido patrimonial interactivo hasta 1950.</p>
     </div>

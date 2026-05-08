@@ -22,6 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const aboutOverlay = document.querySelector(".about-overlay");
   const aboutOpenButtons = document.querySelectorAll(".about-open-button");
   const aboutCloseButton = document.querySelector(".about-close-button");
+  const menuToggleButton = document.querySelector(".menu-toggle-button");
+  const siteNav = document.querySelector(".site-nav");
   const qualitySelector = document.querySelector(".quality-selector");
   const sunSlider = document.querySelector(".sun-slider");
   const quality = setupQualitySelector(qualitySelector, { reloadOnChange: true });
@@ -48,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   bindOverlayControls(helpOverlay, helpOpenButtons, [helpStartButton, helpCloseButton]);
   bindOverlayControls(aboutOverlay, aboutOpenButtons, [aboutCloseButton]);
+  bindMobileMenu(menuToggleButton, siteNav);
 
   renderer = setupRenderer(quality);
 
@@ -109,4 +112,22 @@ function setOverlayActive(overlay, isActive) {
 
   overlay.classList.toggle("active", isActive);
   overlay.setAttribute("aria-hidden", String(!isActive));
+}
+
+function bindMobileMenu(toggleButton, nav) {
+  if (!toggleButton || !nav) return;
+
+  toggleButton.addEventListener("click", () => {
+    const isOpen = nav.classList.toggle("active");
+    toggleButton.classList.toggle("active", isOpen);
+    toggleButton.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  nav.querySelectorAll("a, button").forEach((item) => {
+    item.addEventListener("click", () => {
+      nav.classList.remove("active");
+      toggleButton.classList.remove("active");
+      toggleButton.setAttribute("aria-expanded", "false");
+    });
+  });
 }
