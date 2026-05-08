@@ -11,6 +11,7 @@ import { getQualitySettings } from "./qualityModule.js";
 
 const IDLE_AUTO_ROTATE_DELAY = 22000;
 const IDLE_AUTO_ROTATE_SPEED = 0.18;
+const MARKER_HOVER_SCALE = 0.14;
 
 export function setupRenderer(quality = getQualitySettings()) {
   const renderer = new WebGLRenderer({
@@ -58,7 +59,7 @@ export function setupResizeHandler(camera, renderer, quality = getQualitySetting
   });
 }
 
-export function render(scene, camera, renderer, quality = getQualitySettings()) {
+export function render(scene, camera, renderer, quality = getQualitySettings(), markers = []) {
   let then = performance.now();
   const interval = 1000 / quality.targetFps;
 
@@ -69,6 +70,7 @@ export function render(scene, camera, renderer, quality = getQualitySettings()) 
     if (delta > interval) {
       then = now - (delta % interval);
       camera.userData.controls?.update();
+      updateMarkerScales(markers, camera, now);
       renderer.render(scene, camera);
     }
   }
@@ -82,6 +84,33 @@ function getPixelRatio(quality) {
 
 function getShadowMapType(quality) {
   return quality.shadowMap === "pcf-soft" ? PCFSoftShadowMap : BasicShadowMap;
+}
+
+function updateMarkerScales(markers, camera, now) {
+  for (const marker of markers) {
+    const distance = camera.position.distanceTo(marker.position);
+    const baseScale = clamp(
+      distance * (marker.userData.markerScreenScale || 0.032),
+      marker.userData.markerMinScale || 1,
+      marker.userData.markerMaxScale || 12
+    );
+    const pulse = marker.userData.isHovered
+      ? (Math.sin(now * 0.006) + 1) * 0.5 * MARKER_HOVER_SCALE
+      : 0;
+    const scale = baseScale * (1 + pulse);
+
+    marker.scale.setScalar(scale);
+    if (marker.material) {
+      marker.material.opacity = marker.userData.isHovered
+        ? 0.78 + (pulse / MARKER_HOVER_SCALE) * 0.22
+        : 1;
+      marker.material.transparent = marker.userData.isHovered;
+    }
+  }
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function setupIdleAutoRotate(controls, interactionTarget) {

@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const aboutOpenButton = document.querySelector(".about-open-button");
   const aboutCloseButton = document.querySelector(".about-close-button");
   const qualitySelector = document.querySelector(".quality-selector");
+  const sunSlider = document.querySelector(".sun-slider");
   const quality = setupQualitySelector(qualitySelector, { reloadOnChange: true });
   loader.classList.add("active");
   let experienceReady = false;
@@ -70,12 +71,18 @@ document.addEventListener("DOMContentLoaded", () => {
   scene.background = new Color(0xd7e2e6);
   scene.fog = new Fog(0xd7e2e6, 240, 720);
 
-  setupLights(scene, renderer, quality);
+  const sunController = setupLights(scene, renderer, quality);
+  const updateSunFromSlider = () => {
+    if (!sunSlider) return;
+    sunController.setProgress(Number(sunSlider.value) / 100);
+  };
+  sunSlider?.addEventListener("input", updateSunFromSlider);
+  updateSunFromSlider();
 
   camera = setupCamera(renderer, quality);
   setupResizeHandler(camera, renderer, quality);
 
-  render(scene, camera, renderer, quality);
+  render(scene, camera, renderer, quality, buttons);
 
   const loaderStatus = document.querySelector(".loader-status");
 

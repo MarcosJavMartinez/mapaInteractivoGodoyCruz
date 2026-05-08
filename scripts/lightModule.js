@@ -4,8 +4,16 @@ import {
   HemisphereLight,
   BasicShadowMap,
   PCFSoftShadowMap,
+  Color,
 } from "../vendor/three/build/three.module.js";
 import { getQualitySettings } from "./qualityModule.js";
+
+const SUN_TARGET = [-55, 0, 45];
+const SUN_PATH = {
+  sunrise: [180, 42, -220],
+  noon: [-40, 260, 30],
+  sunset: [-260, 48, 210],
+};
 
 export function setupLights(scene, renderer, quality = getQualitySettings()) {
   renderer.shadowMap.enabled = quality.shadowMap !== "off";
@@ -19,7 +27,7 @@ export function setupLights(scene, renderer, quality = getQualitySettings()) {
 
   const sunLight = createDirectionalLight({
     position: [-160, 220, 180],
-    target: [-30, 0, 40],
+    target: SUN_TARGET,
     color: 0xfff0d0,
     intensity: 1.45,
     shadowSize: quality.sunShadowSize,
@@ -40,6 +48,10 @@ export function setupLights(scene, renderer, quality = getQualitySettings()) {
   });
   scene.add(coolFillLight);
   scene.add(coolFillLight.target);
+
+  const sunController = createSunController(sunLight);
+  sunController.setProgress(0.5);
+  return sunController;
 }
 
 function createDirectionalLight({ position, target, color, intensity, shadowSize, shadowBounds, castShadow }) {
@@ -59,4 +71,38 @@ function createDirectionalLight({ position, target, color, intensity, shadowSize
   light.shadow.normalBias = 0.06;
   light.shadow.radius = 1.5;
   return light;
+}
+
+function createSunController(sunLight) {
+  const sunriseColor = new Color(0xffb36f);
+  const noonColor = new Color(0xfff0d0);
+  const sunsetColor = new Color(0xff9f63);
+
+  return {
+    setProgress(progress) {
+      const clampedProgress = Math.min(Math.max(progress, 0), 1);
+      const firstHalf = clampedProgress <= 0.5;
+      const localProgress = firstHalf ? clampedProgress / 0.5 : (clampedProgress - 0.5) / 0.5;
+      const from = firstHalf ? SUN_PATH.sunrise : SUN_PATH.noon;
+      const to = firstHalf ? SUN_PATH.noon : SUN_PATH.sunset;
+      const fromColor = firstHalf ? sunriseColor : noonColor;
+      const toColor = firstHalf ? noonColor : sunsetColor;
+
+      sunLight.position.set(
+        lerp(from[0], to[0], localProgress),
+        lerp(from[1], to[1], localProgress),
+        lerp(from[2], to[2], localProgress)
+      );
+      sunLight.color.copy(fromColor).lerp(toColor, localProgress);
+      sunLight.intensity = firstHalf
+        ? lerp(1.05, 1.45, localProgress)
+        : lerp(1.45, 1.08, localProgress);
+      sunLight.target.position.set(...SUN_TARGET);
+      sunLight.target.updateMatrixWorld();
+    },
+  };
+}
+
+function lerp(from, to, progress) {
+  return from + (to - from) * progress;
 }

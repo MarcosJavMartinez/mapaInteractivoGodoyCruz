@@ -7,7 +7,6 @@ const mouse = new Vector2();
 let activeCameraAnimation = null;
 let activeMarker = null;
 let hoveredMarker = null;
-let hoverAnimationFrame = null;
 
 const MAP_CENTER = new Vector3(-55, 0, 45);
 const FACADE_VIEW_DISTANCE = 42;
@@ -15,8 +14,6 @@ const FACADE_VIEW_HEIGHT = 18;
 const CAMERA_ANIMATION_DURATION = 900;
 const DEFAULT_MARKER_COLOR = 0xffffff;
 const ACTIVE_MARKER_COLOR = 0xffd35a;
-const MARKER_BASE_SCALE = 2;
-const MARKER_HOVER_SCALE = 0.28;
 let lastPointerRaycast = 0;
 
 export function setupEventListeners(buttons, camera, currentInfoPanel, quality = getQualitySettings()) {
@@ -85,37 +82,17 @@ function setHoveredMarker(marker) {
 
   if (!hoveredMarker) return;
 
-  hoveredMarker.scale.setScalar(MARKER_BASE_SCALE);
+  hoveredMarker.userData.isHovered = true;
   hoveredMarker.material.opacity = 1;
   hoveredMarker.material.transparent = true;
-  startHoverAnimation();
 }
 
 function resetHoveredMarker() {
   if (!hoveredMarker) return;
 
-  hoveredMarker.scale.setScalar(MARKER_BASE_SCALE);
+  hoveredMarker.userData.isHovered = false;
   hoveredMarker.material.opacity = 1;
   hoveredMarker = null;
-}
-
-function startHoverAnimation() {
-  if (hoverAnimationFrame) return;
-
-  const animateHover = (now) => {
-    if (!hoveredMarker) {
-      hoverAnimationFrame = null;
-      return;
-    }
-
-    const pulse = (Math.sin(now * 0.006) + 1) / 2;
-    const scale = MARKER_BASE_SCALE + pulse * MARKER_HOVER_SCALE;
-    hoveredMarker.scale.setScalar(scale);
-    hoveredMarker.material.opacity = 0.78 + pulse * 0.22;
-    hoverAnimationFrame = requestAnimationFrame(animateHover);
-  };
-
-  hoverAnimationFrame = requestAnimationFrame(animateHover);
 }
 
 function focusCameraOnMarker(camera, marker) {

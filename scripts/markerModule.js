@@ -1,5 +1,12 @@
 //markerModule.js
-import { Sprite, SpriteMaterial, TextureLoader, Vector3 } from "../vendor/three/build/three.module.js";
+import {
+  ClampToEdgeWrapping,
+  LinearFilter,
+  Sprite,
+  SpriteMaterial,
+  TextureLoader,
+  Vector3,
+} from "../vendor/three/build/three.module.js";
 
 let buttons = [];
 export function createMarkers(scene, buttons) {
@@ -1289,11 +1296,32 @@ A
 // { position: [x, y, z], target: [x, y, z] }
 export function createMarker(scene, buttons, position, title, imageUrl, text, exteriorImages, interiorImages, cameraView) {
   const texture = new TextureLoader().load("images/marcador-de-alfiler-01.png");
-  const material = new SpriteMaterial({ map: texture });
+  texture.generateMipmaps = false;
+  texture.minFilter = LinearFilter;
+  texture.magFilter = LinearFilter;
+  texture.wrapS = ClampToEdgeWrapping;
+  texture.wrapT = ClampToEdgeWrapping;
+  texture.offset.set(0.025, 0.025);
+  texture.repeat.set(0.95, 0.95);
+  const material = new SpriteMaterial({
+    map: texture,
+    transparent: true,
+    alphaTest: 0.08,
+    depthTest: false,
+    depthWrite: false,
+    fog: false,
+  });
 
   const sprite = new Sprite(material);
+  sprite.center.set(0.5, 0);
+  sprite.renderOrder = 999;
+  sprite.frustumCulled = false;
   sprite.position.copy(position);
   sprite.scale.set(2, 2, 2);
+  sprite.userData.markerScreenScale = 0.032;
+  sprite.userData.markerMinScale = 1.1;
+  sprite.userData.markerMaxScale = 11;
+  sprite.userData.isHovered = false;
   sprite.userData.title = title;
   sprite.userData.imageUrl = imageUrl;
   sprite.userData.text = text;
