@@ -56,16 +56,16 @@ export function setupCameraViewEditor(camera) {
   goToViewButton.type = "button";
   goToViewButton.textContent = "Ir a vista";
   goToViewButton.addEventListener("click", () => goToPastedView(camera, finderInput, goToViewButton));
-  finder.append(finderTitle, finderInput, goToViewButton);
+  finder.append(finderTitle, finderInput);
 
   saveViewButton.type = "button";
   saveViewButton.textContent = "Guardar vista";
   saveViewButton.addEventListener("click", () => saveCurrentView(camera, activeMarker, saveViewButton));
 
   actions.className = "camera-view-editor-actions";
-  actions.append(saveViewButton);
+  actions.append(saveViewButton, goToViewButton);
 
-  panel.append(header, marker, currentView, actions, finder);
+  panel.append(header, marker, currentView, finder, actions);
   document.body.appendChild(panel);
   setupEditorAccessShortcut(panel);
 
