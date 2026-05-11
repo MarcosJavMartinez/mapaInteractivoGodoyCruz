@@ -847,7 +847,6 @@ label {
   padding: 0.45rem 0.5rem;
 }
 .camera-view-editor-current textarea {
-  min-height: 3.7rem;
   resize: none;
 }
 .camera-view-editor-finder textarea::placeholder {
