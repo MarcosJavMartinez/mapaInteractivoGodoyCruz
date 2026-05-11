@@ -1,4 +1,4 @@
-import { getSavedCameraViews, saveCameraView } from "./cameraViewStorage.js";
+import { saveCameraView } from "./cameraViewStorage.js";
 import { savePlaceCameraView } from "./apiClient.js";
 
 const UPDATE_INTERVAL_MS = 120;
@@ -38,10 +38,6 @@ export function setupCameraViewEditor(camera) {
   const goToViewButton = document.createElement("button");
   const actions = document.createElement("div");
   const saveViewButton = document.createElement("button");
-  const copySavedViewsButton = document.createElement("button");
-  const copyPositionButton = createCopyButton("Copiar position");
-  const copyTargetButton = createCopyButton("Copiar target");
-  const copySnippetButton = createCopyButton("Copiar bloque");
 
   finder.className = "camera-view-editor-finder";
   finderInput.rows = 3;
@@ -54,12 +50,9 @@ export function setupCameraViewEditor(camera) {
   saveViewButton.type = "button";
   saveViewButton.textContent = "Guardar vista";
   saveViewButton.addEventListener("click", () => saveCurrentView(camera, activeMarker, saveViewButton));
-  copySavedViewsButton.type = "button";
-  copySavedViewsButton.textContent = "Copiar vistas";
-  copySavedViewsButton.addEventListener("click", () => copySavedViews(copySavedViewsButton));
 
   actions.className = "camera-view-editor-actions";
-  actions.append(saveViewButton, copySavedViewsButton, copyPositionButton, copyTargetButton, copySnippetButton);
+  actions.append(saveViewButton);
 
   panel.append(header, marker, position, target, snippet, actions, finder);
   document.body.appendChild(panel);
@@ -84,10 +77,6 @@ export function setupCameraViewEditor(camera) {
     position.textContent = `position: [${cameraPosition}]`;
     target.textContent = `target: [${controlsTarget}]`;
     snippet.textContent = `{ position: [${cameraPosition}], target: [${controlsTarget}] }`;
-
-    copyPositionButton.dataset.copyValue = `position: [${cameraPosition}]`;
-    copyTargetButton.dataset.copyValue = `target: [${controlsTarget}]`;
-    copySnippetButton.dataset.copyValue = snippet.textContent;
   }
 
   requestAnimationFrame(update);
@@ -156,24 +145,6 @@ async function saveCurrentView(camera, marker, button) {
   showTemporaryButtonText(button, saveCameraView(marker.userData.title, view) ? "Guardada" : "Error");
 }
 
-async function copySavedViews(button) {
-  const savedViews = getSavedCameraViews();
-  const text = JSON.stringify(savedViews, null, 2);
-
-  if (text === "{}") {
-    showTemporaryButtonText(button, "Sin vistas");
-    return;
-  }
-
-  try {
-    await navigator.clipboard.writeText(text);
-    showTemporaryButtonText(button, "Copiadas");
-  } catch (_error) {
-    selectFallbackText(text);
-    showTemporaryButtonText(button, "Copiadas");
-  }
-}
-
 function getCurrentCameraView(camera) {
   const position = vectorToNumberArray(camera.position);
   const target = vectorToNumberArray(camera.userData.controls?.target);
@@ -222,46 +193,12 @@ function parseNumberList(value) {
   return numbers.length === 3 ? numbers : null;
 }
 
-function createCopyButton(label) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = label;
-  button.addEventListener("click", () => copyText(button));
-  return button;
-}
-
-async function copyText(button) {
-  const text = button.dataset.copyValue || "";
-  if (!text) return;
-
-  try {
-    await navigator.clipboard.writeText(text);
-    showCopiedState(button);
-  } catch (_error) {
-    selectFallbackText(text);
-  }
-}
-
-function showCopiedState(button) {
-  showTemporaryButtonText(button, "Copiado");
-}
-
 function showTemporaryButtonText(button, text) {
   const originalText = button.textContent;
   button.textContent = text;
   setTimeout(() => {
     button.textContent = originalText;
   }, 900);
-}
-
-function selectFallbackText(text) {
-  const helper = document.createElement("textarea");
-  helper.value = text;
-  helper.className = "camera-view-editor-copy-helper";
-  document.body.appendChild(helper);
-  helper.select();
-  document.execCommand("copy");
-  helper.remove();
 }
 
 function vectorToArray(vector) {

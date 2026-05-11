@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "db:init": "node server/initDatabase.js",
+    "db:seed:legacy-markers": "node server/seeds/legacyMarkersFromMarkerModule.js",
     "db:seed:san-vicente": "node server/seeds/sanVicenteFerrer.js",
     "start": "node local-server.js"
   },
