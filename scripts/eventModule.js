@@ -66,6 +66,14 @@ function setActiveMarker(marker) {
 
   activeMarker = marker;
   activeMarker.material?.color?.setHex(ACTIVE_MARKER_COLOR);
+  document.dispatchEvent(new CustomEvent("marker:selected", {
+    detail: {
+      title: marker.userData.title,
+      marker,
+      cameraView: marker.userData.cameraView,
+      position: marker.position.toArray(),
+    },
+  }));
 }
 
 function onPointerMove(event, buttons, camera, quality) {

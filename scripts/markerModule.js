@@ -7,8 +7,10 @@ import {
   TextureLoader,
   Vector3,
 } from "../vendor/three/build/three.module.js";
+import { getSavedCameraView } from "./cameraViewStorage.js";
 
 let buttons = [];
+
 export function createMarkers(scene, buttons) {
   // Crear marcadores
 
@@ -57,8 +59,11 @@ export function createMarkers(scene, buttons) {
 
     ["images/M-0/0.2.monumentoplazadepartamental/0.1.plazadepartamental.4.DPC_DPUyA_MGC.jpg", "images/M-0/0.2.monumentoplazadepartamental/0.1.plazadepartamental.5.Archivo B+M Manuel Belgrano.jpg"],
     [], // Exterior    
-   
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-40.48, 2.38, 36.98],
+      target: [-50.55, 1.00, 56.50]
+    });
 
 
 
@@ -108,8 +113,11 @@ export function createMarkers(scene, buttons) {
     `,
     ["images/M-0/0.1.plazadepartamental/01.plazadepartamental.6.BlogMendozaAntigua.jpg", "images/M-0/0.1.plazadepartamental/0.1.plazadepartamental.5.BlogMendozaAntigua.jpg"], 
     ["images/M-0/0.1.plazadepartamental/0.1.plazadepartamental.2.DPC_DPUyA_MGC.jpg", "images/M-0/0.1.plazadepartamental/0.1.plazadepartamental.3.DPC_DPUyA_MGC.jpg"], 
-   
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-19.11, 8.11, 33.75],
+      target: [-41.41, -1.47, 50.22]
+    });
 
 
 
@@ -143,8 +151,11 @@ export function createMarkers(scene, buttons) {
 `,
     ["images/M-1/1.21-22.ferreteríapanocchia/1.21-22.ferreteriapanocchia.2.Balmaceda, S (2007).jpg.png", "images/M-1/1.21-22.ferreteríapanocchia/1,21-22.ferreteríapanocchia.3. La Quincena Social (1924)..jpg"], 
     ["images/M-1/1.21-22.ferreteríapanocchia/1.21-22.ferreteríapanocchia.4. MUVI GC_DCeIC_MGC.jpg"],              
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-184.20, 5.34, 25.82],
+      target: [-183.10, -0.70, 4.27]
+    });
 
 
 
@@ -188,8 +199,11 @@ export function createMarkers(scene, buttons) {
     `,
     ["images/M-2/2.1.bodegatomba/2.1.bodegatomba.2. Caras y Caretas, 1910.jpg", "images/M-2/2.1.bodegatomba/2.1.bodegatomba.3.Centro vitivinícola Nacional, 1910.jpg"], // Exterior
     ["images/M-2/2.1.bodegatomba/2.1.bodegatomba.4.Girini, Revista Universum, 1900.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-126.2, 14, 53.1],
+      target: [-126.2, 8, 11.1]
+    });
 
 
   createMarker(
@@ -222,11 +236,17 @@ export function createMarkers(scene, buttons) {
 
     ["images/M-2/2.12.Farmacia San Vicente/2.12.farmaciasanvicente.1.Archivo B+M Manuel Belgrano.jpg", "images/M-2/2.12.Farmacia San Vicente/2.12.farmaciasanvicente.2. MUVI GC_DCeIC_MGC.jpeg"], // Exterior
     [],  // Interior
-    
-  );
-
-
-
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-68, 14, 69],
+      target: [-68, 6, 27]
+    });
+/*
+ {
+      position: [-68, 14, 69],
+      target: [-68, 6, 27]
+    });
+*/
 
 
 
@@ -269,8 +289,11 @@ export function createMarkers(scene, buttons) {
 
     ["images/M-3/3.4.clubsiriolibanes/3.4.clubsiriolibanes.1.DPC_DPUyA_MGC.jpg", "images/M-3/3.4.clubsiriolibanes/3.4.clubsiriolibanes.2.DPC_DPUyA_MGC.jpg"], // Exterior
     ["images/M-3/3.4.clubsiriolibanes/3.4.clubsiriolibanes.3.DPC_DPUyA_MGC.jpg", "images/M-3/3.4.clubsiriolibanes/3.4.clubsiriolibanes.4.DPC_DPUyA_MGC.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-17.6, 14, 24.3],
+      target: [-17.6, 7, -17.7]
+    });
 
 
 
@@ -302,8 +325,11 @@ export function createMarkers(scene, buttons) {
 
     ["images/M-4/4.12.la rosarina/4.12.larosarina.1. Archivo Instituto San Vicente Ferrer.jpg", "images/M-4/4.12.la rosarina/4.12.larosarina.2.Archivo Instituto San Vicente Ferrer.jpg"], // Exterior
     ["images/M-4/4.12.la rosarina/4.12.larosarina.3.Blog MendozaAntigua.jpg"],  // Interior
-   
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-28.6, 14, 77],
+      target: [-28.6, 7, 35]
+    });
 
   createMarker(
     scene, 
@@ -341,8 +367,11 @@ export function createMarkers(scene, buttons) {
 
     ["images/M-4/4.14.casaolaya/4.14.casaolaya.2.Archivo B+M Manuel Belgrano.jpeg", "images/M-4/4.14.casaolaya/4.14.casaolaya.3. La Vitivinicultura argentina en 1910.jpeg"], // Exterior
     ["images/M-4/4.14.casaolaya/4.14.casaolaya.4.La Vitivinicultura argentina en 1910.jpeg", "images/M-4/4.14.casaolaya/4.14.casaolaya.5. La Vitivinicultura argentina en 1910.jpeg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-36, 14, 70.3],
+      target: [-36, 7, 28.3]
+    });
 
 
 
@@ -383,8 +412,11 @@ export function createMarkers(scene, buttons) {
 
     ["images/M-6/6.12.farmaciagodoycruz/6.12.farmaciagodoycruz.2.Balmaceda, S. (2007).jpg", "images/M-6/6.12.farmaciagodoycruz/6.12.farmaciagodoycruz.4.DPC_DPUyA_MGC.jpg"], // Exterior
     ["images/M-6/6.12.farmaciagodoycruz/6.12.farmaciagodoycruz.3.DPC_DPUyA_MGC.jpg", "images/M-6/6.12.farmaciagodoycruz/6.12.farmaciagodoycruz.5.DPC_DPUyA_MGC.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-21, 14, 79.1],
+      target: [-21, 7, 37.1]
+    });
 
 
 
@@ -424,8 +456,11 @@ export function createMarkers(scene, buttons) {
 
     ["images/M-7/7.1.ferrocarril/7.1.ferrocarril.1.MUVI GC_DCeIC_MGC.jpg", "images/M-7/7.1.ferrocarril/7.1.ferrocarril.2.MUVI GC_DCeIC_MGC.jpg", "images/M-7/7.1.ferrocarril/7.1.ferrocaril.3.MUVI GC_DCeIC_MGC.jpg"], // Exterior
     ["images/M-7/7.1.ferrocarril/7.1.ferrocarril.3.jpeg", "images/M-7/7.1.ferrocarril/7.1.ferrocarril.4.jpeg ",  "images/M-7/7.1.ferrocarril/7.1.ferrocarril.5.MUVI GC_DCeIC_MGC.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [23, 14, 54],
+      target: [23, 8, 12]
+    });
 
    //MANZANA 8--------------------------------------------------------
    createMarker(
@@ -463,8 +498,11 @@ export function createMarkers(scene, buttons) {
 
     ["images/M-8/8.barriopouget/8.1.barriopouget.9.MUVI GC_DCeIC_MGC.jpg", "images/M-8/8.barriopouget/8.1.barriopouget.25.MUVI GC_DCeIC_MGC.jpg", "images/M-8/8.barriopouget/8.1.barriopouget.26.MUVI GC_DCeIC_MGC.jpg"], // Exterior
     ["images/M-8/8.barriopouget/8.1.barriopouget.50.MUVI GC_DCeIC_MGC.jpg", "images/M-8/8.barriopouget/8.1.barriopouget.53.MUVI GC_DCeIC_MGC.jpg",  "images/M-8/8.barriopouget/8.1.barriopouget.57.MUVI GC_DCeIC_MGC.jpg" ,  "images/M-8/8.barriopouget/8.1.barriopouget.68.MUVI GC_DCeIC_MGC.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [88, 14, 72.8],
+      target: [88, 8, 30.8]
+    });
 
   //MANZANA 9--------------------------------------------------------     
   createMarker(
@@ -502,8 +540,11 @@ export function createMarkers(scene, buttons) {
 
 
     ["images/M-9/9.1.arcanco/empleadas arcanco_Casa Flichman (1936). Guía Anual de Turismo Cóndor (1936-1937).jpg", "images/M-9/9.1.arcanco/9.1.arcanco.3. Rodriguez, F (2017).jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [114, 14, 33],
+      target: [114, 9, -9]
+    });
 
 
 
@@ -538,8 +579,11 @@ export function createMarkers(scene, buttons) {
 
 
     [],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [100, 14, 30],
+      target: [100, 8, -12]
+    });
 
 //MANZANA 16--------------------------------------------------------      
 
@@ -571,8 +615,11 @@ createMarker(
 
   ["images/M-16/16.4.cineplaza/16.4.cineplaza.1. Archivo B+M Manuel Belgrano.jpg", "images/M-16/16.4.cineplaza//16.4.cineplaza.2.Archivo B+M Manuel Belgrano.jpg"], // Exterior
   [],  // Interior
-  
-);
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-72, 14, 87.6],
+      target: [-72, 9, 45.6]
+    });
 
 createMarker(
   scene, 
@@ -605,8 +652,11 @@ createMarker(
 
 
   [],  // Interior
-  
-);
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-75.2, 14, 99.6],
+      target: [-75.2, 7, 57.6]
+    });
 
 
 
@@ -644,8 +694,11 @@ createMarker(
 
 
   [],  // Interior
-  
-);
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-78.3, 14, 110.6],
+      target: [-78.3, 7, 68.6]
+    });
 
 //MANZANA 17--------------------------------------------------------      
 
@@ -683,8 +736,11 @@ createMarker(
 
   ["images/M-17/17.1.edificioconsejodeliberante/17.1.edificioconsejodeliberante.2.Archivo  B+M Manuel Belgrano.jpg", "images/M-17/17.1.edificioconsejodeliberante/17.1.edificioconsejodeliberante.3.Archivo  B+M Manuel Belgrano.jpg"], // Exterior
   ["images/M-17/17.1.edificioconsejodeliberante/17.1.edificioconsejodeliberante.1.Archivo  B+M Manuel Belgrano.jpg", ],  // Interior
-  
-);
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-16.31, 14, 93.8],
+      target: [-16.31, 8, 51.8]
+    });
 
 createMarker(
   scene, 
@@ -733,8 +789,11 @@ createMarker(
 
 
   ["images/M-17/17.6.escuelarawson/17.6.escuelarawson.3.Archivo Rawson.jpg"],  // Interior
-  
-);
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-5.58, 14, 124.5],
+      target: [-5.58, 8, 82.5]
+    });
 
 
 
@@ -772,8 +831,11 @@ createMarker(
 
 
   [],  // Interior
-  
-);
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-31.5, 14, 118.57],
+      target: [-31.5, 7, 76.57]
+    });
 
 
 
@@ -821,8 +883,11 @@ createMarker(
 
     ["images/M-18/18.1.Compañiademaria/18.1.colegiocompañiademaria.1.Archivo fotográfico Colegio Compañía de María.jpg", "images/M-18/18.1.Compañiademaria/18.1.colegiocompañiademaria.2.Archivo fotográfico Colegio Compañía de María.jpg"], // Exterior
     ["images/M-18/18.1.Compañiademaria/18.1.colegiocompañiademaria.3.Girini (2014).jpg", "images/M-18/18.1.Compañiademaria/18.1.compañiademaria.4.Archivo fotográfico Colegio Compañía de María.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [29.95, 14, 101.1],
+      target: [29.95, 9, 59.1]
+    });
 
 
     //MANZANA 19--------------------------------------------------------
@@ -852,8 +917,11 @@ createMarker(
   
       ["images/M-19/19.7.clubolimpia.1.Alicia Viotti.jpg"], // Exterior
       [],  // Interior
-      
-    );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [66, 14, 124.5],
+      target: [66, 6, 82.5]
+    });
 
   //MANZANA 23--------------------------------------------------------
   createMarker(
@@ -883,8 +951,11 @@ createMarker(
 
     ["images/M-23/23.20.bodegacremaschi/23.20.bodegacremaschi.2.Album Los Argentinos (1924).jpg", "images/M-23/23.20.bodegacremaschi/23.20.bodegacremaschi.1.Album Los Argentinos (1924).jpg"], // Exterior
     ["images/M-23/23.20.bodegacremaschi/23.20.bodegacremaschi.3.DPC_DPUyA_MGC.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-157, 14, 137],
+      target: [-157, 6, 95]
+    });
 
 
 
@@ -933,8 +1004,11 @@ createMarker(
  
     [ "images/M-25/25.1.comisariaseptima/25.1.comisaria7ma.1. Web Municipalidad GC.jpg",  "images/M-25/25.1.comisariaseptima/25.1.comisaria7ma.4.Balmaceda, S (2007).jpg",  "images/M-25/25.1.comisariaseptima/25.1.comisaria7ma.2.Archivo Casa de la Memoria.jpg"], // Exterior
     [ "images/M-25/25.1.comisariaseptima/25.1.comisaria7ma.3.Archivo B+M Manuel Belgrano.jpg",  "images/M-25/25.1.comisariaseptima/25.1.comisariaseptima.5.MUVI GC_DCeIC_MGC.jpg",  "images/M-25/25.1.comisariaseptima/25.1.comisariaseptima.6.MUVI GC_DCeIC_MGC.jpg"],  // Interior
-    
-  ); 
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-71.2, 14, 121.4],
+      target: [-71.2, 14, 79.4]
+    });
 
 
 
@@ -988,8 +1062,11 @@ A
 
     ["images/M-25/25.2.parroquiasanvicenteferrer/25.2.parroquiasanvicenteferrer.1.MUVI GC_DCeIC_MGC.jpg", "images/M-25/25.2.parroquiasanvicenteferrer/25.2.parroquiasanvicenteferrer.2.Archivo B+M Manuel Belgrano.jpg"], // Exterior
     ["images/M-25/25.2.parroquiasanvicenteferrer/25.2.parroquiasanvicenteferrer.3.Archivo Instituto San Vicente Ferrer.jpg", "images/M-25/25.2.parroquiasanvicenteferrer/25.2.parroquiasanvicenteferrer.4.Archivo Instituto San Vicente Ferrer.jpg", "images/M-25/25.2.parroquiasanvicenteferrer/25.2.parroquiasanvicenteferrer.5.Archivo Instituto San Vicente Ferrer.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-60.7, 14, 126.93],
+      target: [-60.7, 18, 84.93]
+    });
 
   createMarker(
     scene, // Cambiado a 'scene' como objeto de referencia
@@ -1021,8 +1098,11 @@ A
 
     ["images/M-25/25.3.laperla/25.3.la perla.1.Archivo Instituto San Vicente Ferrer.jpg", "images/M-25/25.3.laperla/25.3.laperla.2.Archivo Instituto San Vicente Ferrer.jpg"], // Exterior
     ["images/M-25/25.3.laperla/25.3.laperla.3.Archivo Instituto San Vicente Ferrer.jpg"],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-45, 14, 124.5],
+      target: [-45, 7, 82.5]
+    });
 
 
   createMarker(
@@ -1056,8 +1136,11 @@ A
 
     ["images/M-25/25.11.casabenito/25.11.casabenito.1.jpg", "images/M-25/25.11.casabenito/25.11.casabenito.2.jpg"], // Exterior
     [],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-51, 14, 156],
+      target: [-51, 7, 114]
+    });
 
   //MANZANA 26--------------------------------------------------------
   createMarker(
@@ -1093,8 +1176,11 @@ A
 
     ["images/M-26/26.1.exbancomendoza/26.1.bancomendoza.1.Blog MendozaAntigua.jpg",], // Exterior
     [],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-33, 14, 127],
+      target: [-33, 9, 85]
+    });
 
   createMarker(
     scene, // Cambiado a 'scene' como objeto de referencia
@@ -1125,8 +1211,11 @@ A
 
     ["images/M-26/26.32.ferreteriasuarez/26.32.ferreteríasuarez.2. Archivo fotográfico B+M Manuel Belgrano.jpg"], // Exterior
     [],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-34, 14, 133],
+      target: [-34, 7, 91]
+    });
 
 //MANZANA 32--------------------------------------------------------
   createMarker(
@@ -1164,7 +1253,11 @@ A
 
     ["images/M-32-33/33.1.clubsportivogodoycruz.1.Página oficial del Club Antonio Tomba Godoy Cruz.jpg", "images/M-32-33/33.1.clubsportivogodoycruz.2.Página oficial del Club Antonio Tomba Godoy Cruz.jpg"], // Exterior
     [],  // Interior
-    );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-157, 14, 212],
+      target: [-157, 6, 170]
+    });
 
     //MANZANA 35--------------------------------------------------------
   createMarker(
@@ -1192,8 +1285,11 @@ A
 
     [], // Exterior
     [],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-98, 14, 212],
+      target: [-98, 6, 170]
+    });
 
     //MANZANA 53--------------------------------------------------------
  
@@ -1235,8 +1331,11 @@ A
   
       ["images/M-53/53.11.cristoforocolombo/53.11.cristoforocolombo.1.Balmaceda, S. (2007).jpg", "images/M-53/53.11.cristoforocolombo/53.11.cristoforocolombo.2.Archivo B+M Manuel Belgrano.jpg"], // Exterior
       ["images/M-53/53.11.cristoforocolombo/53.11.cristoforocolombo.3.Archivo B+M Manuel Belgrano.jpg", "images/M-53/53.11.cristoforocolombo/53.11.CristóforoColombo.4.DPC_DPUyA_MGC.jpg","images/M-53/53.11.cristoforocolombo/53.11.cristóforoColombo.5.DPC_DPUyA_MGC.jpg" ],  // Interior
-      
-    );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [-11.3, 14, -9],
+      target: [-11.3, 9, -51]
+    });
   
 
         //MANZANA 54--------------------------------------------------------
@@ -1285,16 +1384,43 @@ A
 
     [ "images/M-54/54.1.iglesiasanjuanmaron/54.1.iglesiasanjuanmaron.2.Archivo B+M Manuel Belgrano.jpg",  "images/M-54/54.1.iglesiasanjuanmaron/54.1.iglesiasanjuanmaron.1. Balmaceda, S. (2007).jpg"], // Exterior
     [],  // Interior
-    
-  );
+    // Vista de camara editable: ajusta position para poner la camara frente a la fachada.
+    {
+      position: [10, 14, -32],
+      target: [10, 9, -74]
+    });
 
 }
-
-// cameraView opcional:
-// { direction: [x, z], distance: 42, height: 18, targetHeight: 0 }
-// o posicion exacta:
-// { position: [x, y, z], target: [x, y, z] }
+// Vista de camara opcional para cada marcador:
+//
+// 1) Forma recomendada para corregir una fachada exacta:
+//    { position: [camaraX, camaraY, camaraZ], target: [edificioX, edificioY, edificioZ] }
+//
+//    position = desde donde mira la camara.
+//    target = punto exacto del edificio/fachada que queda en el centro de la vista.
+//
+// 2) Forma rapida usando direccion:
+//    { direction: [x, z], distance: 42, height: 18, targetHeight: 0 }
+//
+//    direction = hacia que lado se ubica la camara desde el marcador.
+//    distance = distancia de la camara al edificio.
+//    height = altura de la camara.
+//    targetHeight = altura del punto mirado sobre el marcador.
+//
+// Ejemplo de uso como ultimo parametro de createMarker:
+// createMarker(
+//   scene,
+//   buttons,
+//   new Vector3(-183, 0, 3),
+//   "Ferreteria Panocchia",
+//   "images/imagen.jpg",
+//   "<p>Texto</p>",
+//   [],
+//   [],
+//   { position: [-183, 14, 45], target: [-183, 6, 3] }
+// );
 export function createMarker(scene, buttons, position, title, imageUrl, text, exteriorImages, interiorImages, cameraView) {
+  const savedCameraView = getSavedCameraView(title);
   const texture = new TextureLoader().load("images/marcador-de-alfiler-01.png");
   texture.generateMipmaps = false;
   texture.minFilter = LinearFilter;
@@ -1327,7 +1453,7 @@ export function createMarker(scene, buttons, position, title, imageUrl, text, ex
   sprite.userData.text = text;
   sprite.userData.exteriorImages = exteriorImages;
   sprite.userData.interiorImages = interiorImages;
-  sprite.userData.cameraView = cameraView;
+  sprite.userData.cameraView = savedCameraView || cameraView;
   scene.add(sprite);
   buttons.push(sprite);
 }

@@ -1,0 +1,221 @@
+import { getSavedCameraViews, saveCameraView } from "./cameraViewStorage.js";
+
+const UPDATE_INTERVAL_MS = 120;
+const EMPTY_VECTOR_TEXT = "0, 0, 0";
+
+export function setupCameraViewEditor(camera) {
+  if (!camera) return;
+
+  let activeMarker = null;
+  const panel = document.createElement("aside");
+  panel.className = "camera-view-editor-panel";
+  panel.setAttribute("aria-label", "Editor de vistas de camara");
+
+  const title = document.createElement("strong");
+  title.textContent = "Editor de vistas";
+
+  const marker = document.createElement("p");
+  marker.className = "camera-view-editor-marker";
+  marker.textContent = "Marcador: ninguno";
+
+  const position = document.createElement("p");
+  const target = document.createElement("p");
+  const snippet = document.createElement("code");
+  const finder = document.createElement("div");
+  const finderInput = document.createElement("textarea");
+  const goToViewButton = document.createElement("button");
+  const actions = document.createElement("div");
+  const saveViewButton = document.createElement("button");
+  const copySavedViewsButton = document.createElement("button");
+  const copyPositionButton = createCopyButton("Copiar position");
+  const copyTargetButton = createCopyButton("Copiar target");
+  const copySnippetButton = createCopyButton("Copiar bloque");
+
+  finder.className = "camera-view-editor-finder";
+  finderInput.rows = 3;
+  finderInput.placeholder = "{ position: [-183, 14, 45], target: [-183, 6, 3] }";
+  goToViewButton.type = "button";
+  goToViewButton.textContent = "Ir a vista";
+  goToViewButton.addEventListener("click", () => goToPastedView(camera, finderInput, goToViewButton));
+  finder.append(finderInput, goToViewButton);
+
+  saveViewButton.type = "button";
+  saveViewButton.textContent = "Guardar vista";
+  saveViewButton.addEventListener("click", () => saveCurrentView(camera, activeMarker, saveViewButton));
+  copySavedViewsButton.type = "button";
+  copySavedViewsButton.textContent = "Copiar vistas";
+  copySavedViewsButton.addEventListener("click", () => copySavedViews(copySavedViewsButton));
+
+  actions.className = "camera-view-editor-actions";
+  actions.append(saveViewButton, copySavedViewsButton, copyPositionButton, copyTargetButton, copySnippetButton);
+
+  panel.append(title, marker, position, target, snippet, actions, finder);
+  document.body.appendChild(panel);
+
+  document.addEventListener("marker:selected", (event) => {
+    activeMarker = event.detail?.marker || null;
+    marker.textContent = `Marcador: ${event.detail?.title || "sin titulo"}`;
+  });
+
+  let lastUpdate = 0;
+
+  function update(now) {
+    requestAnimationFrame(update);
+
+    if (now - lastUpdate < UPDATE_INTERVAL_MS) return;
+    lastUpdate = now;
+
+    const cameraPosition = vectorToArray(camera.position);
+    const controlsTarget = vectorToArray(camera.userData.controls?.target);
+
+    position.textContent = `position: [${cameraPosition}]`;
+    target.textContent = `target: [${controlsTarget}]`;
+    snippet.textContent = `{ position: [${cameraPosition}], target: [${controlsTarget}] }`;
+
+    copyPositionButton.dataset.copyValue = `position: [${cameraPosition}]`;
+    copyTargetButton.dataset.copyValue = `target: [${controlsTarget}]`;
+    copySnippetButton.dataset.copyValue = snippet.textContent;
+  }
+
+  requestAnimationFrame(update);
+}
+
+function saveCurrentView(camera, marker, button) {
+  if (!marker) {
+    showTemporaryButtonText(button, "Elegir marcador");
+    return;
+  }
+
+  const view = getCurrentCameraView(camera);
+
+  if (!view) {
+    showTemporaryButtonText(button, "Sin target");
+    return;
+  }
+
+  marker.userData.cameraView = view;
+  showTemporaryButtonText(button, saveCameraView(marker.userData.title, view) ? "Guardada" : "Error");
+}
+
+async function copySavedViews(button) {
+  const savedViews = getSavedCameraViews();
+  const text = JSON.stringify(savedViews, null, 2);
+
+  if (text === "{}") {
+    showTemporaryButtonText(button, "Sin vistas");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    showTemporaryButtonText(button, "Copiadas");
+  } catch (_error) {
+    selectFallbackText(text);
+    showTemporaryButtonText(button, "Copiadas");
+  }
+}
+
+function getCurrentCameraView(camera) {
+  const position = vectorToNumberArray(camera.position);
+  const target = vectorToNumberArray(camera.userData.controls?.target);
+
+  return position && target ? { position, target } : null;
+}
+
+function goToPastedView(camera, input, button) {
+  const view = parseCameraView(input.value);
+  if (!view) {
+    showTemporaryButtonText(button, "Revisar datos");
+    return;
+  }
+
+  const controls = camera.userData.controls;
+  camera.position.set(...view.position);
+
+  if (controls) {
+    controls.target.set(...view.target);
+    controls.update();
+  } else {
+    camera.lookAt(...view.target);
+  }
+
+  showTemporaryButtonText(button, "Listo");
+}
+
+function parseCameraView(text) {
+  const positionMatch = text.match(/position\s*:\s*\[([^\]]+)\]/i);
+  const targetMatch = text.match(/target\s*:\s*\[([^\]]+)\]/i);
+  if (!positionMatch || !targetMatch) return null;
+
+  const position = parseNumberList(positionMatch[1]);
+  const target = parseNumberList(targetMatch[1]);
+  if (!position || !target) return null;
+
+  return { position, target };
+}
+
+function parseNumberList(value) {
+  const numbers = value
+    .split(",")
+    .map((item) => Number(item.trim()))
+    .filter((number) => Number.isFinite(number));
+
+  return numbers.length === 3 ? numbers : null;
+}
+
+function createCopyButton(label) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", () => copyText(button));
+  return button;
+}
+
+async function copyText(button) {
+  const text = button.dataset.copyValue || "";
+  if (!text) return;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    showCopiedState(button);
+  } catch (_error) {
+    selectFallbackText(text);
+  }
+}
+
+function showCopiedState(button) {
+  showTemporaryButtonText(button, "Copiado");
+}
+
+function showTemporaryButtonText(button, text) {
+  const originalText = button.textContent;
+  button.textContent = text;
+  setTimeout(() => {
+    button.textContent = originalText;
+  }, 900);
+}
+
+function selectFallbackText(text) {
+  const helper = document.createElement("textarea");
+  helper.value = text;
+  helper.className = "camera-view-editor-copy-helper";
+  document.body.appendChild(helper);
+  helper.select();
+  document.execCommand("copy");
+  helper.remove();
+}
+
+function vectorToArray(vector) {
+  if (!vector) return EMPTY_VECTOR_TEXT;
+
+  return vectorToNumberArray(vector)
+    .map((value) => Number(value).toFixed(2))
+    .join(", ");
+}
+
+function vectorToNumberArray(vector) {
+  if (!vector) return null;
+
+  return [vector.x, vector.y, vector.z]
+    .map((value) => Number(Number(value).toFixed(2)));
+}

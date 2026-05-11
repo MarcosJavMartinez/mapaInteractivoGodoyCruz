@@ -5,6 +5,7 @@ import { loadModels } from "./modelModule.js";
 import { createMarkers } from "./markerModule.js";
 import { setupEventListeners } from "./eventModule.js";
 import { setupQualitySelector } from "./qualityModule.js";
+import { setupCameraViewEditor } from "./cameraViewEditorModule.js";
 
 const buttons = [];
 let scene;
@@ -22,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const aboutOverlay = document.querySelector(".about-overlay");
   const aboutOpenButtons = document.querySelectorAll(".about-open-button");
   const aboutCloseButton = document.querySelector(".about-close-button");
+  const loaderReturnButtons = document.querySelectorAll(".loader-return-button");
   const menuToggleButton = document.querySelector(".menu-toggle-button");
   const siteNav = document.querySelector(".site-nav");
   const qualitySelector = document.querySelector(".quality-selector");
@@ -50,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   bindOverlayControls(helpOverlay, helpOpenButtons, [helpStartButton, helpCloseButton]);
   bindOverlayControls(aboutOverlay, aboutOpenButtons, [aboutCloseButton]);
+  bindLoaderReturn(loader, loaderReturnButtons, [helpOverlay, aboutOverlay]);
   bindMobileMenu(menuToggleButton, siteNav);
 
   renderer = setupRenderer(quality);
@@ -68,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   camera = setupCamera(renderer, quality);
   setupResizeHandler(camera, renderer, quality);
+  setupCameraViewEditor(camera);
 
   render(scene, camera, renderer, quality, buttons);
 
@@ -112,6 +116,18 @@ function setOverlayActive(overlay, isActive) {
 
   overlay.classList.toggle("active", isActive);
   overlay.setAttribute("aria-hidden", String(!isActive));
+}
+
+function bindLoaderReturn(loader, buttons, overlays) {
+  if (!loader) return;
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      overlays.forEach((overlay) => setOverlayActive(overlay, false));
+      loader.classList.add("active");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
 }
 
 function bindMobileMenu(toggleButton, nav) {
