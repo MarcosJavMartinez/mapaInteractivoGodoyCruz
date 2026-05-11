@@ -53,7 +53,7 @@ export function setupCameraViewEditor(camera) {
   finderTitle.className = "camera-view-editor-section-title";
   finderTitle.textContent = "Buscar vista";
   finderInput.rows = 3;
-  finderInput.placeholder = "{ position: [-183, 14, 45], target: [-183, 6, 3] }";
+  finderInput.placeholder = "{\nposition: [88, 14, 72.8],\ntarget: [88, 8, 30.8]\n}";
   goToViewButton.type = "button";
   goToViewButton.textContent = "Ir a vista";
   goToViewButton.addEventListener("click", () => goToPastedView(camera, finderInput, goToViewButton));
