@@ -2,17 +2,18 @@ import { Color, Fog, Scene } from "../vendor/three/build/three.module.js";
 import { setupLights } from "./lightModule.js";
 import { setupRenderer, setupCamera, setupResizeHandler, render } from "./renderModule.js";
 import { loadModels } from "./modelModule.js";
-import { createMarkers } from "./markerModule.js";
+import { createMarkers, createMarkersFromPlaces } from "./markerModule.js";
 import { setupEventListeners } from "./eventModule.js";
 import { setupQualitySelector } from "./qualityModule.js";
 import { setupCameraViewEditor } from "./cameraViewEditorModule.js";
+import { fetchPlaces } from "./apiClient.js";
 
 const buttons = [];
 let scene;
 let renderer;
 let camera;
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const loader = document.querySelector(".loader");
   const loaderStartButton = document.querySelector(".loader-start-button");
   const loaderStatus = document.querySelector(".loader-status");
@@ -79,7 +80,10 @@ document.addEventListener("DOMContentLoaded", () => {
     markExperienceReady("Ya puedes comenzar; algunos modelos seguiran cargando.");
   }, 12000);
 
-  createMarkers(scene, buttons);
+  const databasePlaces = await loadDatabasePlaces(loaderStatus);
+  const databasePlaceTitles = new Set(databasePlaces.map((place) => place.title));
+  createMarkers(scene, buttons, { skipTitles: databasePlaceTitles });
+  createMarkersFromPlaces(scene, buttons, databasePlaces);
   setupEventListeners(buttons, camera, quality);
   markExperienceReady("Puedes comenzar; los modelos se cargaran en segundo plano.");
 
@@ -100,6 +104,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }, 250);
 });
+
+async function loadDatabasePlaces(loaderStatus) {
+  try {
+    return await fetchPlaces();
+  } catch (error) {
+    console.warn(error);
+    if (loaderStatus) {
+      loaderStatus.textContent = "Recorrido listo; la base de datos no respondio.";
+    }
+    return [];
+  }
+}
 
 function bindOverlayControls(overlay, openButtons, closeButtons) {
   openButtons.forEach((button) => {

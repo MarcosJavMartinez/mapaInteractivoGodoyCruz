@@ -10,8 +10,10 @@ import {
 import { getSavedCameraView } from "./cameraViewStorage.js";
 
 let buttons = [];
+let legacyMarkerTitlesToSkip = new Set();
 
-export function createMarkers(scene, buttons) {
+export function createMarkers(scene, buttons, options = {}) {
+  legacyMarkerTitlesToSkip = options.skipTitles || new Set();
   // Crear marcadores
 
 
@@ -1434,12 +1436,15 @@ export function createMarkersFromPlaces(scene, buttons, places) {
       {
         placeId: place.id,
         slug: place.slug,
+        source: "database",
       }
     );
   });
 }
 
 export function createMarker(scene, buttons, position, title, imageUrl, text, exteriorImages, interiorImages, cameraView, metadata = {}) {
+  if (legacyMarkerTitlesToSkip.has(title) && metadata.source !== "database") return;
+
   const savedCameraView = getSavedCameraView(title);
   const texture = new TextureLoader().load("images/marcador-de-alfiler-01.png");
   texture.generateMipmaps = false;
