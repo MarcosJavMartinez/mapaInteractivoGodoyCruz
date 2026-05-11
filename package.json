@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "db:init": "node server/initDatabase.js",
     "start": "node local-server.js"
   },
   "dependencies": {
+    "better-sqlite3": "^12.9.0",
     "three": "^0.127.0"
   }
 }

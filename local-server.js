@@ -1,6 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { handleApiRequest } = require("./server/apiRouter");
 
 const root = process.cwd();
 const port = Number(process.env.PORT || 8000);
@@ -21,6 +22,8 @@ const mimeTypes = {
 };
 
 const server = http.createServer((req, res) => {
+  if (handleApiRequest(req, res)) return;
+
   const requestPath = decodeURIComponent(req.url.split("?")[0]);
   const filePath = path.join(root, requestPath === "/" ? "index.html" : requestPath);
 

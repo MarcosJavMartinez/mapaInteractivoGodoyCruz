@@ -1419,7 +1419,27 @@ A
 //   [],
 //   { position: [-183, 14, 45], target: [-183, 6, 3] }
 // );
-export function createMarker(scene, buttons, position, title, imageUrl, text, exteriorImages, interiorImages, cameraView) {
+export function createMarkersFromPlaces(scene, buttons, places) {
+  places.forEach((place) => {
+    createMarker(
+      scene,
+      buttons,
+      new Vector3(...place.position),
+      place.title,
+      place.imageUrl,
+      place.text,
+      place.exteriorImages || [],
+      place.interiorImages || [],
+      place.cameraView,
+      {
+        placeId: place.id,
+        slug: place.slug,
+      }
+    );
+  });
+}
+
+export function createMarker(scene, buttons, position, title, imageUrl, text, exteriorImages, interiorImages, cameraView, metadata = {}) {
   const savedCameraView = getSavedCameraView(title);
   const texture = new TextureLoader().load("images/marcador-de-alfiler-01.png");
   texture.generateMipmaps = false;
@@ -1454,6 +1474,8 @@ export function createMarker(scene, buttons, position, title, imageUrl, text, ex
   sprite.userData.exteriorImages = exteriorImages;
   sprite.userData.interiorImages = interiorImages;
   sprite.userData.cameraView = savedCameraView || cameraView;
+  sprite.userData.placeId = metadata.placeId || null;
+  sprite.userData.slug = metadata.slug || null;
   scene.add(sprite);
   buttons.push(sprite);
 }

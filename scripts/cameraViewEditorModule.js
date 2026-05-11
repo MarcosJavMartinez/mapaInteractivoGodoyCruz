@@ -1,4 +1,5 @@
 import { getSavedCameraViews, saveCameraView } from "./cameraViewStorage.js";
+import { savePlaceCameraView } from "./apiClient.js";
 
 const UPDATE_INTERVAL_MS = 120;
 const EMPTY_VECTOR_TEXT = "0, 0, 0";
@@ -128,7 +129,7 @@ function hideEditor(panel) {
   panel.hidden = true;
 }
 
-function saveCurrentView(camera, marker, button) {
+async function saveCurrentView(camera, marker, button) {
   if (!marker) {
     showTemporaryButtonText(button, "Elegir marcador");
     return;
@@ -142,6 +143,16 @@ function saveCurrentView(camera, marker, button) {
   }
 
   marker.userData.cameraView = view;
+  if (marker.userData.placeId) {
+    try {
+      await savePlaceCameraView(marker.userData.placeId, view);
+      showTemporaryButtonText(button, "Guardada DB");
+      return;
+    } catch (_error) {
+      showTemporaryButtonText(button, "Local");
+    }
+  }
+
   showTemporaryButtonText(button, saveCameraView(marker.userData.title, view) ? "Guardada" : "Error");
 }
 
