@@ -761,10 +761,10 @@ label {
   width: min(92vw, 25rem);
   box-sizing: border-box;
   color: #2f2a26;
-  background: rgba(255, 252, 246, 0.88);
+  background: rgba(255, 252, 246, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 8px;
-  box-shadow: 0 1.2rem 3.2rem rgba(18, 14, 12, 0.28);
+  box-shadow: 0 1.35rem 3.6rem rgba(18, 14, 12, 0.36);
   font-size: var(--font-size-body);
   line-height: 1.35;
   padding: clamp(1.25rem, 3.4vw, 1.8rem);
@@ -845,6 +845,7 @@ label {
   background: #7a145f;
   border: 1px solid rgba(122, 20, 95, 0.18);
   border-radius: 5px;
+  box-shadow: 0 0.45rem 1rem rgba(46, 29, 39, 0.22);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-action);
   line-height: 1;
@@ -858,17 +859,18 @@ label {
 }
 .camera-view-editor-finder button {
   min-height: 1.8rem;
-  color: #7a145f;
-  background: rgba(122, 20, 95, 0.1);
+  color: #fff;
+  background: #7a145f;
   border: 1px solid rgba(122, 20, 95, 0.18);
   border-radius: 5px;
+  box-shadow: 0 0.45rem 1rem rgba(46, 29, 39, 0.22);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-action);
   line-height: 1;
   padding: 0.5rem 0.7rem;
 }
 .camera-view-editor-finder button:hover {
-  background: rgba(122, 20, 95, 0.16);
+  background: #63104d;
 }
 @media (min-width: 1120px) {
   .info-panel {
