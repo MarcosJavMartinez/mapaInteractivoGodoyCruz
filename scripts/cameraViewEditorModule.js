@@ -34,12 +34,11 @@ export function setupCameraViewEditor(camera) {
   const currentViewTitle = document.createElement("span");
   const position = document.createElement("p");
   const target = document.createElement("p");
-  const snippet = document.createElement("code");
 
   currentView.className = "camera-view-editor-current";
   currentViewTitle.className = "camera-view-editor-section-title";
   currentViewTitle.textContent = "Vista actual";
-  currentView.append(currentViewTitle, position, target, snippet);
+  currentView.append(currentViewTitle, position, target);
 
   const finder = document.createElement("div");
   const finderTitle = document.createElement("span");
@@ -65,7 +64,7 @@ export function setupCameraViewEditor(camera) {
   actions.className = "camera-view-editor-actions";
   actions.append(saveViewButton, goToViewButton);
 
-  panel.append(header, marker, currentView, finder, actions);
+  panel.append(header, marker, currentView, actions, finder);
   document.body.appendChild(panel);
   setupEditorAccessShortcut(panel);
 
@@ -87,7 +86,6 @@ export function setupCameraViewEditor(camera) {
 
     position.textContent = `position: [${cameraPosition}]`;
     target.textContent = `target: [${controlsTarget}]`;
-    snippet.textContent = `{ position: [${cameraPosition}], target: [${controlsTarget}] }`;
   }
 
   requestAnimationFrame(update);
