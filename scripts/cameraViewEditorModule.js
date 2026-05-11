@@ -16,13 +16,14 @@ export function setupCameraViewEditor(camera) {
 
   const header = document.createElement("div");
   const closeButton = document.createElement("button");
-  const title = document.createElement("strong");
+  const title = document.createElement("h2");
 
   header.className = "camera-view-editor-header";
   title.textContent = "Editor de vistas";
-  closeButton.className = "camera-view-editor-close";
+  closeButton.className = "dialog-close-button camera-view-editor-close";
   closeButton.type = "button";
-  closeButton.textContent = "Cerrar";
+  closeButton.setAttribute("aria-label", "Cerrar");
+  closeButton.textContent = "X";
   closeButton.addEventListener("click", () => hideEditor(panel));
   header.append(title, closeButton);
 
