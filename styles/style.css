@@ -771,10 +771,32 @@ label {
   pointer-events: auto;
   user-select: text;
 }
+.camera-view-editor-panel[hidden] {
+  display: none;
+}
+.camera-view-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
 .camera-view-editor-panel strong {
   color: #ffd35a;
   font-size: 0.78rem;
   line-height: 1.2;
+}
+.camera-view-editor-close {
+  min-height: 1.6rem;
+  color: #f8efe2;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 5px;
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 0.35rem 0.5rem;
+}
+.camera-view-editor-close:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 .camera-view-editor-panel p {
   margin: 0;

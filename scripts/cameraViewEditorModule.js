@@ -2,6 +2,7 @@ import { getSavedCameraViews, saveCameraView } from "./cameraViewStorage.js";
 
 const UPDATE_INTERVAL_MS = 120;
 const EMPTY_VECTOR_TEXT = "0, 0, 0";
+const EDITOR_PASSWORD = "muvi1950";
 
 export function setupCameraViewEditor(camera) {
   if (!camera) return;
@@ -10,9 +11,19 @@ export function setupCameraViewEditor(camera) {
   const panel = document.createElement("aside");
   panel.className = "camera-view-editor-panel";
   panel.setAttribute("aria-label", "Editor de vistas de camara");
+  panel.hidden = true;
 
+  const header = document.createElement("div");
+  const closeButton = document.createElement("button");
   const title = document.createElement("strong");
+
+  header.className = "camera-view-editor-header";
   title.textContent = "Editor de vistas";
+  closeButton.className = "camera-view-editor-close";
+  closeButton.type = "button";
+  closeButton.textContent = "Cerrar";
+  closeButton.addEventListener("click", () => hideEditor(panel));
+  header.append(title, closeButton);
 
   const marker = document.createElement("p");
   marker.className = "camera-view-editor-marker";
@@ -49,8 +60,9 @@ export function setupCameraViewEditor(camera) {
   actions.className = "camera-view-editor-actions";
   actions.append(saveViewButton, copySavedViewsButton, copyPositionButton, copyTargetButton, copySnippetButton);
 
-  panel.append(title, marker, position, target, snippet, actions, finder);
+  panel.append(header, marker, position, target, snippet, actions, finder);
   document.body.appendChild(panel);
+  setupEditorAccessShortcut(panel);
 
   document.addEventListener("marker:selected", (event) => {
     activeMarker = event.detail?.marker || null;
@@ -78,6 +90,42 @@ export function setupCameraViewEditor(camera) {
   }
 
   requestAnimationFrame(update);
+}
+
+function setupEditorAccessShortcut(panel) {
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !panel.hidden) {
+      hideEditor(panel);
+      return;
+    }
+
+    if (!isEditorShortcut(event)) return;
+
+    event.preventDefault();
+    if (!panel.hidden) {
+      hideEditor(panel);
+      return;
+    }
+
+    const password = window.prompt("Clave del editor de vistas");
+    if (password === EDITOR_PASSWORD) {
+      showEditor(panel);
+    }
+  });
+}
+
+function isEditorShortcut(event) {
+  return event.ctrlKey
+    && event.altKey
+    && event.key.toLowerCase() === "v";
+}
+
+function showEditor(panel) {
+  panel.hidden = false;
+}
+
+function hideEditor(panel) {
+  panel.hidden = true;
 }
 
 function saveCurrentView(camera, marker, button) {
