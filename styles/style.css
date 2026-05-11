@@ -824,20 +824,6 @@ label {
   line-height: 1;
   text-transform: uppercase;
 }
-.camera-view-editor-panel code {
-  display: block;
-  color: #2f2a26;
-  background: rgba(47, 42, 38, 0.06);
-  border: 1px solid rgba(47, 42, 38, 0.08);
-  border-radius: 6px;
-  font-family: Consolas, "Courier New", monospace;
-  font-size: 0.74rem;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-  padding: 0.45rem 0.5rem;
-  white-space: pre-wrap;
-  user-select: all;
-}
 .camera-view-editor-actions {
   display: grid;
   gap: 0.4rem;
@@ -846,6 +832,7 @@ label {
   display: grid;
   gap: 0.4rem;
 }
+.camera-view-editor-current textarea,
 .camera-view-editor-finder textarea {
   min-height: 4.5rem;
   resize: vertical;
@@ -858,6 +845,10 @@ label {
   font-size: 0.72rem;
   line-height: 1.35;
   padding: 0.45rem 0.5rem;
+}
+.camera-view-editor-current textarea {
+  min-height: 3.7rem;
+  resize: none;
 }
 .camera-view-editor-finder textarea::placeholder {
   color: rgba(47, 42, 38, 0.45);
