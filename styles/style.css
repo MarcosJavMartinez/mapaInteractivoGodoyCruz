@@ -875,11 +875,6 @@ label {
 .camera-view-editor-finder button:hover {
   background: #fff7ea;
 }
-.camera-view-editor-copy-helper {
-  position: fixed;
-  left: -9999px;
-  top: 0;
-}
 @media (min-width: 1120px) {
   .info-panel {
     width: min(30vw, 400px);
