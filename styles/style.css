@@ -826,7 +826,6 @@ label {
 }
 .camera-view-editor-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.4rem;
 }
 .camera-view-editor-finder {
@@ -852,7 +851,7 @@ label {
 .camera-view-editor-actions button {
   min-height: 1.8rem;
   color: #2f2a26;
-  background: #ffd35a;
+  background: #aee6c6;
   border: 1px solid rgba(47, 42, 38, 0.08);
   border-radius: 5px;
   font-size: 0.72rem;
@@ -861,16 +860,24 @@ label {
   padding: 0.5rem 0.7rem;
 }
 .camera-view-editor-actions button:first-child {
-  background: #ffd35a;
-}
-.camera-view-editor-actions button:first-child:hover {
-  background: #ffe08a;
-}
-.camera-view-editor-actions button:last-child {
   background: #aee6c6;
 }
-.camera-view-editor-actions button:last-child:hover {
+.camera-view-editor-actions button:first-child:hover {
   background: #c4f2d7;
+}
+.camera-view-editor-finder button {
+  min-height: 1.8rem;
+  color: #2f2a26;
+  background: #ffd35a;
+  border: 1px solid rgba(47, 42, 38, 0.08);
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-title);
+  line-height: 1;
+  padding: 0.5rem 0.7rem;
+}
+.camera-view-editor-finder button:hover {
+  background: #ffe08a;
 }
 @media (min-width: 1120px) {
   .info-panel {
@@ -1069,10 +1076,7 @@ label {
     font-size: 0.68rem;
   }
 
-  .camera-view-editor-actions {
-    grid-template-columns: 1fr;
-  }
-
+  .camera-view-editor-finder button,
   .camera-view-editor-actions button {
     width: 100%;
   }

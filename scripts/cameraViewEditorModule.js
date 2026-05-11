@@ -49,7 +49,7 @@ export function setupCameraViewEditor(camera) {
 
   finder.className = "camera-view-editor-finder";
   finderTitle.className = "camera-view-editor-section-title";
-  finderTitle.textContent = "Probar vista";
+  finderTitle.textContent = "Buscar vista";
   finderInput.rows = 3;
   finderInput.placeholder = "{ position: [-183, 14, 45], target: [-183, 6, 3] }";
   goToViewButton.type = "button";
@@ -62,7 +62,9 @@ export function setupCameraViewEditor(camera) {
   saveViewButton.addEventListener("click", () => saveCurrentView(camera, activeMarker, saveViewButton));
 
   actions.className = "camera-view-editor-actions";
-  actions.append(saveViewButton, goToViewButton);
+  actions.append(saveViewButton);
+
+  finder.append(goToViewButton);
 
   panel.append(header, marker, currentView, actions, finder);
   document.body.appendChild(panel);
