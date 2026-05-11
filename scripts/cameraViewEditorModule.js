@@ -30,22 +30,33 @@ export function setupCameraViewEditor(camera) {
   marker.className = "camera-view-editor-marker";
   marker.textContent = "Marcador: ninguno";
 
+  const currentView = document.createElement("div");
+  const currentViewTitle = document.createElement("span");
   const position = document.createElement("p");
   const target = document.createElement("p");
   const snippet = document.createElement("code");
+
+  currentView.className = "camera-view-editor-current";
+  currentViewTitle.className = "camera-view-editor-section-title";
+  currentViewTitle.textContent = "Vista actual";
+  currentView.append(currentViewTitle, position, target, snippet);
+
   const finder = document.createElement("div");
+  const finderTitle = document.createElement("span");
   const finderInput = document.createElement("textarea");
   const goToViewButton = document.createElement("button");
   const actions = document.createElement("div");
   const saveViewButton = document.createElement("button");
 
   finder.className = "camera-view-editor-finder";
+  finderTitle.className = "camera-view-editor-section-title";
+  finderTitle.textContent = "Probar vista";
   finderInput.rows = 3;
   finderInput.placeholder = "{ position: [-183, 14, 45], target: [-183, 6, 3] }";
   goToViewButton.type = "button";
   goToViewButton.textContent = "Ir a vista";
   goToViewButton.addEventListener("click", () => goToPastedView(camera, finderInput, goToViewButton));
-  finder.append(finderInput, goToViewButton);
+  finder.append(finderTitle, finderInput, goToViewButton);
 
   saveViewButton.type = "button";
   saveViewButton.textContent = "Guardar vista";
@@ -54,7 +65,7 @@ export function setupCameraViewEditor(camera) {
   actions.className = "camera-view-editor-actions";
   actions.append(saveViewButton);
 
-  panel.append(header, marker, position, target, snippet, actions, finder);
+  panel.append(header, marker, currentView, actions, finder);
   document.body.appendChild(panel);
   setupEditorAccessShortcut(panel);
 
