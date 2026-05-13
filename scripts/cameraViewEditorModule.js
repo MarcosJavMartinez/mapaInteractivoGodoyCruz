@@ -1,7 +1,11 @@
 import { savePlaceCameraView } from "./apiClient.js";
+import {
+  parseNumberList,
+  vectorToNumberArray,
+  vectorToText,
+} from "./vectorTextUtils.js";
 
 const UPDATE_INTERVAL_MS = 120;
-const EMPTY_VECTOR_TEXT = "0, 0, 0";
 const EDITOR_PASSWORD = "muvi1950";
 
 export function setupCameraViewEditor(camera) {
@@ -89,8 +93,8 @@ export function setupCameraViewEditor(camera) {
     if (now - lastUpdate < UPDATE_INTERVAL_MS) return;
     lastUpdate = now;
 
-    const cameraPosition = vectorToArray(camera.position);
-    const controlsTarget = vectorToArray(camera.userData.controls?.target);
+    const cameraPosition = vectorToText(camera.position, { fixed: true });
+    const controlsTarget = vectorToText(camera.userData.controls?.target, { fixed: true });
 
     currentViewInput.value = `position: [${cameraPosition}]\ntarget: [${controlsTarget}]`;
   }
@@ -204,15 +208,6 @@ function parseCameraView(text) {
   return { position, target };
 }
 
-function parseNumberList(value) {
-  const numbers = value
-    .split(",")
-    .map((item) => Number(item.trim()))
-    .filter((number) => Number.isFinite(number));
-
-  return numbers.length === 3 ? numbers : null;
-}
-
 function showTemporaryButtonText(button, text) {
   const originalText = button.textContent;
   button.textContent = text;
@@ -221,17 +216,3 @@ function showTemporaryButtonText(button, text) {
   }, 900);
 }
 
-function vectorToArray(vector) {
-  if (!vector) return EMPTY_VECTOR_TEXT;
-
-  return vectorToNumberArray(vector)
-    .map((value) => Number(value).toFixed(2))
-    .join(", ");
-}
-
-function vectorToNumberArray(vector) {
-  if (!vector) return null;
-
-  return [vector.x, vector.y, vector.z]
-    .map((value) => Number(Number(value).toFixed(2)));
-}

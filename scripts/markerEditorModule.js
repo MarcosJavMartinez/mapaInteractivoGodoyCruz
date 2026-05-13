@@ -15,9 +15,15 @@ import {
   SpriteMaterial,
   TextureLoader,
 } from "../vendor/three/build/three.module.js";
+import {
+  EMPTY_VECTOR_TEXT,
+  numberListToText,
+  parseNumberList,
+  vectorToNumberArray,
+  vectorToText,
+} from "./vectorTextUtils.js";
 
 const EDITOR_PASSWORD = "muvi1950";
-const EMPTY_VECTOR_TEXT = "0, 0, 0";
 const MARKER_MIN_Y = 0;
 const MARKER_MIN_Z = -74;
 const PREVIEW_MARKER_COLOR = 0x66d9ff;
@@ -94,7 +100,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
   const newMarkerButton = createButton("Nuevo marker");
   const followTargetButton = createButton("Anclar marker");
   const updateAnchorButton = () => {
-    followTargetButton.textContent = isPreviewFollowingTarget ? "Anclar marker" : "Desanclar marker";
+    followTargetButton.textContent = isPreviewFollowingTarget ? "Desanclar marker" : "Anclar marker";
     followTargetButton.classList.toggle("active", isPreviewFollowingTarget);
   };
   const startFollowingTarget = () => {
@@ -110,6 +116,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     activeMarker = null;
     startFollowingTarget();
     clearEditor(fields, camera);
+    document.dispatchEvent(new CustomEvent("marker:deselected"));
     setWorkflowStage(EDITOR_STAGE_GHOST);
   });
   positionInput.input.addEventListener("input", () => {
@@ -124,7 +131,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
   followTargetButton.addEventListener("click", () => {
     if (isPreviewFollowingTarget) {
       const targetPosition = clampMarkerPosition(vectorToNumberArray(camera.userData.controls?.target));
-      positionInput.input.value = positionToText(targetPosition);
+      positionInput.input.value = numberListToText(targetPosition);
       stopFollowingTarget();
     } else {
       startFollowingTarget();
@@ -182,7 +189,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
       return;
     }
 
-    positionInput.input.value = positionToText(position);
+    positionInput.input.value = numberListToText(position);
     activeMarker = createDraftMarker(scene, buttons, position);
     stopFollowingTarget();
     previewMarker.visible = false;
@@ -206,7 +213,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
       return;
     }
 
-    positionInput.input.value = positionToText(position);
+    positionInput.input.value = numberListToText(position);
     activeMarker?.position.set(...position);
     updatePlacedPositionPreview(placedPositionPreview, position);
     stopFollowingTarget();
@@ -291,7 +298,12 @@ export function setupMarkerEditor(camera, scene, buttons) {
   document.body.appendChild(panel);
 
   document.addEventListener("marker:selected", (event) => {
-    activeMarker = event.detail?.marker || null;
+    const selectedMarker = event.detail?.marker || null;
+    if (activeMarker?.userData.isDraftMarker && activeMarker !== selectedMarker) {
+      removeMarkerFromScene(activeMarker, scene, buttons);
+    }
+
+    activeMarker = selectedMarker;
     isCreatingNewMarker = Boolean(activeMarker?.userData.isDraftMarker);
     stopFollowingTarget();
     populateEditor(activeMarker, fields);
@@ -308,7 +320,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     lastPreviewUpdate = now;
 
     const targetPosition = clampMarkerPosition(vectorToNumberArray(camera.userData.controls?.target));
-    cameraPreview.textContent = `Punto mirado: ${positionToText(targetPosition)}`;
+    cameraPreview.textContent = `Punto mirado: ${numberListToText(targetPosition)}`;
     if (activeMarker) {
       updatePlacedPositionPreview(placedPositionPreview, vectorToNumberArray(activeMarker.position));
     }
@@ -324,7 +336,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     }
 
     if (isPreviewFollowingTarget) {
-      positionInput.input.value = positionToText(targetPosition);
+      positionInput.input.value = numberListToText(targetPosition);
     }
 
     updatePreviewMarker(previewMarker, parseNumberList(positionInput.input.value));
@@ -455,7 +467,7 @@ function populateEditor(marker, fields) {
   fields.status.textContent = getMarkerStatusText(marker, placeId);
 
   fields.titleInput.value = marker?.userData.title || "";
-  fields.positionInput.value = marker ? vectorToArray(marker.position) : EMPTY_VECTOR_TEXT;
+  fields.positionInput.value = marker ? vectorToText(marker.position) : EMPTY_VECTOR_TEXT;
   fields.mainImageInput.value = marker?.userData.imageUrl || "";
   fields.textInput.value = marker?.userData.text || "";
   fields.exteriorImagesInput.value = (marker?.userData.exteriorImages || []).join("\n");
@@ -463,16 +475,22 @@ function populateEditor(marker, fields) {
 }
 
 async function saveCurrentMarker(marker, fields, context) {
+  const title = fields.titleInput.value.trim();
+  if (!title) {
+    showTemporaryButtonText(fields.saveButton, "Falta titulo");
+    return;
+  }
+
   const rawPosition = parseNumberList(fields.positionInput.value);
   const position = clampMarkerPosition(rawPosition);
   if (!position) {
     showTemporaryButtonText(fields.saveButton, "Revisar coords");
     return;
   }
-  fields.positionInput.value = positionToText(position);
+  fields.positionInput.value = numberListToText(position);
 
   const payload = {
-    title: fields.titleInput.value,
+    title,
     position,
     imageUrl: fields.mainImageInput.value,
     text: fields.textInput.value,
@@ -505,7 +523,7 @@ async function saveCurrentMarker(marker, fields, context) {
 function clearEditor(fields, camera) {
   fields.status.textContent = "Marker nuevo | sin guardar";
   fields.titleInput.value = "Nuevo marker";
-  fields.positionInput.value = positionToText(clampMarkerPosition(vectorToNumberArray(camera.userData.controls?.target)));
+  fields.positionInput.value = numberListToText(clampMarkerPosition(vectorToNumberArray(camera.userData.controls?.target)));
   fields.mainImageInput.value = "";
   fields.textInput.value = "<p>Descripcion del nuevo marker.</p>";
   fields.exteriorImagesInput.value = "";
@@ -573,6 +591,7 @@ async function deleteCurrentMarker(marker, fields, context) {
   try {
     await deletePlace(marker.userData.placeId);
     removeMarkerFromScene(marker, context.scene, context.buttons);
+    document.dispatchEvent(new CustomEvent("marker:deselected"));
     context.onDeleted();
     clearFields(fields);
     showTemporaryButtonText(fields.deleteButton, "Eliminado");
@@ -603,7 +622,7 @@ function clearFields(fields, statusText = "Marker eliminado") {
 }
 
 function updatePlacedPositionPreview(preview, position) {
-  preview.textContent = `Punto ubicado: ${positionToText(position)}`;
+  preview.textContent = `Punto ubicado: ${numberListToText(position)}`;
 }
 
 function createPreviewMarker() {
@@ -689,29 +708,6 @@ function hideEditor(panel) {
   panel.hidden = true;
 }
 
-function parseNumberList(value) {
-  const numbers = value
-    .split(",")
-    .map((item) => Number(item.trim()))
-    .filter((number) => Number.isFinite(number));
-
-  return numbers.length === 3 ? numbers : null;
-}
-
-function vectorToArray(vector) {
-  if (!vector) return EMPTY_VECTOR_TEXT;
-
-  return vectorToNumberArray(vector)
-    .join(", ");
-}
-
-function vectorToNumberArray(vector) {
-  if (!vector) return null;
-
-  return [vector.x, vector.y, vector.z]
-    .map((value) => Number(Number(value).toFixed(2)))
-}
-
 function clampMarkerPosition(position) {
   if (!position) return null;
 
@@ -720,10 +716,6 @@ function clampMarkerPosition(position) {
     Math.max(position[1], MARKER_MIN_Y),
     Math.max(position[2], MARKER_MIN_Z),
   ];
-}
-
-function positionToText(position) {
-  return position ? position.join(", ") : EMPTY_VECTOR_TEXT;
 }
 
 function splitLines(value) {
