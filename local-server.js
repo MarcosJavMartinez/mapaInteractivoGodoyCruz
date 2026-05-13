@@ -21,6 +21,8 @@ const mimeTypes = {
   ".bin": "application/octet-stream",
 };
 
+const noCacheExtensions = new Set([".html", ".js", ".css"]);
+
 const server = http.createServer((req, res) => {
   if (handleApiRequest(req, res)) return;
 
@@ -41,9 +43,15 @@ const server = http.createServer((req, res) => {
     }
 
     const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, {
+    const headers = {
       "Content-Type": mimeTypes[ext] || "application/octet-stream",
-    });
+    };
+
+    if (noCacheExtensions.has(ext)) {
+      headers["Cache-Control"] = "no-store, max-age=0";
+    }
+
+    res.writeHead(200, headers);
     fs.createReadStream(filePath).pipe(res);
   });
 });

@@ -20,6 +20,7 @@ export function setupEventListeners(buttons, camera, quality = getQualitySetting
   document.body.addEventListener("click", (event) => onClick(event, buttons, camera));
   document.body.addEventListener("touchstart", (event) => onTouchStart(event, buttons, camera));
   document.body.addEventListener("pointermove", (event) => onPointerMove(event, buttons, camera, quality));
+  document.addEventListener("marker:deselected", clearActiveMarker);
 }
 
 function onClick(event, buttons, camera) {
@@ -74,6 +75,13 @@ function setActiveMarker(marker) {
       position: marker.position.toArray(),
     },
   }));
+}
+
+function clearActiveMarker() {
+  if (activeMarker) {
+    activeMarker.material?.color?.setHex(DEFAULT_MARKER_COLOR);
+  }
+  activeMarker = null;
 }
 
 function onPointerMove(event, buttons, camera, quality) {

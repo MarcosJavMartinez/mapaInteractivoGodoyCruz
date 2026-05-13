@@ -2,10 +2,11 @@ import { Color, Fog, Scene } from "../vendor/three/build/three.module.js";
 import { setupLights } from "./lightModule.js";
 import { setupRenderer, setupCamera, setupResizeHandler, render } from "./renderModule.js";
 import { loadModels } from "./modelModule.js";
-import { createMarkers, createMarkersFromPlaces } from "./markerModule.js";
+import { createMarkersFromPlaces } from "./markerModule.js";
 import { setupEventListeners } from "./eventModule.js";
 import { setupQualitySelector } from "./qualityModule.js";
 import { setupCameraViewEditor } from "./cameraViewEditorModule.js";
+import { setupMarkerEditor } from "./markerEditorModule.js";
 import { fetchPlaces } from "./apiClient.js";
 
 const buttons = [];
@@ -73,6 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   camera = setupCamera(renderer, quality);
   setupResizeHandler(camera, renderer, quality);
   setupCameraViewEditor(camera);
+  setupMarkerEditor(camera, scene, buttons);
 
   render(scene, camera, renderer, quality, buttons);
 
@@ -81,9 +83,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }, 12000);
 
   const databasePlaces = await loadDatabasePlaces(loaderStatus);
-  const databasePlaceTitles = new Set(databasePlaces.map((place) => place.title));
-  createMarkers(scene, buttons, { skipTitles: databasePlaceTitles });
-  createMarkersFromPlaces(scene, buttons, databasePlaces);
+  if (databasePlaces.length > 0) {
+    createMarkersFromPlaces(scene, buttons, databasePlaces);
+  } else {
+    markExperienceReady("La base de datos no respondio; no hay marcadores para mostrar.");
+  }
   setupEventListeners(buttons, camera, quality);
   markExperienceReady("Puedes comenzar; los modelos se cargaran en segundo plano.");
 

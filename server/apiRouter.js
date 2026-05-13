@@ -28,10 +28,42 @@ async function routeApiRequest(req, res, pathname, places) {
     return;
   }
 
+  if (req.method === "POST" && pathname === "/api/places") {
+    const body = await readJsonBody(req);
+
+    if (!isPlaceUpdate(body)) {
+      sendJson(res, 400, { error: "Invalid place data" });
+      return;
+    }
+
+    const place = places.createPlace(normalizePlaceUpdate(body));
+    sendJson(res, 201, place);
+    return;
+  }
+
   const placeMatch = pathname.match(/^\/api\/places\/(\d+)$/);
   if (req.method === "GET" && placeMatch) {
     const place = places.getPlace(Number(placeMatch[1]));
     sendJson(res, place ? 200 : 404, place || { error: "Place not found" });
+    return;
+  }
+
+  if (req.method === "PUT" && placeMatch) {
+    const body = await readJsonBody(req);
+
+    if (!isPlaceUpdate(body)) {
+      sendJson(res, 400, { error: "Invalid place data" });
+      return;
+    }
+
+    const place = places.updatePlace(Number(placeMatch[1]), normalizePlaceUpdate(body));
+    sendJson(res, place ? 200 : 404, place || { error: "Place not found" });
+    return;
+  }
+
+  if (req.method === "DELETE" && placeMatch) {
+    const deleted = places.deletePlace(Number(placeMatch[1]));
+    sendJson(res, deleted ? 200 : 404, deleted ? { ok: true } : { error: "Place not found" });
     return;
   }
 
@@ -91,6 +123,45 @@ function isCameraView(view) {
     && view.target.length === 3
     && view.position.every(Number.isFinite)
     && view.target.every(Number.isFinite);
+}
+
+function isPlaceUpdate(place) {
+  return typeof place?.title === "string"
+    && place.title.trim().length > 0
+    && typeof place?.text === "string"
+    && Array.isArray(place?.position)
+    && place.position.length === 3
+    && place.position.every(Number.isFinite)
+    && isStringArray(place.exteriorImages)
+    && isStringArray(place.interiorImages)
+    && (place.cameraView === null || place.cameraView === undefined || isCameraView(place.cameraView))
+    && (typeof place.imageUrl === "string" || place.imageUrl === null || place.imageUrl === undefined);
+}
+
+function normalizePlaceUpdate(place) {
+  return {
+    title: place.title.trim(),
+    text: place.text,
+    imageUrl: cleanOptionalString(place.imageUrl),
+    position: place.position,
+    cameraView: place.cameraView || null,
+    exteriorImages: cleanStringArray(place.exteriorImages),
+    interiorImages: cleanStringArray(place.interiorImages),
+  };
+}
+
+function isStringArray(value) {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function cleanOptionalString(value) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function cleanStringArray(value) {
+  return value
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 module.exports = {

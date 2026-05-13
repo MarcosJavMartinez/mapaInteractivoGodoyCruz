@@ -42,13 +42,12 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
     textElement.innerHTML = text;
     panel.appendChild(textElement);
 
-    const link = textElement.querySelector("a");
-    if (link) {
+    textElement.querySelectorAll("a").forEach((link) => {
       link.addEventListener("click", (event) => {
         event.preventDefault();
         window.open(link.href, "_blank");
       });
-    }
+    });
   }
 
   if (exteriorGalleryImages.length > 0) {

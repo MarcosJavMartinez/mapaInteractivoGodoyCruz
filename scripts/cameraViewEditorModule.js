@@ -1,4 +1,3 @@
-import { saveCameraView } from "./cameraViewStorage.js";
 import { savePlaceCameraView } from "./apiClient.js";
 
 const UPDATE_INTERVAL_MS = 120;
@@ -75,7 +74,11 @@ export function setupCameraViewEditor(camera) {
 
   document.addEventListener("marker:selected", (event) => {
     activeMarker = event.detail?.marker || null;
-    marker.textContent = `Marcador: ${event.detail?.title || "sin titulo"}`;
+    const markerTitle = event.detail?.title || "sin titulo";
+    const placeId = activeMarker?.userData.placeId;
+    marker.textContent = placeId
+      ? `Marcador: ${markerTitle} | DB #${placeId}`
+      : `Marcador: ${markerTitle} | sin DB`;
   });
 
   let lastUpdate = 0;
@@ -120,7 +123,7 @@ function setupEditorAccessShortcut(panel) {
 function isEditorShortcut(event) {
   return event.ctrlKey
     && event.altKey
-    && event.key.toLowerCase() === "v";
+    && event.code === "KeyV";
 }
 
 function showEditor(panel) {
@@ -145,17 +148,21 @@ async function saveCurrentView(camera, marker, button) {
   }
 
   marker.userData.cameraView = view;
-  if (marker.userData.placeId) {
-    try {
-      await savePlaceCameraView(marker.userData.placeId, view);
-      showTemporaryButtonText(button, "Guardada DB");
-      return;
-    } catch (_error) {
-      showTemporaryButtonText(button, "Local");
-    }
+
+  if (!marker.userData.placeId) {
+    showTemporaryButtonText(button, "Sin DB");
+    return;
   }
 
-  showTemporaryButtonText(button, saveCameraView(marker.userData.title, view) ? "Guardada" : "Error");
+  try {
+    const savedPlace = await savePlaceCameraView(marker.userData.placeId, view);
+    if (savedPlace?.cameraView) {
+      marker.userData.cameraView = savedPlace.cameraView;
+    }
+    showTemporaryButtonText(button, "Guardada DB");
+  } catch (_error) {
+    showTemporaryButtonText(button, "Error DB");
+  }
 }
 
 function getCurrentCameraView(camera) {
