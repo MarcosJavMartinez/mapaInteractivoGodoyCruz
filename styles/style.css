@@ -889,6 +889,9 @@ label {
 .marker-editor-panel[hidden] {
   display: none;
 }
+.marker-editor-panel [hidden] {
+  display: none !important;
+}
 .marker-editor-header {
   min-height: 2rem;
 }

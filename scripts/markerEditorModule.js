@@ -426,7 +426,7 @@ function updateWorkflowUi({ stage, isCreatingNewMarker, hasActiveMarker, workflo
   }
 
   if (isGhostStage) {
-    workflowHelp.textContent = "Mueve la camara hasta el lugar donde queres crear el marker.";
+    workflowHelp.textContent = "Mueve la camara y desplazate presionando Control hasta el lugar donde queres crear el marker.";
     return;
   }
 
