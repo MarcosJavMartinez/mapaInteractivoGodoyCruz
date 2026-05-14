@@ -29,6 +29,7 @@ function createPlaceRepository(db) {
     updatePlace,
     deletePlace,
     updateCameraView,
+    countImageReferences,
   };
 
   function listPlaces() {
@@ -160,6 +161,27 @@ function createPlaceRepository(db) {
       .run(id);
 
     return result.changes > 0;
+  }
+
+  function countImageReferences(imageUrl, excludedPlaceId = null) {
+    const mainImageCount = db.prepare(`
+      SELECT COUNT(*) AS count
+      FROM places
+      WHERE is_active = 1
+        AND main_image_url = ?
+        AND (? IS NULL OR id != ?)
+    `).get(imageUrl, excludedPlaceId, excludedPlaceId).count;
+
+    const galleryImageCount = db.prepare(`
+      SELECT COUNT(*) AS count
+      FROM place_images
+      INNER JOIN places ON places.id = place_images.place_id
+      WHERE places.is_active = 1
+        AND place_images.image_url = ?
+        AND (? IS NULL OR places.id != ?)
+    `).get(imageUrl, excludedPlaceId, excludedPlaceId).count;
+
+    return mainImageCount + galleryImageCount;
   }
 
   function getImages(placeId) {

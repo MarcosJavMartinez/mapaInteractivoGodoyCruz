@@ -9,6 +9,7 @@ const DEFAULT_MODEL_POSITION = new Vector3(1, -2, 1);
 const DEFAULT_MODEL_SCALE = new Vector3(0.3, 0.3, 0.3);
 
 const MODEL_PATHS = [
+  "models/Base.glb",
   "models/M00 Plaza.glb",
   "models/M02 Bodega 1.glb",
   "models/M02 Bodega 2.glb",

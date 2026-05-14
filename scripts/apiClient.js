@@ -67,3 +67,33 @@ export async function deletePlace(placeId) {
 
   return response.json();
 }
+
+export async function uploadImage(file) {
+  const dataUrl = await readFileAsDataUrl(file);
+  const response = await fetch("/api/uploads/image", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      filename: file.name,
+      type: file.type,
+      dataUrl,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo subir la imagen (${response.status})`);
+  }
+
+  return response.json();
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(reader.result));
+    reader.addEventListener("error", () => reject(reader.error));
+    reader.readAsDataURL(file);
+  });
+}

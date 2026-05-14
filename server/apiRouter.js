@@ -1,5 +1,17 @@
+const fs = require("fs");
+const path = require("path");
 const { getDatabase } = require("./database");
 const { createPlaceRepository } = require("./repositories/placeRepository");
+
+const UPLOAD_DIR = path.join(process.cwd(), "images", "uploads");
+const UPLOAD_ROUTE = "images/uploads";
+const MAX_UPLOAD_BODY_BYTES = 30 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Map([
+  ["image/jpeg", ".jpg"],
+  ["image/png", ".png"],
+  ["image/webp", ".webp"],
+  ["image/gif", ".gif"],
+]);
 
 function handleApiRequest(req, res) {
   const url = new URL(req.url, "http://127.0.0.1");
@@ -25,6 +37,19 @@ async function routeApiRequest(req, res, pathname, places) {
 
   if (req.method === "GET" && pathname === "/api/places") {
     sendJson(res, 200, places.listPlaces());
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/uploads/image") {
+    const body = await readJsonBody(req, MAX_UPLOAD_BODY_BYTES);
+    const uploadedImage = saveUploadedImage(body);
+
+    if (!uploadedImage) {
+      sendJson(res, 400, { error: "Invalid image" });
+      return;
+    }
+
+    sendJson(res, 201, uploadedImage);
     return;
   }
 
@@ -62,8 +87,15 @@ async function routeApiRequest(req, res, pathname, places) {
   }
 
   if (req.method === "DELETE" && placeMatch) {
-    const deleted = places.deletePlace(Number(placeMatch[1]));
-    sendJson(res, deleted ? 200 : 404, deleted ? { ok: true } : { error: "Place not found" });
+    const placeId = Number(placeMatch[1]);
+    const place = places.getPlace(placeId);
+    const deleted = places.deletePlace(placeId);
+    let deletedImages = 0;
+    if (deleted && place) {
+      deletedImages = deleteUnusedUploadedImages(getPlaceImagePaths(place), places, placeId);
+    }
+
+    sendJson(res, deleted ? 200 : 404, deleted ? { ok: true, deletedImages } : { error: "Place not found" });
     return;
   }
 
@@ -92,13 +124,13 @@ function sendJson(res, statusCode, payload) {
   res.end(JSON.stringify(payload));
 }
 
-function readJsonBody(req) {
+function readJsonBody(req, maxBodyBytes = 1_000_000) {
   return new Promise((resolve, reject) => {
     let body = "";
 
     req.on("data", (chunk) => {
       body += chunk;
-      if (body.length > 1_000_000) {
+      if (body.length > maxBodyBytes) {
         req.destroy();
         reject(new Error("Request body too large"));
       }
@@ -114,6 +146,95 @@ function readJsonBody(req) {
 
     req.on("error", reject);
   });
+}
+
+function saveUploadedImage(upload) {
+  const imageType = typeof upload?.type === "string" ? upload.type.toLowerCase() : "";
+  const extension = ALLOWED_IMAGE_TYPES.get(imageType);
+  const dataUrl = typeof upload?.dataUrl === "string" ? upload.dataUrl : "";
+  const dataMatch = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+
+  if (!extension || !dataMatch || dataMatch[1].toLowerCase() !== imageType) {
+    return null;
+  }
+
+  const imageBuffer = Buffer.from(dataMatch[2], "base64");
+  if (!imageBuffer.length) return null;
+
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  const baseName = sanitizeFileBaseName(path.basename(upload.filename || "imagen", path.extname(upload.filename || "")));
+  const filename = getUniqueUploadFilename(baseName || "imagen", extension);
+  const filePath = path.join(UPLOAD_DIR, filename);
+  fs.writeFileSync(filePath, imageBuffer);
+
+  return {
+    path: `${UPLOAD_ROUTE}/${filename}`,
+    filename,
+  };
+}
+
+function sanitizeFileBaseName(value) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80)
+    .toLowerCase();
+}
+
+function getUniqueUploadFilename(baseName, extension) {
+  let suffix = 0;
+
+  while (true) {
+    const filename = suffix
+      ? `${baseName}-${suffix}${extension}`
+      : `${baseName}${extension}`;
+    const filePath = path.join(UPLOAD_DIR, filename);
+    if (!fs.existsSync(filePath)) return filename;
+    suffix += 1;
+  }
+}
+
+function getPlaceImagePaths(place) {
+  return [
+    place.imageUrl,
+    ...(place.exteriorImages || []),
+    ...(place.interiorImages || []),
+  ].filter(Boolean);
+}
+
+function deleteUnusedUploadedImages(imagePaths, places, deletedPlaceId) {
+  return Array.from(new Set(imagePaths))
+    .filter(isUploadImagePath)
+    .reduce((deletedCount, imagePath) => {
+      if (places.countImageReferences(imagePath, deletedPlaceId) > 0) return deletedCount;
+      return deleteUploadImageFile(imagePath) ? deletedCount + 1 : deletedCount;
+    }, 0);
+}
+
+function isUploadImagePath(imagePath) {
+  return typeof imagePath === "string"
+    && imagePath.replace(/\\/g, "/").startsWith(`${UPLOAD_ROUTE}/`);
+}
+
+function deleteUploadImageFile(imagePath) {
+  const relativeUploadPath = imagePath.replace(/\\/g, "/").slice(UPLOAD_ROUTE.length + 1);
+  const filePath = path.resolve(UPLOAD_DIR, relativeUploadPath);
+  const uploadRoot = path.resolve(UPLOAD_DIR);
+
+  if (!filePath.startsWith(`${uploadRoot}${path.sep}`)) return;
+
+  try {
+    fs.unlinkSync(filePath);
+    return true;
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      console.warn(`No se pudo borrar la imagen subida: ${imagePath}`, error);
+    }
+  }
+
+  return false;
 }
 
 function isCameraView(view) {
