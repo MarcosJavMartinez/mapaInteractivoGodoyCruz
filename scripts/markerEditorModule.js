@@ -3,15 +3,22 @@ import {
   addContentBlock,
   addImagePath,
   animateEditorPreviewSaved,
+  createContentBlockList,
   createEditorPreviewPanel,
   createImageCounters,
+  createImageListEditor,
   createImageDropZone,
+  setupContentBlockList,
   setupImageDropZone,
+  setupImageListEditor,
   stopPreviewMapGestures,
+  syncContentBlockList,
+  syncImageListEditors,
   updateContentPreview,
   updateEditorPreview,
 } from "./markerEditorContentModule.js";
 import { createMarkerFromPlace } from "./markerModule.js";
+import { sanitizeHtml } from "./htmlSanitizer.js";
 import {
   createMarkerEditorProjection,
   hideMarkerEditorProjection,
@@ -109,6 +116,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
   const contentPreview = document.createElement("div");
   contentPreview.className = "marker-editor-content-preview";
   contentPreview.textContent = "Todavia no hay contenido.";
+  const contentBlockList = createContentBlockList();
   const textInput = createTextarea("Edicion avanzada", 8);
   textInput.field.classList.add("marker-editor-advanced-field");
   const exteriorImagesInput = createTextarea("Fotos exteriores", 4);
@@ -116,6 +124,9 @@ export function setupMarkerEditor(camera, scene, buttons) {
   const interiorImagesInput = createTextarea("Fotos interiores", 4);
   interiorImagesInput.input.placeholder = "Una ruta de imagen por linea.";
   mainImageInput.field.classList.add("marker-editor-advanced-field");
+  const mainImageList = createImageListEditor("foto principal");
+  const exteriorImageList = createImageListEditor("fotos exteriores");
+  const interiorImageList = createImageListEditor("fotos interiores");
   const fields = {
     titleInput: titleInput.input,
     positionInput: positionInput.input,
@@ -123,10 +134,16 @@ export function setupMarkerEditor(camera, scene, buttons) {
     imageDraftInput: imageDraftInput.input,
     contentDraftInput: contentDraftInput.input,
     contentPreview,
+    contentBlockList,
     textInput: textInput.input,
     exteriorImagesInput: exteriorImagesInput.input,
     interiorImagesInput: interiorImagesInput.input,
     imageCounters,
+    imageListEditors: {
+      main: mainImageList,
+      exterior: exteriorImageList,
+      interior: interiorImageList,
+    },
     status,
     feedback,
   };
@@ -140,9 +157,41 @@ export function setupMarkerEditor(camera, scene, buttons) {
     }
     updateEditorPreview(fields);
   });
-  mainImageInput.input.addEventListener("input", () => updateEditorPreview(fields));
-  exteriorImagesInput.input.addEventListener("input", () => updateEditorPreview(fields));
-  interiorImagesInput.input.addEventListener("input", () => updateEditorPreview(fields));
+  mainImageInput.input.addEventListener("input", () => {
+    syncImageListEditors(fields);
+    updateEditorPreview(fields);
+  });
+  exteriorImagesInput.input.addEventListener("input", () => {
+    syncImageListEditors(fields);
+    updateEditorPreview(fields);
+  });
+  interiorImagesInput.input.addEventListener("input", () => {
+    syncImageListEditors(fields);
+    updateEditorPreview(fields);
+  });
+  setupContentBlockList({
+    list: contentBlockList,
+    fields,
+    setFeedback,
+  });
+  setupImageListEditor({
+    list: mainImageList,
+    type: "main",
+    fields,
+    setFeedback,
+  });
+  setupImageListEditor({
+    list: exteriorImageList,
+    type: "exterior",
+    fields,
+    setFeedback,
+  });
+  setupImageListEditor({
+    list: interiorImageList,
+    type: "interior",
+    fields,
+    setFeedback,
+  });
 
   const positionActions = document.createElement("div");
   positionActions.className = "marker-editor-actions";
@@ -225,6 +274,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
   }));
   insertActions.append(subtitleButton, paragraphButton, sourcesButton);
   textInput.input.addEventListener("input", () => {
+    syncContentBlockList(fields);
     updateContentPreview(contentPreview, textInput.input.value);
     updateEditorPreview(fields);
   });
@@ -427,6 +477,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     titleInput.field,
     contentDraftInput.field,
     insertActions,
+    contentBlockList,
     advancedContentSection.section
   );
   gallerySection.body.append(
@@ -436,6 +487,9 @@ export function setupMarkerEditor(camera, scene, buttons) {
     interiorImagesDropZone,
     imageDraftInput.field,
     imageActions,
+    mainImageList,
+    exteriorImageList,
+    interiorImageList,
     advancedGallerySection.section
   );
 
@@ -641,6 +695,8 @@ function populateEditor(marker, fields) {
   fields.interiorImagesInput.value = (marker?.userData.interiorImages || []).join("\n");
   fields.imageDraftInput.value = "";
   fields.contentDraftInput.value = "";
+  syncContentBlockList(fields);
+  syncImageListEditors(fields);
   updateContentPreview(fields.contentPreview, fields.textInput.value);
   updateEditorPreview(fields);
   clearFieldInvalid(fields.titleInput);
@@ -684,7 +740,7 @@ async function saveCurrentMarker(marker, fields, context) {
     title,
     position,
     imageUrl: fields.mainImageInput.value,
-    text: fields.textInput.value,
+    text: sanitizeHtml(fields.textInput.value),
     exteriorImages: splitLines(fields.exteriorImagesInput.value),
     interiorImages: splitLines(fields.interiorImagesInput.value),
   };
@@ -729,6 +785,8 @@ function clearEditor(fields, camera) {
   fields.contentDraftInput.value = "";
   fields.exteriorImagesInput.value = "";
   fields.interiorImagesInput.value = "";
+  syncContentBlockList(fields);
+  syncImageListEditors(fields);
   updateContentPreview(fields.contentPreview, fields.textInput.value);
   updateEditorPreview(fields);
   clearFieldInvalid(fields.titleInput);
@@ -832,6 +890,8 @@ function clearFields(fields, statusText = "Marcador eliminado") {
   fields.contentDraftInput.value = "";
   fields.exteriorImagesInput.value = "";
   fields.interiorImagesInput.value = "";
+  syncContentBlockList(fields);
+  syncImageListEditors(fields);
   updateContentPreview(fields.contentPreview, fields.textInput.value);
   updateEditorPreview(fields);
   clearFieldInvalid(fields.titleInput);

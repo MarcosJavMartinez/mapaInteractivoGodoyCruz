@@ -1087,6 +1087,93 @@ label {
 .marker-editor-content-preview ul {
   padding-left: 1.1rem;
 }
+.marker-editor-edit-list {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  color: #3e3934;
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(122, 20, 95, 0.1);
+  border-radius: 6px;
+  font-size: var(--font-size-small);
+  line-height: 1.35;
+  padding: 0.5rem;
+}
+.marker-editor-edit-item {
+  display: grid;
+  gap: 0.42rem;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(122, 20, 95, 0.12);
+  border-radius: 6px;
+  padding: 0.45rem;
+}
+.marker-editor-edit-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.marker-editor-edit-item-header span {
+  overflow: hidden;
+  color: #7a145f;
+  font-weight: var(--font-weight-subtitle);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.marker-editor-edit-controls {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.25rem;
+}
+.marker-editor-edit-controls button {
+  min-height: 1.55rem;
+  color: #4c453e;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(122, 20, 95, 0.16);
+  border-radius: 5px;
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 0.35rem 0.42rem;
+}
+.marker-editor-edit-controls button:hover {
+  background: rgba(227, 242, 247, 0.68);
+}
+.marker-editor-edit-controls button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+.marker-editor-edit-item textarea,
+.marker-editor-image-row input {
+  width: 100%;
+  color: #211f1d;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(122, 20, 95, 0.12);
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-family: var(--font-family-ui);
+  font-size: var(--font-size-small);
+  line-height: 1.35;
+  padding: 0.44rem 0.5rem;
+}
+.marker-editor-edit-item textarea {
+  resize: vertical;
+}
+.marker-editor-image-row {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.marker-editor-image-row img {
+  width: 3.2rem;
+  height: 2.35rem;
+  object-fit: cover;
+  background: rgba(47, 42, 38, 0.08);
+  border-radius: 5px;
+}
 .marker-editor-image-dropzone {
   display: grid;
   place-items: center;

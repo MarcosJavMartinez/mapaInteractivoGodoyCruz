@@ -1,4 +1,5 @@
 import { uploadImage } from "./apiClient.js";
+import { sanitizeHtml } from "./htmlSanitizer.js";
 
 const FEEDBACK_SUCCESS = "success";
 const FEEDBACK_ERROR = "error";
@@ -56,6 +57,109 @@ export function createImageCounters() {
   };
 }
 
+export function createContentBlockList() {
+  const list = document.createElement("div");
+  list.className = "marker-editor-edit-list";
+  list.dataset.emptyText = "Todavia no hay textos agregados.";
+  list.textContent = list.dataset.emptyText;
+  return list;
+}
+
+export function setupContentBlockList({ list, fields, setFeedback }) {
+  list.addEventListener("input", (event) => {
+    if (!event.target.matches("textarea")) return;
+
+    fields.textInput.value = contentBlocksToHtml(readContentBlocksFromList(list));
+    updateContentPreview(fields.contentPreview, fields.textInput.value);
+    updateEditorPreview(fields);
+  });
+
+  list.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const item = button.closest(".marker-editor-edit-item");
+    const index = Number(item?.dataset.index);
+    const blocks = readContentBlocksFromList(list);
+
+    if (button.dataset.action === "up" && index > 0) {
+      moveItem(blocks, index, index - 1);
+    } else if (button.dataset.action === "down" && index < blocks.length - 1) {
+      moveItem(blocks, index, index + 1);
+    } else if (button.dataset.action === "remove") {
+      blocks.splice(index, 1);
+    } else {
+      return;
+    }
+
+    fields.textInput.value = contentBlocksToHtml(blocks);
+    syncContentBlockList(fields);
+    updateContentPreview(fields.contentPreview, fields.textInput.value);
+    updateEditorPreview(fields);
+    setFeedback(fields, "Contenido actualizado. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
+  });
+}
+
+export function syncContentBlockList(fields) {
+  if (!fields.contentBlockList) return;
+
+  renderContentBlockList(fields.contentBlockList, parseContentBlocks(fields.textInput.value));
+}
+
+export function createImageListEditor(labelText) {
+  const list = document.createElement("div");
+  list.className = "marker-editor-edit-list marker-editor-image-list";
+  list.dataset.emptyText = `Todavia no hay ${labelText.toLowerCase()}.`;
+  list.textContent = list.dataset.emptyText;
+  return list;
+}
+
+export function setupImageListEditor({ list, type, fields, setFeedback }) {
+  list.addEventListener("input", (event) => {
+    if (!event.target.matches("input")) return;
+
+    const image = event.target.closest(".marker-editor-image-row")?.querySelector("img");
+    if (image) {
+      image.src = event.target.value.trim();
+    }
+
+    writeImagesToFields(type, readImagesFromList(list), fields);
+    updateEditorPreview(fields);
+  });
+
+  list.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const item = button.closest(".marker-editor-edit-item");
+    const index = Number(item?.dataset.index);
+    const images = readImagesFromList(list);
+
+    if (button.dataset.action === "up" && index > 0) {
+      moveItem(images, index, index - 1);
+    } else if (button.dataset.action === "down" && index < images.length - 1) {
+      moveItem(images, index, index + 1);
+    } else if (button.dataset.action === "remove") {
+      images.splice(index, 1);
+    } else {
+      return;
+    }
+
+    writeImagesToFields(type, images, fields);
+    syncImageListEditors(fields);
+    updateEditorPreview(fields);
+    setFeedback(fields, "Fotos actualizadas. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
+  });
+}
+
+export function syncImageListEditors(fields) {
+  if (!fields.imageListEditors) return;
+
+  renderImageList(fields.imageListEditors.main, fields.mainImageInput.value.trim() ? [fields.mainImageInput.value.trim()] : []);
+  renderImageList(fields.imageListEditors.exterior, splitLines(fields.exteriorImagesInput.value));
+  renderImageList(fields.imageListEditors.interior, splitLines(fields.interiorImagesInput.value));
+}
+
 export function updateEditorPreview(fields) {
   const preview = fields.previewPanel;
   if (!preview) return;
@@ -76,8 +180,9 @@ export function updateEditorPreview(fields) {
     preview.image.removeAttribute("src");
   }
 
-  if (text) {
-    preview.body.innerHTML = removeUnsafeHtml(text);
+  const safeText = sanitizeHtml(text);
+  if (safeText) {
+    preview.body.innerHTML = safeText;
     preview.body.classList.remove("is-empty");
   } else {
     preview.body.textContent = "Aca se va a ver el texto del marcador.";
@@ -117,6 +222,7 @@ export function addContentBlock({ type, draftInput, textInput, preview, fields, 
 
   textInput.value = appendHtmlBlock(textInput.value, blockHtml);
   draftInput.value = "";
+  syncContentBlockList(fields);
   updateContentPreview(preview, textInput.value);
   updateEditorPreview(fields);
   setFeedback(fields, "Contenido agregado. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
@@ -133,6 +239,7 @@ export function addImagePath({ type, draftInput, fields, setFeedback }) {
   if (type === "main") {
     fields.mainImageInput.value = imagePath;
     draftInput.value = "";
+    syncImageListEditors(fields);
     updateEditorPreview(fields);
     setFeedback(fields, "Foto principal lista. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
     return;
@@ -143,6 +250,7 @@ export function addImagePath({ type, draftInput, fields, setFeedback }) {
     : fields.exteriorImagesInput;
   galleryInput.value = appendLine(galleryInput.value, imagePath);
   draftInput.value = "";
+  syncImageListEditors(fields);
   updateEditorPreview(fields);
   setFeedback(fields, "Foto agregada. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
 }
@@ -210,7 +318,13 @@ export function updateContentPreview(preview, html) {
     return;
   }
 
-  preview.innerHTML = removeUnsafeHtml(content);
+  const safeContent = sanitizeHtml(content);
+  if (!safeContent) {
+    preview.textContent = "Todavia no hay contenido.";
+    return;
+  }
+
+  preview.innerHTML = safeContent;
 }
 
 function createImageCounter(labelText) {
@@ -263,6 +377,7 @@ function addUploadedImagesToFields(type, uploadedImages, fields, setFeedback) {
   const imagePaths = uploadedImages.map((image) => image.path);
   if (type === "main") {
     fields.mainImageInput.value = imagePaths[0];
+    syncImageListEditors(fields);
     updateEditorPreview(fields);
     setFeedback(fields, "Foto principal lista. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
     return;
@@ -272,8 +387,203 @@ function addUploadedImagesToFields(type, uploadedImages, fields, setFeedback) {
     ? fields.interiorImagesInput
     : fields.exteriorImagesInput;
   galleryInput.value = appendLines(galleryInput.value, imagePaths);
+  syncImageListEditors(fields);
   updateEditorPreview(fields);
   setFeedback(fields, `${imagePaths.length} ${getImageTypeText(type, imagePaths.length)} ${getAddedText(imagePaths.length)}. Cuando termines, toca Guardar.`, FEEDBACK_SUCCESS);
+}
+
+function renderContentBlockList(list, blocks) {
+  list.replaceChildren();
+
+  if (!blocks.length) {
+    list.textContent = list.dataset.emptyText;
+    return;
+  }
+
+  blocks.forEach((block, index) => {
+    const item = createEditableItem({
+      label: getContentBlockLabel(block.type),
+      index,
+      isFirst: index === 0,
+      isLast: index === blocks.length - 1,
+    });
+    const textarea = document.createElement("textarea");
+    textarea.rows = block.type === "paragraph" ? 4 : 2;
+    textarea.dataset.type = block.type;
+    textarea.value = block.text;
+    item.appendChild(textarea);
+    list.appendChild(item);
+  });
+}
+
+function readContentBlocksFromList(list) {
+  return Array.from(list.querySelectorAll(".marker-editor-edit-item textarea"))
+    .map((textarea) => ({
+      type: textarea.dataset.type || "paragraph",
+      text: textarea.value.trim(),
+    }))
+    .filter((block) => block.text);
+}
+
+function parseContentBlocks(html) {
+  const content = sanitizeHtml(html).trim();
+  if (!content) return [];
+
+  const template = document.createElement("template");
+  template.innerHTML = content;
+  const nodes = Array.from(template.content.childNodes);
+  const blocks = [];
+
+  for (let index = 0; index < nodes.length; index += 1) {
+    const node = nodes[index];
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent.trim();
+      if (text) blocks.push({ type: "paragraph", text });
+      continue;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) continue;
+
+    const tagName = node.tagName.toLowerCase();
+    if (tagName === "h3") {
+      const nextNode = nodes[index + 1];
+      if (node.textContent.trim().toLowerCase() === "fuentes" && nextNode?.tagName?.toLowerCase() === "ul") {
+        blocks.push({ type: "source", text: getListText(nextNode) });
+        index += 1;
+      } else {
+        blocks.push({ type: "subtitle", text: node.textContent.trim() });
+      }
+      continue;
+    }
+
+    if (tagName === "ul") {
+      blocks.push({ type: "source", text: getListText(node) });
+      continue;
+    }
+
+    if (tagName === "p") {
+      blocks.push({ type: "paragraph", text: getElementTextWithBreaks(node).trim() });
+      continue;
+    }
+
+    const text = node.textContent.trim();
+    if (text) blocks.push({ type: "paragraph", text });
+  }
+
+  return blocks.filter((block) => block.text);
+}
+
+function contentBlocksToHtml(blocks) {
+  return blocks
+    .map((block) => createContentBlockHtml(block.type, block.text))
+    .filter(Boolean)
+    .join("\n");
+}
+
+function getContentBlockLabel(type) {
+  if (type === "subtitle") return "Subtitulo";
+  if (type === "source") return "Fuente";
+  return "Parrafo";
+}
+
+function getListText(list) {
+  return Array.from(list.querySelectorAll("li"))
+    .map((item) => item.textContent.trim())
+    .filter(Boolean)
+    .join("\n");
+}
+
+function getElementTextWithBreaks(element) {
+  return Array.from(element.childNodes)
+    .map((node) => {
+      if (node.nodeName === "BR") return "\n";
+      return node.textContent || "";
+    })
+    .join("");
+}
+
+function renderImageList(list, images) {
+  if (!list) return;
+  list.replaceChildren();
+
+  if (!images.length) {
+    list.textContent = list.dataset.emptyText;
+    return;
+  }
+
+  images.forEach((imageUrl, index) => {
+    const item = createEditableItem({
+      label: `Foto ${index + 1}`,
+      index,
+      isFirst: index === 0,
+      isLast: index === images.length - 1,
+    });
+    const row = document.createElement("div");
+    row.className = "marker-editor-image-row";
+    const image = document.createElement("img");
+    image.src = imageUrl;
+    image.alt = "";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = imageUrl;
+    input.placeholder = "Ruta de la foto";
+    row.append(image, input);
+    item.appendChild(row);
+    list.appendChild(item);
+  });
+}
+
+function readImagesFromList(list) {
+  return Array.from(list.querySelectorAll(".marker-editor-edit-item input"))
+    .map((input) => input.value.trim())
+    .filter(Boolean);
+}
+
+function writeImagesToFields(type, images, fields) {
+  if (type === "main") {
+    fields.mainImageInput.value = images[0] || "";
+    return;
+  }
+
+  const input = type === "interior"
+    ? fields.interiorImagesInput
+    : fields.exteriorImagesInput;
+  input.value = images.join("\n");
+}
+
+function createEditableItem({ label, index, isFirst, isLast }) {
+  const item = document.createElement("div");
+  item.className = "marker-editor-edit-item";
+  item.dataset.index = String(index);
+
+  const header = document.createElement("div");
+  header.className = "marker-editor-edit-item-header";
+  const title = document.createElement("span");
+  title.textContent = label;
+  const controls = document.createElement("div");
+  controls.className = "marker-editor-edit-controls";
+  controls.append(
+    createEditControlButton("Subir", "up", isFirst),
+    createEditControlButton("Bajar", "down", isLast),
+    createEditControlButton("Quitar", "remove", false),
+  );
+  header.append(title, controls);
+  item.appendChild(header);
+  return item;
+}
+
+function createEditControlButton(label, action, isDisabled) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.action = action;
+  button.textContent = label;
+  button.disabled = isDisabled;
+  return button;
+}
+
+function moveItem(items, fromIndex, toIndex) {
+  const [item] = items.splice(fromIndex, 1);
+  items.splice(toIndex, 0, item);
 }
 
 function getImageTypeText(type, count) {
@@ -323,13 +633,6 @@ function appendLine(currentValue, line) {
 
 function appendLines(currentValue, lines) {
   return lines.reduce((value, line) => appendLine(value, line), currentValue);
-}
-
-function removeUnsafeHtml(html) {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/\son\w+="[^"]*"/gi, "")
-    .replace(/\son\w+='[^']*'/gi, "");
 }
 
 function escapeHtml(value) {

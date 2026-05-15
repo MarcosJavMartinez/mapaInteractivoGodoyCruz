@@ -1,3 +1,5 @@
+import { sanitizeHtml } from "./htmlSanitizer.js";
+
 let currentInfoPanel = null;
 let activeImageViewerKeyHandler = null;
 let activeImageViewerCleanup = null;
@@ -37,15 +39,16 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
     panel.appendChild(image);
   }
 
-  if (text) {
+  const safeText = sanitizeHtml(text);
+  if (safeText) {
     const textElement = document.createElement("div");
-    textElement.innerHTML = text;
+    textElement.innerHTML = safeText;
     panel.appendChild(textElement);
 
     textElement.querySelectorAll("a").forEach((link) => {
       link.addEventListener("click", (event) => {
         event.preventDefault();
-        window.open(link.href, "_blank");
+        window.open(link.href, "_blank", "noopener");
       });
     });
   }
