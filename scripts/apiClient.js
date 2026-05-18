@@ -68,6 +68,22 @@ export async function deletePlace(placeId) {
   return response.json();
 }
 
+export async function deleteUploadedImage(imagePath) {
+  const response = await fetch("/api/uploads/image", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ path: imagePath }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo eliminar la imagen (${response.status})`);
+  }
+
+  return response.json();
+}
+
 export async function uploadImage(file) {
   const dataUrl = await readFileAsDataUrl(file);
   const response = await fetch("/api/uploads/image", {

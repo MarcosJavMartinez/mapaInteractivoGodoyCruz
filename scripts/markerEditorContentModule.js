@@ -1,4 +1,4 @@
-import { uploadImage } from "./apiClient.js";
+import { deleteUploadedImage, uploadImage } from "./apiClient.js";
 import { sanitizeHtml } from "./htmlSanitizer.js";
 
 const FEEDBACK_SUCCESS = "success";
@@ -125,6 +125,7 @@ export function setupImageListEditor({ list, type, fields, setFeedback }) {
 
     writeImagesToFields(type, readImagesFromList(list), fields);
     updateEditorPreview(fields);
+    cleanupRemovedEditorUploadedImages(fields);
   });
 
   list.addEventListener("click", (event) => {
@@ -140,7 +141,8 @@ export function setupImageListEditor({ list, type, fields, setFeedback }) {
     } else if (button.dataset.action === "down" && index < images.length - 1) {
       moveItem(images, index, index + 1);
     } else if (button.dataset.action === "remove") {
-      images.splice(index, 1);
+      const [removedImage] = images.splice(index, 1);
+      cleanupUploadedImages([removedImage]);
     } else {
       return;
     }
@@ -148,6 +150,7 @@ export function setupImageListEditor({ list, type, fields, setFeedback }) {
     writeImagesToFields(type, images, fields);
     syncImageListEditors(fields);
     updateEditorPreview(fields);
+    rememberEditorImagePaths(fields);
     setFeedback(fields, "Fotos actualizadas. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
   });
 }
@@ -194,6 +197,32 @@ export function updateEditorPreview(fields) {
   updateImageCounters(fields, { mainImage, exteriorImages, interiorImages });
 }
 
+export function cleanupEditorUploadedImages(fields) {
+  cleanupUploadedImages(getEditorImagePaths(fields));
+  rememberEditorImagePaths(fields);
+}
+
+export function cleanupRemovedEditorUploadedImages(fields) {
+  const previousImagePaths = fields.lastTrackedImagePaths || [];
+  const currentImagePaths = getEditorImagePaths(fields);
+  const currentImagePathSet = new Set(currentImagePaths);
+  cleanupUploadedImages(previousImagePaths.filter((imagePath) => !currentImagePathSet.has(imagePath)));
+  rememberEditorImagePaths(fields, currentImagePaths);
+  return currentImagePaths;
+}
+
+export function rememberEditorImagePaths(fields, imagePaths = getEditorImagePaths(fields)) {
+  fields.lastTrackedImagePaths = imagePaths;
+}
+
+export function getEditorImagePaths(fields) {
+  return [
+    fields.mainImageInput.value,
+    ...splitLines(fields.exteriorImagesInput.value),
+    ...splitLines(fields.interiorImagesInput.value),
+  ].filter(Boolean);
+}
+
 export function animateEditorPreviewSaved(preview, onDone) {
   if (!preview?.panel || preview.panel.hidden) {
     onDone?.();
@@ -237,10 +266,12 @@ export function addImagePath({ type, draftInput, fields, setFeedback }) {
   }
 
   if (type === "main") {
+    cleanupUploadedImages([fields.mainImageInput.value]);
     fields.mainImageInput.value = imagePath;
     draftInput.value = "";
     syncImageListEditors(fields);
     updateEditorPreview(fields);
+    rememberEditorImagePaths(fields);
     setFeedback(fields, "Foto principal lista. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
     return;
   }
@@ -252,6 +283,7 @@ export function addImagePath({ type, draftInput, fields, setFeedback }) {
   draftInput.value = "";
   syncImageListEditors(fields);
   updateEditorPreview(fields);
+  rememberEditorImagePaths(fields);
   setFeedback(fields, "Foto agregada. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
 }
 
@@ -376,9 +408,11 @@ async function uploadDroppedImages(files) {
 function addUploadedImagesToFields(type, uploadedImages, fields, setFeedback) {
   const imagePaths = uploadedImages.map((image) => image.path);
   if (type === "main") {
+    cleanupUploadedImages([fields.mainImageInput.value]);
     fields.mainImageInput.value = imagePaths[0];
     syncImageListEditors(fields);
     updateEditorPreview(fields);
+    rememberEditorImagePaths(fields);
     setFeedback(fields, "Foto principal lista. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
     return;
   }
@@ -389,7 +423,23 @@ function addUploadedImagesToFields(type, uploadedImages, fields, setFeedback) {
   galleryInput.value = appendLines(galleryInput.value, imagePaths);
   syncImageListEditors(fields);
   updateEditorPreview(fields);
+  rememberEditorImagePaths(fields);
   setFeedback(fields, `${imagePaths.length} ${getImageTypeText(type, imagePaths.length)} ${getAddedText(imagePaths.length)}. Cuando termines, toca Guardar.`, FEEDBACK_SUCCESS);
+}
+
+function cleanupUploadedImages(imagePaths) {
+  Array.from(new Set(imagePaths))
+    .filter(isUploadImagePath)
+    .forEach((imagePath) => {
+      deleteUploadedImage(imagePath).catch((error) => {
+        console.warn("No se pudo limpiar la imagen subida", imagePath, error);
+      });
+    });
+}
+
+function isUploadImagePath(imagePath) {
+  return typeof imagePath === "string"
+    && imagePath.replace(/\\/g, "/").startsWith("images/uploads/");
 }
 
 function renderContentBlockList(list, blocks) {

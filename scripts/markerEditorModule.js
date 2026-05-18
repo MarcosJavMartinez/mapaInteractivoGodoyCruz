@@ -3,6 +3,8 @@ import {
   addContentBlock,
   addImagePath,
   animateEditorPreviewSaved,
+  cleanupEditorUploadedImages,
+  cleanupRemovedEditorUploadedImages,
   createContentBlockList,
   createEditorPreviewPanel,
   createImageCounters,
@@ -12,6 +14,7 @@ import {
   setupImageDropZone,
   setupImageListEditor,
   stopPreviewMapGestures,
+  rememberEditorImagePaths,
   syncContentBlockList,
   syncImageListEditors,
   updateContentPreview,
@@ -161,13 +164,22 @@ export function setupMarkerEditor(camera, scene, buttons) {
     syncImageListEditors(fields);
     updateEditorPreview(fields);
   });
+  mainImageInput.input.addEventListener("change", () => {
+    cleanupRemovedEditorUploadedImages(fields);
+  });
   exteriorImagesInput.input.addEventListener("input", () => {
     syncImageListEditors(fields);
     updateEditorPreview(fields);
   });
+  exteriorImagesInput.input.addEventListener("change", () => {
+    cleanupRemovedEditorUploadedImages(fields);
+  });
   interiorImagesInput.input.addEventListener("input", () => {
     syncImageListEditors(fields);
     updateEditorPreview(fields);
+  });
+  interiorImagesInput.input.addEventListener("change", () => {
+    cleanupRemovedEditorUploadedImages(fields);
   });
   setupContentBlockList({
     list: contentBlockList,
@@ -349,6 +361,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
   cancelDraftButton.className = "marker-editor-delete-button";
   cancelPositionDraftButton.className = "marker-editor-delete-button";
   const deleteDraftMarker = () => {
+    cleanupEditorUploadedImages(fields);
     removeMarkerFromScene(activeMarker, scene, buttons);
     activeMarker = null;
     isCreatingNewMarker = false;
@@ -505,6 +518,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
   document.addEventListener("marker:selected", (event) => {
     const selectedMarker = event.detail?.marker || null;
     if (activeMarker?.userData.isDraftMarker && activeMarker !== selectedMarker) {
+      cleanupEditorUploadedImages(fields);
       removeMarkerFromScene(activeMarker, scene, buttons);
     }
 
@@ -697,6 +711,7 @@ function populateEditor(marker, fields) {
   fields.contentDraftInput.value = "";
   syncContentBlockList(fields);
   syncImageListEditors(fields);
+  rememberEditorImagePaths(fields);
   updateContentPreview(fields.contentPreview, fields.textInput.value);
   updateEditorPreview(fields);
   clearFieldInvalid(fields.titleInput);
@@ -787,6 +802,7 @@ function clearEditor(fields, camera) {
   fields.interiorImagesInput.value = "";
   syncContentBlockList(fields);
   syncImageListEditors(fields);
+  rememberEditorImagePaths(fields);
   updateContentPreview(fields.contentPreview, fields.textInput.value);
   updateEditorPreview(fields);
   clearFieldInvalid(fields.titleInput);
@@ -892,6 +908,7 @@ function clearFields(fields, statusText = "Marcador eliminado") {
   fields.interiorImagesInput.value = "";
   syncContentBlockList(fields);
   syncImageListEditors(fields);
+  rememberEditorImagePaths(fields);
   updateContentPreview(fields.contentPreview, fields.textInput.value);
   updateEditorPreview(fields);
   clearFieldInvalid(fields.titleInput);

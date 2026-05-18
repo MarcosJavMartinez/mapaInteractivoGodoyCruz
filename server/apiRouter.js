@@ -53,6 +53,24 @@ async function routeApiRequest(req, res, pathname, places) {
     return;
   }
 
+  if (req.method === "DELETE" && pathname === "/api/uploads/image") {
+    const body = await readJsonBody(req);
+    const imagePath = typeof body?.path === "string" ? body.path : "";
+
+    if (!isUploadImagePath(imagePath)) {
+      sendJson(res, 400, { error: "Invalid image path" });
+      return;
+    }
+
+    if (places.countImageReferences(imagePath) > 0) {
+      sendJson(res, 200, { ok: true, deleted: false, reason: "Image is still in use" });
+      return;
+    }
+
+    sendJson(res, 200, { ok: true, deleted: deleteUploadImageFile(imagePath) });
+    return;
+  }
+
   if (req.method === "POST" && pathname === "/api/places") {
     const body = await readJsonBody(req);
 
@@ -74,6 +92,8 @@ async function routeApiRequest(req, res, pathname, places) {
   }
 
   if (req.method === "PUT" && placeMatch) {
+    const placeId = Number(placeMatch[1]);
+    const previousPlace = places.getPlace(placeId);
     const body = await readJsonBody(req);
 
     if (!isPlaceUpdate(body)) {
@@ -81,7 +101,11 @@ async function routeApiRequest(req, res, pathname, places) {
       return;
     }
 
-    const place = places.updatePlace(Number(placeMatch[1]), normalizePlaceUpdate(body));
+    const place = places.updatePlace(placeId, normalizePlaceUpdate(body));
+    if (place && previousPlace) {
+      deleteUnusedUploadedImages(getRemovedImagePaths(previousPlace, place), places, placeId);
+    }
+
     sendJson(res, place ? 200 : 404, place || { error: "Place not found" });
     return;
   }
@@ -202,6 +226,11 @@ function getPlaceImagePaths(place) {
     ...(place.exteriorImages || []),
     ...(place.interiorImages || []),
   ].filter(Boolean);
+}
+
+function getRemovedImagePaths(previousPlace, nextPlace) {
+  const nextImages = new Set(getPlaceImagePaths(nextPlace));
+  return getPlaceImagePaths(previousPlace).filter((imagePath) => !nextImages.has(imagePath));
 }
 
 function deleteUnusedUploadedImages(imagePaths, places, deletedPlaceId) {
