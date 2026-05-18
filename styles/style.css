@@ -172,126 +172,262 @@ select {
 }
 /* Loader */
 .loader {
+  --loader-paper-rgb: 238, 229, 216;
   position: fixed;
   z-index: 9999;
   top: 0;
   left: 0;
   height: 100vh;
   width: 100vw;
-  background: #f6f3ed;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(120deg, rgba(var(--loader-paper-rgb), 0.96), rgba(232, 221, 205, 0.86)),
+    radial-gradient(circle at 28% 20%, rgba(252, 202, 56, 0.1), transparent 24rem),
+    radial-gradient(circle at 84% 18%, rgba(47, 135, 149, 0.09), transparent 25rem),
+    linear-gradient(28deg, transparent 0 23%, rgba(118, 100, 82, 0.05) 23.2% 23.45%, transparent 23.65% 100%),
+    linear-gradient(152deg, transparent 0 35%, rgba(118, 100, 82, 0.04) 35.15% 35.4%, transparent 35.6% 100%),
+    repeating-linear-gradient(8deg, transparent 0 3.4rem, rgba(85, 72, 60, 0.035) 3.45rem 3.5rem),
+    rgb(var(--loader-paper-rgb));
+  display: grid;
+  place-items: center;
   text-align: center;
-  padding: clamp(2rem, 6vh, 4rem) 1.25rem;
+  padding: 2.25rem 1.25rem;
   box-sizing: border-box;
 }
+.loader::before {
+  content: "1950";
+  position: absolute;
+  right: -0.1em;
+  bottom: -0.18em;
+  color: rgba(121, 94, 67, 0.08);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(13rem, 25vw, 23rem);
+  font-weight: var(--font-weight-title);
+  line-height: 0.78;
+  pointer-events: none;
+}
+.loader::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: min(42vw, 34rem);
+  height: min(45vh, 28rem);
+  opacity: 0.32;
+  background:
+    linear-gradient(to right, rgba(var(--loader-paper-rgb), 0) 0%, rgba(var(--loader-paper-rgb), 0.14) 48%, rgba(var(--loader-paper-rgb), 0.96) 100%),
+    linear-gradient(to top, rgba(var(--loader-paper-rgb), 0) 0%, rgba(var(--loader-paper-rgb), 0.22) 48%, rgba(var(--loader-paper-rgb), 0.98) 100%),
+    url("../images/M-25/25.2.parroquiasanvicenteferrer/25.2.parroquiasanvicenteferrer.2.Archivo B+M Manuel Belgrano.jpg");
+  background-position: center bottom;
+  background-size: cover;
+  filter: grayscale(1) sepia(0.28) contrast(1.45) brightness(1.12);
+  mix-blend-mode: multiply;
+  mask-image:
+    linear-gradient(to right, #000 0%, #000 48%, transparent 100%),
+    linear-gradient(to top, #000 0%, #000 58%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to right, #000 0%, #000 48%, transparent 100%),
+    linear-gradient(to top, #000 0%, #000 58%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  pointer-events: none;
+}
 .loader-content {
-  width: min(86vw, 420px);
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  width: min(86vw, 800px);
+  height: min(calc(100vh - 4.5rem), 700px);
+  display: grid;
+  align-content: center;
   align-items: center;
   justify-content: center;
+  justify-items: center;
+  gap: 0.95rem;
+  box-sizing: border-box;
+  padding: clamp(2.4rem, 4.8vw, 4rem);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 249, 240, 0.07)),
+    rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 30px;
+  box-shadow: 0 1.15rem 3rem rgba(42, 30, 40, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
-.loader img {
-  width: min(72vw, 430px);
-  max-height: min(46vh, 320px);
+.loader-brand {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  color: #5d4938;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(4.8rem, 8.6vw, 6.9rem);
+  font-weight: 400;
+  line-height: 0.82;
+  margin: 0;
+}
+.loader-logo {
+  display: block;
+  width: min(72%, 24rem);
+  height: clamp(4.5rem, 7.8vw, 6.4rem);
   object-fit: contain;
-  margin: auto 0 0.25rem;
+  margin: 0 0 0.35rem;
+}
+.loader-brand span {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 2.2rem);
+  color: currentColor;
+  letter-spacing: 0;
+  margin-top: -0.2rem;
+  white-space: nowrap;
+}
+.loader-brand span::before,
+.loader-brand span::after {
+  content: "";
+  display: block;
+  width: clamp(4.7rem, 9vw, 7.6rem);
+  height: 1px;
+  background:
+    radial-gradient(circle at 100% 50%, rgba(122, 98, 73, 0.34) 0 3px, transparent 3.5px),
+    linear-gradient(to right, rgba(122, 98, 73, 0.46), rgba(122, 98, 73, 0.46));
+  background-repeat: no-repeat;
+  background-size: 100% 100%, calc(100% - 0.1rem) 1px;
+  background-position: center, center;
+  border-radius: 999px;
+}
+.loader-brand span::after {
+  transform: scaleX(-1);
 }
 .loader.active {
-  display: flex;
+  display: grid;
 }
 .loader:not(.active) {
   display: none;
 }
 .loader-kicker {
-  color: #7d6d62;
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-subtitle);
-  letter-spacing: 0.08em;
-  line-height: 1.4;
-  margin: 0 0 0.5rem;
+  width: min(100%, 31rem);
+  color: #7a5c42;
+  font-size: clamp(0.88rem, 1.35vw, 1.08rem);
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  line-height: 1.5;
+  margin: 0.85rem 0 0.7rem;
   text-transform: uppercase;
 }
-.loader h1 {
-  color: #7d6d62;
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-title);
-  line-height: 1;
-  margin: 0 0 auto;
+.loader-quality-control {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  width: min(100%, 12.49rem);
+  margin-top: 0.2rem;
 }
 .quality-selector-label {
-  color: #5f5851;
-  font-size: var(--font-size-small);
+  color: #7a145f;
+  font-size: 0.72rem;
   font-weight: var(--font-weight-subtitle);
   line-height: 1.3;
-  margin: 1.15rem 0 0.3rem;
+  margin: 0;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 .quality-selector {
-  width: min(100%, 13.5rem);
-  min-height: 2.35rem;
-  color: #2d2926;
-  background: #fffaf3;
-  border: 1px solid rgba(99, 83, 72, 0.24);
-  border-radius: 6px;
+  width: 100%;
+  min-height: 2.08rem;
+  color: #3d3631;
+  appearance: auto;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(99, 83, 72, 0.14);
+  border-radius: 999px;
+  box-shadow: 0 0.48rem 1.05rem rgba(47, 42, 38, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.82);
   cursor: pointer;
-  font-size: var(--font-size-small);
+  font-size: 0.86rem;
   font-weight: var(--font-weight-body);
   line-height: 1.3;
   margin: 0;
-  padding: 0.55rem 0.7rem;
+  padding: 0.28rem 0.9rem;
+  text-align: left;
+}
+.loader-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3.4rem;
+  align-items: center;
+  gap: 0.8rem;
+  width: min(calc(100% + 5rem), 760px);
+  margin-top: 0.15rem;
+}
+.loader-progress {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  background: rgba(93, 64, 87, 0.12);
+  border-radius: 999px;
+  box-sizing: border-box;
+}
+.loader-progress-bar {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #7a145f, #b52a8c 48%, #2f8795);
+  border-radius: inherit;
+  transition: width 220ms ease;
 }
 .loader-status {
-  color: #5f5851;
-  font-size: var(--font-size-small);
+  width: min(100%, 520px);
+  color: #766d66;
+  font-size: 0.92rem;
   font-weight: var(--font-weight-body);
   line-height: 1.45;
-  margin: 0.65rem 0 1rem;
+  margin: 0.05rem 0 0.55rem;
   min-height: 1.4em;
+  text-align: center;
 }
-/* Loader animation */
-.loader-circle {
-  margin: 2.25rem 0 0.65rem;
-  border: 3px solid rgba(0, 0, 0, 0.1);
-  border-top: 3px solid #910e79;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  animation: spin 2s linear infinite;
-}
-.loader.ready .loader-circle {
-  display: none;
+.loader-progress-value {
+  color: #4d3948;
+  font-size: 0.98rem;
+  font-weight: var(--font-weight-subtitle);
+  line-height: 1;
+  min-width: 3.4rem;
+  text-align: right;
 }
 .loader-start-button {
-  min-width: 11.5rem;
-  min-height: 2.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: min(100%, 360px);
+  min-height: 58px;
   float: none;
   color: #fff;
-  background: #7a145f;
+  background: linear-gradient(135deg, #7a145f, #b52a8c);
   border: 0;
-  border-radius: 6px;
-  box-shadow: 0 0.65rem 1.4rem rgba(46, 29, 39, 0.22);
+  border-radius: 13px;
+  box-shadow: 0 1rem 1.9rem rgba(74, 12, 58, 0.34);
   cursor: pointer;
-  font-size: var(--font-size-small);
+  font-size: 1.05rem;
   font-weight: var(--font-weight-action);
-  letter-spacing: 0.01em;
-  margin: 0;
+  letter-spacing: 0;
+  margin: 0.45rem 0 0;
   opacity: 0;
-  padding: 0.68rem 1rem;
+  padding: 0.75rem 1.2rem;
   pointer-events: none;
   transform: translateY(8px);
-  transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease;
+  transition: opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+.loader-start-button::before {
+  content: ">";
+  font-size: 1.05rem;
+  line-height: 1;
 }
 .loader.ready .loader-start-button {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
 }
-.loader-start-button:hover {
-  background: #63104d;
+.loader-start-button:not(:disabled):hover {
+  box-shadow: 0 1.08rem 2rem rgba(74, 12, 58, 0.42);
+  filter: brightness(1.06);
+  transform: translateY(-2px);
 }
 .loader-start-button:disabled {
   cursor: default;
@@ -1381,6 +1517,74 @@ label {
   :root {
     --site-header-height: 6.1rem;
     --site-footer-height: 2.5rem;
+  }
+
+  .loader {
+    padding: 1.25rem 1.25rem;
+  }
+
+  .loader::before {
+    right: -0.28em;
+    bottom: -0.08em;
+    font-size: 9rem;
+  }
+
+  .loader::after {
+    left: 0.8rem;
+    bottom: 0.7rem;
+    width: 11rem;
+    height: 4.5rem;
+    opacity: 0.14;
+  }
+
+  .loader-content {
+    width: 100%;
+    max-height: calc(100vh - 2.5rem);
+    aspect-ratio: auto;
+    overflow-y: auto;
+    gap: 0.82rem;
+    border-radius: 26px;
+    padding: 1.85rem 1.15rem;
+  }
+
+  .loader-brand {
+    font-size: clamp(3.4rem, 19vw, 4.6rem);
+  }
+
+  .loader-logo {
+    width: min(78%, 16rem);
+    height: 5.4rem;
+  }
+
+  .loader-brand span {
+    gap: 0.72rem;
+    margin-top: -0.14rem;
+  }
+
+  .loader-brand span::before,
+  .loader-brand span::after {
+    width: clamp(2.2rem, 13vw, 3.1rem);
+  }
+
+  .loader-kicker,
+  .loader-status {
+    width: min(100%, 19rem);
+  }
+
+  .loader-progress-row {
+    width: min(100%, 19rem);
+    grid-template-columns: minmax(0, 1fr) 2.75rem;
+    gap: 0.6rem;
+  }
+
+  .loader-start-button {
+    width: min(100%, 20rem);
+    min-height: 52px;
+  }
+
+  .loader-quality-control,
+  .quality-selector {
+    width: min(100%, 15rem);
   }
 
   .site-header {

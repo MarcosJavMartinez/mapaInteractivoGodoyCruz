@@ -18,6 +18,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loader = document.querySelector(".loader");
   const loaderStartButton = document.querySelector(".loader-start-button");
   const loaderStatus = document.querySelector(".loader-status");
+  const loaderProgress = document.querySelector(".loader-progress");
+  const loaderProgressBar = document.querySelector(".loader-progress-bar");
+  const loaderProgressValue = document.querySelector(".loader-progress-value");
   const helpOverlay = document.querySelector(".help-overlay");
   const helpOpenButtons = document.querySelectorAll(".help-open-button");
   const helpStartButton = document.querySelector(".help-start-button");
@@ -32,13 +35,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   const sunSlider = document.querySelector(".sun-slider");
   const quality = setupQualitySelector(qualitySelector, { reloadOnChange: true });
 
-  loader.classList.add("active");
-  let experienceReady = false;
+  loader?.classList.add("active");
+  let canStartExperience = false;
+  let emergencyReadyTimer = null;
 
-  const markExperienceReady = (message = "Recorrido listo") => {
-    if (experienceReady) return;
-    experienceReady = true;
-    loader.classList.add("ready");
+  const setLoaderProgress = (value) => {
+    const progress = Math.min(Math.max(Math.round(value), 0), 100);
+    if (loaderProgressBar) {
+      loaderProgressBar.style.width = `${progress}%`;
+    }
+    if (loaderProgressValue) {
+      loaderProgressValue.textContent = `${progress}%`;
+    }
+    if (loaderProgress) {
+      loaderProgress.setAttribute("aria-valuenow", String(progress));
+    }
+  };
+
+  const markExperienceReady = (message = "Recorrido listo.") => {
+    if (canStartExperience) return;
+    canStartExperience = true;
+    clearTimeout(emergencyReadyTimer);
+    setLoaderProgress(100);
+    loader?.classList.add("ready");
     if (loaderStatus) {
       loaderStatus.textContent = message;
     }
@@ -47,8 +66,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  emergencyReadyTimer = setTimeout(() => {
+    markExperienceReady("Ya puedes comenzar; el recorrido sigue preparando contenido.");
+  }, 12000);
+
+  setLoaderProgress(8);
+
   loaderStartButton?.addEventListener("click", () => {
-    loader.classList.remove("active");
+    loader?.classList.remove("active");
     setOverlayActive(helpOverlay, true);
   });
 
@@ -57,61 +82,75 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindLoaderReturn(loader, loaderReturnButtons, [helpOverlay, aboutOverlay]);
   bindMobileMenu(menuToggleButton, siteNav);
 
-  renderer = setupRenderer(quality);
+  try {
+    renderer = setupRenderer(quality);
 
-  scene = new Scene();
-  scene.background = new Color(0xd7e2e6);
-  scene.fog = new Fog(0xd7e2e6, 240, 720);
+    scene = new Scene();
+    scene.background = new Color(0xd7e2e6);
+    scene.fog = new Fog(0xd7e2e6, 240, 720);
 
-  const sunController = setupLights(scene, renderer, quality);
-  const updateSunFromSlider = () => {
-    if (!sunSlider) return;
-    sunController.setProgress(Number(sunSlider.value) / 100);
-  };
-  sunSlider?.addEventListener("input", updateSunFromSlider);
-  updateSunFromSlider();
+    const sunController = setupLights(scene, renderer, quality);
+    const updateSunFromSlider = () => {
+      if (!sunSlider) return;
+      sunController.setProgress(Number(sunSlider.value) / 100);
+    };
+    sunSlider?.addEventListener("input", updateSunFromSlider);
+    updateSunFromSlider();
 
-  camera = setupCamera(renderer, quality);
-  setupResizeHandler(camera, renderer, quality);
-  setupCameraViewEditor(camera);
-  setupMarkerEditor(camera, scene, buttons);
+    camera = setupCamera(renderer, quality);
+    setupResizeHandler(camera, renderer, quality);
+    setupCameraViewEditor(camera);
+    setupMarkerEditor(camera, scene, buttons);
+    setupEventListeners(buttons, camera, quality);
+    setLoaderProgress(32);
 
-  render(scene, camera, renderer, quality, buttons);
+    render(scene, camera, renderer, quality, buttons);
+    setLoaderProgress(48);
 
-  const loadingFallback = setTimeout(() => {
-    markExperienceReady("Ya puedes comenzar; algunos modelos seguiran cargando.");
-  }, 12000);
+    const databasePlaces = await loadDatabasePlaces(loaderStatus);
+    setLoaderProgress(72);
+    if (databasePlaces.length > 0) {
+      createMarkersFromPlaces(scene, buttons, databasePlaces);
+      setLoaderProgress(88);
+      markExperienceReady("Puedes comenzar; los modelos se cargaran en segundo plano.");
+    } else {
+      markExperienceReady("La base de datos no respondio; no hay marcadores para mostrar.");
+    }
 
-  const databasePlaces = await loadDatabasePlaces(loaderStatus);
-  if (databasePlaces.length > 0) {
-    createMarkersFromPlaces(scene, buttons, databasePlaces);
-  } else {
-    markExperienceReady("La base de datos no respondio; no hay marcadores para mostrar.");
+    setTimeout(() => {
+      loadModels(scene, {
+        onProgress: (_url, itemsLoaded, itemsTotal) => {
+          if (!loaderStatus || !itemsTotal || canStartExperience) return;
+          const progress = 88 + Math.round((itemsLoaded / itemsTotal) * 12);
+          setLoaderProgress(progress);
+          loaderStatus.textContent = `Cargando recorrido... ${Math.min(progress, 100)}%`;
+        },
+        onLoad: () => {
+          markExperienceReady("Recorrido listo.");
+        },
+        onError: (url) => {
+          console.warn(`No se pudo cargar: ${url}`);
+        },
+        quality,
+      });
+    }, 250);
+  } catch (error) {
+    console.error("No se pudo iniciar la experiencia", error);
+    markExperienceReady("No se pudo cargar todo el recorrido; revisa la consola del navegador.");
   }
-  setupEventListeners(buttons, camera, quality);
-  markExperienceReady("Puedes comenzar; los modelos se cargaran en segundo plano.");
-
-  setTimeout(() => {
-    loadModels(scene, {
-      onProgress: (_url, itemsLoaded, itemsTotal) => {
-        if (!loaderStatus || !itemsTotal || experienceReady) return;
-        const progress = Math.round((itemsLoaded / itemsTotal) * 100);
-        loaderStatus.textContent = `Cargando recorrido... ${progress}%`;
-      },
-      onLoad: () => {
-        clearTimeout(loadingFallback);
-      },
-      onError: (url) => {
-        console.warn(`No se pudo cargar: ${url}`);
-      },
-      quality,
-    });
-  }, 250);
 });
 
 async function loadDatabasePlaces(loaderStatus) {
+  const timeout = new Promise((resolve) => {
+    setTimeout(() => resolve([]), 7000);
+  });
+
   try {
-    return await fetchPlaces();
+    const places = await Promise.race([fetchPlaces(), timeout]);
+    if (!places.length && loaderStatus) {
+      loaderStatus.textContent = "Recorrido listo; la base de datos no respondio.";
+    }
+    return places;
   } catch (error) {
     console.warn(error);
     if (loaderStatus) {
