@@ -172,7 +172,7 @@ select {
 }
 /* Loader */
 .loader {
-  --loader-paper-rgb: 238, 229, 216;
+  --loader-paper-rgb: 241, 226, 207;
   position: fixed;
   z-index: 9999;
   top: 0;
@@ -181,12 +181,12 @@ select {
   width: 100vw;
   overflow: hidden;
   background:
-    linear-gradient(120deg, rgba(var(--loader-paper-rgb), 0.96), rgba(232, 221, 205, 0.86)),
+    linear-gradient(120deg, rgba(var(--loader-paper-rgb), 0.96), rgba(236, 216, 190, 0.86)),
     radial-gradient(circle at 28% 20%, rgba(252, 202, 56, 0.1), transparent 24rem),
     radial-gradient(circle at 84% 18%, rgba(47, 135, 149, 0.09), transparent 25rem),
-    linear-gradient(28deg, transparent 0 23%, rgba(118, 100, 82, 0.05) 23.2% 23.45%, transparent 23.65% 100%),
-    linear-gradient(152deg, transparent 0 35%, rgba(118, 100, 82, 0.04) 35.15% 35.4%, transparent 35.6% 100%),
-    repeating-linear-gradient(8deg, transparent 0 3.4rem, rgba(85, 72, 60, 0.035) 3.45rem 3.5rem),
+    linear-gradient(28deg, transparent 0 23%, rgba(138, 91, 55, 0.06) 23.2% 23.45%, transparent 23.65% 100%),
+    linear-gradient(152deg, transparent 0 35%, rgba(138, 91, 55, 0.05) 35.15% 35.4%, transparent 35.6% 100%),
+    repeating-linear-gradient(8deg, transparent 0 3.4rem, rgba(108, 72, 45, 0.045) 3.45rem 3.5rem),
     rgb(var(--loader-paper-rgb));
   display: grid;
   place-items: center;
@@ -199,7 +199,8 @@ select {
   position: absolute;
   right: -0.1em;
   bottom: -0.18em;
-  color: rgba(121, 94, 67, 0.08);
+  color: rgba(132, 83, 47, 0.12);
+  text-shadow: 0 1px 0 rgba(255, 240, 218, 0.18);
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(13rem, 25vw, 23rem);
   font-weight: var(--font-weight-title);
@@ -213,14 +214,14 @@ select {
   bottom: 0;
   width: min(42vw, 34rem);
   height: min(45vh, 28rem);
-  opacity: 0.32;
+  opacity: 0.36;
   background:
     linear-gradient(to right, rgba(var(--loader-paper-rgb), 0) 0%, rgba(var(--loader-paper-rgb), 0.14) 48%, rgba(var(--loader-paper-rgb), 0.96) 100%),
     linear-gradient(to top, rgba(var(--loader-paper-rgb), 0) 0%, rgba(var(--loader-paper-rgb), 0.22) 48%, rgba(var(--loader-paper-rgb), 0.98) 100%),
     url("../images/M-25/25.2.parroquiasanvicenteferrer/25.2.parroquiasanvicenteferrer.2.Archivo B+M Manuel Belgrano.jpg");
   background-position: center bottom;
   background-size: cover;
-  filter: grayscale(1) sepia(0.28) contrast(1.45) brightness(1.12);
+  filter: grayscale(1) sepia(0.46) saturate(1.18) contrast(1.62) brightness(1.08);
   mix-blend-mode: multiply;
   mask-image:
     linear-gradient(to right, #000 0%, #000 48%, transparent 100%),
@@ -235,31 +236,38 @@ select {
 .loader-content {
   position: relative;
   z-index: 1;
-  width: min(86vw, 800px);
-  height: min(calc(100vh - 4.5rem), 700px);
+  width: min(82vw, 740px);
+  height: min(calc(100vh - 5.5rem), 650px);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: clamp(2.4rem, 4.8vw, 4rem);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.035), rgba(255, 249, 240, 0.015)),
+    rgba(255, 255, 255, 0.008);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  box-shadow: 0 1.15rem 3rem rgba(42, 30, 40, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.loader-content-inner {
   display: grid;
   align-content: center;
   align-items: center;
   justify-content: center;
   justify-items: center;
   gap: 0.95rem;
-  box-sizing: border-box;
-  padding: clamp(2.4rem, 4.8vw, 4rem);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 249, 240, 0.07)),
-    rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 30px;
-  box-shadow: 0 1.15rem 3rem rgba(42, 30, 40, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  width: 100%;
+  transform: scale(1.06);
+  transform-origin: center;
 }
 .loader-brand {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   min-width: 0;
-  color: #5d4938;
+  color: #84532f;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(4.8rem, 8.6vw, 6.9rem);
   font-weight: 400;
@@ -279,7 +287,7 @@ select {
   gap: clamp(1.5rem, 3vw, 2.2rem);
   color: currentColor;
   letter-spacing: 0;
-  margin-top: -0.2rem;
+  margin-top: 0;
   white-space: nowrap;
 }
 .loader-brand span::before,
@@ -289,15 +297,16 @@ select {
   width: clamp(4.7rem, 9vw, 7.6rem);
   height: 1px;
   background:
-    radial-gradient(circle at 100% 50%, rgba(122, 98, 73, 0.34) 0 3px, transparent 3.5px),
-    linear-gradient(to right, rgba(122, 98, 73, 0.46), rgba(122, 98, 73, 0.46));
+    radial-gradient(circle at 100% 50%, rgba(132, 83, 47, 0.36) 0 3px, transparent 3.5px),
+    linear-gradient(to right, rgba(132, 83, 47, 0.5), rgba(132, 83, 47, 0.5));
   background-repeat: no-repeat;
   background-size: 100% 100%, calc(100% - 0.1rem) 1px;
   background-position: center, center;
   border-radius: 999px;
+  transform: translateY(0.12em);
 }
 .loader-brand span::after {
-  transform: scaleX(-1);
+  transform: translateY(0.12em) scaleX(-1);
 }
 .loader.active {
   display: grid;
@@ -312,23 +321,23 @@ select {
   font-weight: 500;
   letter-spacing: 0.24em;
   line-height: 1.5;
-  margin: 0.85rem 0 0.7rem;
+  margin: 0.85rem 0 0;
   text-transform: uppercase;
 }
 .loader-quality-control {
   display: grid;
   justify-items: center;
-  gap: 0.45rem;
-  width: min(100%, 12.49rem);
-  margin-top: 0.2rem;
+  gap: 0.6rem;
+  width: min(100%, 13.35rem);
+  margin-top: 0.55rem;
 }
 .quality-selector-label {
   color: #7a145f;
-  font-size: 0.72rem;
-  font-weight: var(--font-weight-subtitle);
+  font-size: 0.7rem;
+  font-weight: 500;
   line-height: 1.3;
   margin: 0;
-  letter-spacing: 0.16em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 .quality-selector {
@@ -342,7 +351,7 @@ select {
   background: rgba(255, 255, 255, 0.76);
   border: 1px solid rgba(99, 83, 72, 0.14);
   cursor: pointer;
-  font-size: 0.86rem;
+  font-size: 0.92rem;
   font-weight: var(--font-weight-body);
   line-height: 1.3;
   text-align: left;
@@ -406,8 +415,8 @@ select {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 3.4rem;
   align-items: center;
-  gap: 0.8rem;
-  width: min(calc(100% + 5rem), 760px);
+  gap: 0.55rem;
+  width: min(calc(100% + 7rem), 820px);
   margin-top: 0.15rem;
 }
 .loader-progress {
@@ -428,7 +437,7 @@ select {
 }
 .loader-status {
   width: min(100%, 520px);
-  color: #766d66;
+  color: #84532f;
   font-size: 0.92rem;
   font-weight: var(--font-weight-body);
   line-height: 1.45;
@@ -445,12 +454,13 @@ select {
   text-align: right;
 }
 .loader-start-button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.65rem;
-  width: min(100%, 360px);
-  min-height: 58px;
+  gap: 0;
+  width: min(100%, 330px);
+  min-height: 50px;
   float: none;
   color: #fff;
   background: linear-gradient(135deg, #7a145f, #b52a8c);
@@ -458,8 +468,8 @@ select {
   border-radius: 13px;
   box-shadow: 0 1rem 1.9rem rgba(74, 12, 58, 0.34);
   cursor: pointer;
-  font-size: 1.05rem;
-  font-weight: var(--font-weight-action);
+  font-size: 0.92rem;
+  font-weight: 500;
   letter-spacing: 0;
   margin: 0.45rem 0 0;
   opacity: 0;
@@ -469,9 +479,14 @@ select {
   transition: opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
 }
 .loader-start-button::before {
-  content: ">";
-  font-size: 1.05rem;
-  line-height: 1;
+  content: "→";
+  position: absolute;
+  left: calc(50% - 6.55rem);
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.55rem;
+  line-height: 0;
+  transform: translateY(-0.08em);
 }
 .loader.ready .loader-start-button {
   opacity: 1;

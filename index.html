@@ -9,29 +9,31 @@
 <body>
   <div class="loader active" aria-live="polite">
     <div class="loader-content">
-      <h1 class="loader-brand">
-        <img class="loader-logo" src="images/LOGO-MUVI-V3.png" alt="MUVI Godoy Cruz">
-        <span>1950</span>
-      </h1>
-      <p class="loader-kicker">RECORRIDO PATRIMONIAL INTERACTIVO</p>
-      <div class="loader-progress-row">
-        <div class="loader-progress" role="progressbar" aria-label="Carga del recorrido" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <span class="loader-progress-bar"></span>
+      <div class="loader-content-inner">
+        <h1 class="loader-brand">
+          <img class="loader-logo" src="images/LOGO-MUVI-V3.png" alt="MUVI Godoy Cruz">
+          <span>1950</span>
+        </h1>
+        <p class="loader-kicker">RECORRIDO PATRIMONIAL INTERACTIVO</p>
+        <div class="loader-progress-row">
+          <div class="loader-progress" role="progressbar" aria-label="Carga del recorrido" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="loader-progress-bar"></span>
+          </div>
+          <span class="loader-progress-value">0%</span>
         </div>
-        <span class="loader-progress-value">0%</span>
-      </div>
-      <p class="loader-status">Preparando recorrido...</p>
-      <button class="loader-start-button" type="button" disabled>Comenzar recorrido</button>
-      <div class="loader-quality-control">
-        <span class="quality-selector-label" id="quality-selector-label">CALIDAD GRAFICA</span>
-        <div class="quality-selector" id="quality-selector" data-quality-selector aria-labelledby="quality-selector-label">
-          <button class="quality-selector-button" type="button" aria-haspopup="listbox" aria-expanded="false">
-            <span class="quality-selector-value">Equilibrado</span>
-          </button>
-          <div class="quality-selector-menu" role="listbox" tabindex="-1">
-            <button class="quality-selector-option" type="button" role="option" data-quality-value="performance">Rendimiento</button>
-            <button class="quality-selector-option" type="button" role="option" data-quality-value="balanced">Equilibrado</button>
-            <button class="quality-selector-option" type="button" role="option" data-quality-value="high">Alta calidad</button>
+        <p class="loader-status">Preparando recorrido...</p>
+        <button class="loader-start-button" type="button" disabled>Comenzar recorrido</button>
+        <div class="loader-quality-control">
+          <span class="quality-selector-label" id="quality-selector-label">CALIDAD GRAFICA</span>
+          <div class="quality-selector" id="quality-selector" data-quality-selector aria-labelledby="quality-selector-label">
+            <button class="quality-selector-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="quality-selector-value">Equilibrado</span>
+            </button>
+            <div class="quality-selector-menu" role="listbox" tabindex="-1">
+              <button class="quality-selector-option" type="button" role="option" data-quality-value="performance">Rendimiento</button>
+              <button class="quality-selector-option" type="button" role="option" data-quality-value="balanced">Equilibrado</button>
+              <button class="quality-selector-option" type="button" role="option" data-quality-value="high">Alta calidad</button>
+            </div>
           </div>
         </div>
       </div>
