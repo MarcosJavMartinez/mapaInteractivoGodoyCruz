@@ -37,15 +37,6 @@ export function createButton(text) {
   return button;
 }
 
-export function insertSnippet(input, snippet) {
-  const start = input.selectionStart;
-  const end = input.selectionEnd;
-  input.value = `${input.value.slice(0, start)}${snippet}${input.value.slice(end)}`;
-  input.focus();
-  input.selectionStart = start + snippet.length;
-  input.selectionEnd = start + snippet.length;
-}
-
 export function showTemporaryButtonText(button, text) {
   const originalText = button.textContent;
   button.textContent = text;
