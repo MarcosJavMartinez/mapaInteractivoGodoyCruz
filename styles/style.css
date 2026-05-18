@@ -332,21 +332,75 @@ select {
   text-transform: uppercase;
 }
 .quality-selector {
+  position: relative;
   width: 100%;
-  min-height: 2.08rem;
+}
+.quality-selector-button,
+.quality-selector-option {
+  width: 100%;
   color: #3d3631;
-  appearance: auto;
   background: rgba(255, 255, 255, 0.76);
   border: 1px solid rgba(99, 83, 72, 0.14);
-  border-radius: 999px;
-  box-shadow: 0 0.48rem 1.05rem rgba(47, 42, 38, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.82);
   cursor: pointer;
   font-size: 0.86rem;
   font-weight: var(--font-weight-body);
   line-height: 1.3;
-  margin: 0;
-  padding: 0.28rem 0.9rem;
   text-align: left;
+}
+.quality-selector-button {
+  position: relative;
+  min-height: 2.08rem;
+  border-radius: 999px;
+  box-shadow: 0 0.48rem 1.05rem rgba(47, 42, 38, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  margin: 0;
+  padding: 0.28rem 2.25rem 0.28rem 0.9rem;
+}
+.quality-selector-button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0.9rem;
+  width: 0.48rem;
+  height: 0.48rem;
+  border-right: 2px solid #7a145f;
+  border-bottom: 2px solid #7a145f;
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 160ms ease;
+}
+.quality-selector.open .quality-selector-button::after {
+  transform: translateY(-35%) rotate(225deg);
+}
+.quality-selector-menu {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  display: none;
+  width: 100%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(99, 83, 72, 0.14);
+  border-radius: 1.05rem;
+  box-shadow: 0 0.85rem 1.7rem rgba(47, 42, 38, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+.quality-selector.open .quality-selector-menu {
+  display: block;
+}
+.quality-selector-option {
+  display: block;
+  min-height: 2.08rem;
+  border: 0;
+  border-radius: 0;
+  padding: 0.46rem 0.9rem;
+}
+.quality-selector-option:hover,
+.quality-selector-option:focus,
+.quality-selector-option.selected {
+  color: #7a145f;
+  background: rgba(122, 20, 95, 0.08);
+  outline: 0;
 }
 .loader-progress-row {
   display: grid;

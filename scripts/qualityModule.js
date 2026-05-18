@@ -54,13 +54,102 @@ export function getQualitySettings(key = getStoredQualityKey()) {
 export function setupQualitySelector(selector, options = {}) {
   if (!selector) return getQualitySettings();
 
-  selector.value = getStoredQualityKey();
-  selector.addEventListener("change", () => {
-    localStorage.setItem(QUALITY_STORAGE_KEY, selector.value);
-    if (options.reloadOnChange) {
-      window.location.reload();
+  if (selector.matches("select")) {
+    selector.value = getStoredQualityKey();
+    selector.addEventListener("change", () => {
+      saveQualitySelection(selector.value, options);
+    });
+
+    return getQualitySettings(selector.value);
+  }
+
+  return setupCustomQualitySelector(selector, options);
+}
+
+function setupCustomQualitySelector(selector, options) {
+  const button = selector.querySelector(".quality-selector-button");
+  const value = selector.querySelector(".quality-selector-value");
+  const menu = selector.querySelector(".quality-selector-menu");
+  const optionButtons = Array.from(selector.querySelectorAll(".quality-selector-option"));
+  const storedQualityKey = getStoredQualityKey();
+
+  const closeMenu = () => {
+    selector.classList.remove("open");
+    button?.setAttribute("aria-expanded", "false");
+  };
+
+  const openMenu = () => {
+    selector.classList.add("open");
+    button?.setAttribute("aria-expanded", "true");
+    selector.querySelector(".quality-selector-option.selected")?.focus();
+  };
+
+  const setSelectedQuality = (qualityKey) => {
+    const quality = getQualitySettings(qualityKey);
+    selector.dataset.value = quality.key;
+    if (value) {
+      value.textContent = quality.label;
+    }
+    optionButtons.forEach((optionButton) => {
+      const isSelected = optionButton.dataset.qualityValue === quality.key;
+      optionButton.classList.toggle("selected", isSelected);
+      optionButton.setAttribute("aria-selected", String(isSelected));
+    });
+  };
+
+  setSelectedQuality(storedQualityKey);
+
+  button?.addEventListener("click", () => {
+    if (selector.classList.contains("open")) {
+      closeMenu();
+    } else {
+      openMenu();
     }
   });
 
-  return getQualitySettings(selector.value);
+  optionButtons.forEach((optionButton) => {
+    optionButton.addEventListener("click", () => {
+      const nextQualityKey = optionButton.dataset.qualityValue;
+      const currentQualityKey = selector.dataset.value;
+      setSelectedQuality(nextQualityKey);
+      closeMenu();
+      if (nextQualityKey !== currentQualityKey) {
+        saveQualitySelection(nextQualityKey, options);
+      }
+    });
+  });
+
+  selector.addEventListener("keydown", (event) => {
+    if (event.target.closest(".quality-selector-option")) return;
+
+    if (event.key === "Escape") {
+      closeMenu();
+      button?.focus();
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      if (selector.classList.contains("open")) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!selector.contains(event.target)) {
+      closeMenu();
+    }
+  });
+
+  return getQualitySettings(storedQualityKey);
+}
+
+function saveQualitySelection(qualityKey, options) {
+  localStorage.setItem(QUALITY_STORAGE_KEY, qualityKey);
+  if (options.reloadOnChange) {
+    window.location.reload();
+  }
 }

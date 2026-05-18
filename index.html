@@ -23,12 +23,17 @@
       <p class="loader-status">Preparando recorrido...</p>
       <button class="loader-start-button" type="button" disabled>Comenzar recorrido</button>
       <div class="loader-quality-control">
-        <label class="quality-selector-label" for="quality-selector">CALIDAD GRAFICA</label>
-        <select class="quality-selector" id="quality-selector">
-          <option value="performance">Rendimiento</option>
-          <option value="balanced">Equilibrado</option>
-          <option value="high">Alta calidad</option>
-        </select>
+        <span class="quality-selector-label" id="quality-selector-label">CALIDAD GRAFICA</span>
+        <div class="quality-selector" id="quality-selector" data-quality-selector aria-labelledby="quality-selector-label">
+          <button class="quality-selector-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span class="quality-selector-value">Equilibrado</span>
+          </button>
+          <div class="quality-selector-menu" role="listbox" tabindex="-1">
+            <button class="quality-selector-option" type="button" role="option" data-quality-value="performance">Rendimiento</button>
+            <button class="quality-selector-option" type="button" role="option" data-quality-value="balanced">Equilibrado</button>
+            <button class="quality-selector-option" type="button" role="option" data-quality-value="high">Alta calidad</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
