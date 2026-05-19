@@ -1,5 +1,5 @@
 import { GLTFLoader } from "../vendor/three/examples/jsm/loaders/GLTFLoader.js";
-import { LoadingManager, Mesh, MeshStandardMaterial, Vector3 } from "../vendor/three/build/three.module.js";
+import { Box3, LoadingManager, Mesh, MeshStandardMaterial, Vector3 } from "../vendor/three/build/three.module.js";
 import { getQualitySettings } from "./qualityModule.js";
 
 const DEFAULT_MODEL_COLOR = 0xd8c9aa;
@@ -7,6 +7,16 @@ const DEFAULT_MODEL_ROUGHNESS = 0.86;
 const DEFAULT_MODEL_METALNESS = 0.02;
 const DEFAULT_MODEL_POSITION = new Vector3(1, -2, 1);
 const DEFAULT_MODEL_SCALE = new Vector3(0.3, 0.3, 0.3);
+const NAVIGATION_COLLIDER_PADDING = 0.18;
+const NAVIGATION_MIN_FOOTPRINT = 0.55;
+const NAVIGATION_MIN_HEIGHT = 0.45;
+const NAVIGATION_MAX_FOOTPRINT = 95;
+
+const NON_BLOCKING_MODEL_KEYWORDS = [
+  "base",
+  "bloques entorno",
+  "plaza",
+];
 
 const MODEL_PATHS = [
   "models/Base.glb",
@@ -39,11 +49,14 @@ export function loadModels(scene, options = {}) {
   const quality = options.quality || getQualitySettings();
   const manager = new LoadingManager();
   const gltfLoader = new GLTFLoader(manager);
+  scene.userData.navigationObstacles = [];
+  scene.userData.navigationCollidersReady = false;
 
   manager.onProgress = (url, itemsLoaded, itemsTotal) => {
     options.onProgress?.(url, itemsLoaded, itemsTotal);
   };
   manager.onLoad = () => {
+    markNavigationCollidersReady(scene);
     options.onLoad?.();
   };
   manager.onError = (url) => {
@@ -71,6 +84,7 @@ export function loadModels(scene, options = {}) {
 function setupObject(object, path, scene, quality) {
   object.scale.copy(DEFAULT_MODEL_SCALE);
   object.position.copy(DEFAULT_MODEL_POSITION);
+  object.updateMatrixWorld(true);
 
   const fallbackMaterial = new MeshStandardMaterial({
     roughness: DEFAULT_MODEL_ROUGHNESS,
@@ -91,6 +105,57 @@ function setupObject(object, path, scene, quality) {
   });
 
   scene.add(object);
+  object.updateMatrixWorld(true);
+  registerNavigationObstacle(object, path, scene);
+}
+
+function registerNavigationObstacle(object, path, scene) {
+  if (!shouldCreateNavigationObstacle(path)) return;
+
+  const box = new Box3().setFromObject(object);
+  if (box.isEmpty()) return;
+  if (!isBlockingObstacle(box)) return;
+
+  const navigationBox = box.clone();
+  navigationBox.min.x -= NAVIGATION_COLLIDER_PADDING;
+  navigationBox.min.z -= NAVIGATION_COLLIDER_PADDING;
+  navigationBox.max.x += NAVIGATION_COLLIDER_PADDING;
+  navigationBox.max.z += NAVIGATION_COLLIDER_PADDING;
+
+  const size = navigationBox.getSize(new Vector3());
+  scene.userData.navigationObstacles ||= [];
+  scene.userData.navigationObstacles.push({
+    box: navigationBox,
+    path,
+    size: size.toArray(),
+  });
+}
+
+function isBlockingObstacle(box) {
+  const size = box.getSize(new Vector3());
+  const footprint = Math.max(size.x, size.z);
+  const thinSide = Math.min(size.x, size.z);
+  const height = size.y;
+
+  return footprint >= NAVIGATION_MIN_FOOTPRINT
+    && thinSide >= NAVIGATION_MIN_FOOTPRINT
+    && height >= NAVIGATION_MIN_HEIGHT
+    && footprint <= NAVIGATION_MAX_FOOTPRINT;
+}
+
+function shouldCreateNavigationObstacle(path) {
+  const normalizedPath = path.toLowerCase();
+  return !NON_BLOCKING_MODEL_KEYWORDS.some((keyword) => normalizedPath.includes(keyword));
+}
+
+function markNavigationCollidersReady(scene) {
+  scene.userData.navigationCollidersReady = (scene.userData.navigationObstacles || []).length > 0;
+  document.dispatchEvent(new CustomEvent("navigation:colliders-ready", {
+    detail: {
+      count: scene.userData.navigationObstacles?.length || 0,
+      ready: scene.userData.navigationCollidersReady,
+    },
+  }));
 }
 
 function tuneMaterialForRealisticLight(material, fallbackMaterial) {

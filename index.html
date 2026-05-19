@@ -24,7 +24,7 @@
         <p class="loader-status">Preparando recorrido...</p>
         <button class="loader-start-button" type="button" disabled>Comenzar recorrido</button>
         <div class="loader-quality-control">
-          <span class="quality-selector-label" id="quality-selector-label">CALIDAD GRAFICA</span>
+          <span class="quality-selector-label" id="quality-selector-label">CALIDAD GRÁFICA</span>
           <div class="quality-selector" id="quality-selector" data-quality-selector aria-labelledby="quality-selector-label">
             <button class="quality-selector-button" type="button" aria-haspopup="listbox" aria-expanded="false">
               <span class="quality-selector-value">Equilibrado</span>
@@ -43,7 +43,7 @@
     <div class="app-toolbar" aria-label="Controles del recorrido">
       <div class="sun-control">
         <span class="sun-control-label">Amanecer</span>
-        <input class="sun-slider" type="range" min="0" max="100" value="15" aria-label="Direccion del sol">
+        <input class="sun-slider" type="range" min="0" max="100" value="15" aria-label="Dirección del sol">
         <span class="sun-control-label">Atardecer</span>
       </div>
     </div>
@@ -51,16 +51,18 @@
       <img src="images/LOGO-MUVI-V3.png" alt="MUVI Godoy Cruz">
       <span>1950</span>
     </a>
-    <button class="menu-toggle-button" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="site-nav">
+    <button class="menu-toggle-button" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="site-nav">
       <span></span>
       <span></span>
       <span></span>
     </button>
-    <nav class="site-nav site-nav-right" id="site-nav" aria-label="Navegacion principal">
+    <nav class="site-nav site-nav-right" id="site-nav" aria-label="Navegación principal">
       <a href="#root">Recorrido</a>
       <button class="loader-return-button" type="button">Inicio</button>
       <button class="help-open-button" type="button">Ayuda</button>
-      <button class="about-open-button" type="button">Quienes somos</button>
+      <button class="navigation-mode-button active" type="button" data-navigation-mode="orbit" aria-pressed="true" title="Mouse para girar, rueda para acercar">Normal</button>
+      <button class="navigation-mode-button" type="button" data-navigation-mode="walk" aria-pressed="false" title="WASD para moverse, espacio para saltar, mouse para mirar">Persona</button>
+      <button class="about-open-button" type="button">Quiénes somos</button>
     </nav>
   </header>
   <div id="root"></div>
@@ -68,20 +70,31 @@
     <section class="help-panel" role="dialog" aria-labelledby="help-title" aria-modal="true">
       <button class="dialog-close-button help-close-button" type="button" aria-label="Cerrar">X</button>
       <p class="help-kicker">Antes de explorar</p>
-      <h2 id="help-title">Como navegar el mapa</h2>
-      <div class="help-grid">
-        <div class="help-item">
-          <span class="help-icon">1</span>
-          <p>Arrastra sobre el mapa para girar la vista y recorrer el entorno.</p>
+      <h2 id="help-title">Cómo navegar el mapa</h2>
+      <div class="help-demo" data-help-demo="orbit" aria-hidden="true">
+        <div class="help-demo-map">
+          <span class="help-demo-path"></span>
+          <span class="help-demo-building help-demo-building-one"></span>
+          <span class="help-demo-building help-demo-building-two"></span>
+          <span class="help-demo-building help-demo-building-three"></span>
+          <span class="help-demo-marker help-demo-marker-one"></span>
+          <span class="help-demo-marker help-demo-marker-two"></span>
+          <span class="help-demo-cursor"></span>
         </div>
-        <div class="help-item">
-          <span class="help-icon">2</span>
-          <p>Usa la rueda del mouse o el gesto de pinza para acercarte y alejarte.</p>
-        </div>
-        <div class="help-item">
-          <span class="help-icon">3</span>
-          <p>Haz click en los marcadores para ver fotos, historia y enfocar la fachada.</p>
-        </div>
+      </div>
+      <div class="help-grid" aria-label="Acciones de navegacion">
+        <button class="help-item help-action-button active" type="button" data-help-action="orbit" aria-pressed="true">
+          <span class="help-icon help-icon-drag"></span>
+          <span><strong>Arrastra</strong> sobre el mapa para girar la vista alrededor del recorrido.</span>
+        </button>
+        <button class="help-item help-action-button" type="button" data-help-action="zoom" aria-pressed="false">
+          <span class="help-icon help-icon-zoom"></span>
+          <span><strong>Acerca o aleja</strong> con la rueda del mouse o con el gesto de pinza.</span>
+        </button>
+        <button class="help-item help-action-button" type="button" data-help-action="pin" aria-pressed="false">
+          <span class="help-icon help-icon-pin"></span>
+          <span><strong>Toca un marcador</strong> para abrir fotos, historia y enfocar la fachada.</span>
+        </button>
       </div>
       <button class="help-start-button" type="button">Entendido, explorar</button>
     </section>
@@ -90,19 +103,19 @@
     <section class="about-panel" role="dialog" aria-labelledby="about-title" aria-modal="true">
       <button class="dialog-close-button about-close-button" type="button" aria-label="Cerrar">X</button>
       <p class="about-kicker">Equipo del proyecto</p>
-      <h2 id="about-title">Quienes somos</h2>
+      <h2 id="about-title">Quiénes somos</h2>
       <div class="about-columns">
         <article>
-          <h3>Investigacion historica</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Dos investigadoras recopilaron fuentes, fotografias y relatos para reconstruir la memoria urbana de Godoy Cruz.</p>
+          <h3>Investigación histórica</h3>
+          <p>El equipo de investigación reúne fuentes, fotografías y relatos para reconstruir la memoria urbana de Godoy Cruz y contextualizar cada punto del recorrido.</p>
         </article>
         <article>
-          <h3>Programacion y direccion</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. La programacion, direccion tecnica, seleccion de tecnologia y articulacion general de la experiencia estuvieron a cargo del desarrollo web interactivo.</p>
+          <h3>Programación y dirección</h3>
+          <p>El desarrollo web interactivo articula la experiencia, integra los modelos 3D, la base de datos local, los marcadores patrimoniales y las herramientas de edición.</p>
         </article>
         <article>
-          <h3>Modelado arquitectonico</h3>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cuatro arquitectos trabajaron en el modelado tridimensional de edificios, volumenes y piezas patrimoniales del recorrido.</p>
+          <h3>Modelado arquitectónico</h3>
+          <p>El equipo de arquitectura trabaja sobre edificios, volúmenes y piezas patrimoniales para construir una representación tridimensional coherente del recorrido.</p>
         </article>
       </div>
     </section>
@@ -112,11 +125,13 @@
       <strong>MUVI Godoy Cruz</strong>
       <p>Recorrido patrimonial interactivo hasta 1950.</p>
     </div>
-    <nav class="footer-nav" aria-label="Navegacion secundaria">
+    <nav class="footer-nav" aria-label="Navegación secundaria">
       <a href="#root">Recorrido</a>
       <button class="loader-return-button" type="button">Inicio</button>
       <button class="help-open-button" type="button">Ayuda</button>
-      <button class="about-open-button" type="button">Quienes somos</button>
+      <button class="navigation-mode-button active" type="button" data-navigation-mode="orbit" aria-pressed="true" title="Mouse para girar, rueda para acercar">Normal</button>
+      <button class="navigation-mode-button" type="button" data-navigation-mode="walk" aria-pressed="false" title="WASD para moverse, espacio para saltar, mouse para mirar">Persona</button>
+      <button class="about-open-button" type="button">Quiénes somos</button>
     </nav>
     <p class="footer-copy">&copy; 2023 MUVI Godoy Cruz</p>
   </footer>

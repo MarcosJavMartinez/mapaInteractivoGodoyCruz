@@ -43,7 +43,7 @@ export const QUALITY_PRESETS = {
 };
 
 export function getStoredQualityKey() {
-  const storedValue = localStorage.getItem(QUALITY_STORAGE_KEY);
+  const storedValue = readStoredQualityKey();
   return QUALITY_PRESETS[storedValue] ? storedValue : "balanced";
 }
 
@@ -148,8 +148,21 @@ function setupCustomQualitySelector(selector, options) {
 }
 
 function saveQualitySelection(qualityKey, options) {
-  localStorage.setItem(QUALITY_STORAGE_KEY, qualityKey);
+  try {
+    localStorage.setItem(QUALITY_STORAGE_KEY, qualityKey);
+  } catch (_error) {
+    // La seleccion sigue funcionando durante la sesion aunque el navegador bloquee el almacenamiento.
+  }
+
   if (options.reloadOnChange) {
     window.location.reload();
+  }
+}
+
+function readStoredQualityKey() {
+  try {
+    return localStorage.getItem(QUALITY_STORAGE_KEY);
+  } catch (_error) {
+    return null;
   }
 }

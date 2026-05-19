@@ -14,7 +14,7 @@ export function setupCameraViewEditor(camera) {
   let activeMarker = null;
   const panel = document.createElement("aside");
   panel.className = "camera-view-editor-panel";
-  panel.setAttribute("aria-label", "Editor de vistas de camara");
+  panel.setAttribute("aria-label", "Editor de vistas de cámara");
   panel.hidden = true;
 
   const header = document.createElement("div");
@@ -78,7 +78,7 @@ export function setupCameraViewEditor(camera) {
 
   document.addEventListener("marker:selected", (event) => {
     activeMarker = event.detail?.marker || null;
-    const markerTitle = event.detail?.title || "sin titulo";
+    const markerTitle = event.detail?.title || "sin título";
     const placeId = activeMarker?.userData.placeId;
     marker.textContent = placeId
       ? `Marcador: ${markerTitle} | DB #${placeId}`

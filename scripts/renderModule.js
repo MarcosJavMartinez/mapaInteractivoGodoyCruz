@@ -40,6 +40,7 @@ export function setupCamera(renderer, quality = getQualitySettings()) {
   controls.rotateSpeed = quality.rotateSpeed;
   controls.zoomSpeed = quality.zoomSpeed;
   controls.panSpeed = quality.panSpeed;
+  controls.enablePan = false;
   controls.minDistance = 16;
   controls.maxDistance = 380;
   controls.minPolarAngle = 0.12;
@@ -69,7 +70,10 @@ export function render(scene, camera, renderer, quality = getQualitySettings(), 
 
     if (delta > interval) {
       then = now - (delta % interval);
-      camera.userData.controls?.update();
+      const controls = camera.userData.controls;
+      if (!controls || controls.enabled !== false) {
+        controls?.update();
+      }
       updateMarkerScales(markers, camera, now);
       renderer.render(scene, camera);
     }

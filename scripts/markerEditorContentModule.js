@@ -60,7 +60,7 @@ export function createImageCounters() {
 export function createContentBlockList() {
   const list = document.createElement("div");
   list.className = "marker-editor-edit-list";
-  list.dataset.emptyText = "Todavia no hay textos agregados.";
+  list.dataset.emptyText = "Todavía no hay textos agregados.";
   list.textContent = list.dataset.emptyText;
   return list;
 }
@@ -109,7 +109,7 @@ export function syncContentBlockList(fields) {
 export function createImageListEditor(labelText) {
   const list = document.createElement("div");
   list.className = "marker-editor-edit-list marker-editor-image-list";
-  list.dataset.emptyText = `Todavia no hay ${labelText.toLowerCase()}.`;
+  list.dataset.emptyText = `Todavía no hay ${labelText.toLowerCase()}.`;
   list.textContent = list.dataset.emptyText;
   return list;
 }
@@ -173,7 +173,7 @@ export function updateEditorPreview(fields) {
   const exteriorImages = splitLines(fields.exteriorImagesInput.value);
   const interiorImages = splitLines(fields.interiorImagesInput.value);
 
-  preview.title.textContent = title || "Titulo del marcador";
+  preview.title.textContent = title || "Título del marcador";
   preview.title.classList.toggle("is-empty", !title);
 
   preview.image.hidden = !mainImage;
@@ -188,7 +188,7 @@ export function updateEditorPreview(fields) {
     preview.body.innerHTML = safeText;
     preview.body.classList.remove("is-empty");
   } else {
-    preview.body.textContent = "Aca se va a ver el texto del marcador.";
+    preview.body.textContent = "Acá se va a ver el texto del marcador.";
     preview.body.classList.add("is-empty");
   }
 
@@ -241,7 +241,7 @@ export function animateEditorPreviewSaved(preview, onDone) {
 export function addContentBlock({ type, draftInput, textInput, preview, fields, setFeedback }) {
   const draftText = draftInput.value.trim();
   if (!draftText) {
-    setFeedback(fields, "Escribi el texto y despues elegi un boton para agregarlo.", FEEDBACK_ERROR);
+    setFeedback(fields, "Escribí el texto y después elegí un botón para agregarlo.", FEEDBACK_ERROR);
     draftInput.focus();
     return;
   }
@@ -314,7 +314,7 @@ export function setupImageDropZone({ dropZone, type, fields, setFeedback }) {
 
     const files = getDroppedImageFiles(event);
     if (!files.length) {
-      setFeedback(fields, "Solta imagenes JPG, PNG, WEBP o GIF.", FEEDBACK_ERROR);
+      setFeedback(fields, "Soltá imágenes JPG, PNG, WEBP o GIF.", FEEDBACK_ERROR);
       return;
     }
 
@@ -327,13 +327,13 @@ export function setupImageDropZone({ dropZone, type, fields, setFeedback }) {
       dropZone.classList.add("is-uploading");
       dropZone.textContent = files.length === 1
         ? "Subiendo imagen..."
-        : `Subiendo ${files.length} imagenes...`;
+        : `Subiendo ${files.length} imágenes...`;
       setFeedback(fields, dropZone.textContent);
       const uploadedImages = await uploadDroppedImages(files);
       addUploadedImagesToFields(type, uploadedImages, fields, setFeedback);
     } catch (error) {
       console.warn("No se pudo subir la imagen", error);
-      setFeedback(fields, "No se pudieron subir las imagenes. Intenta otra vez.", FEEDBACK_ERROR);
+      setFeedback(fields, "No se pudieron subir las imágenes. Intentá otra vez.", FEEDBACK_ERROR);
     } finally {
       dropZone.classList.remove("is-uploading");
       dropZone.textContent = dropZone.dataset.idleText;
@@ -346,13 +346,13 @@ export function updateContentPreview(preview, html) {
 
   const content = html.trim();
   if (!content) {
-    preview.textContent = "Todavia no hay contenido.";
+    preview.textContent = "Todavía no hay contenido.";
     return;
   }
 
   const safeContent = sanitizeHtml(content);
   if (!safeContent) {
-    preview.textContent = "Todavia no hay contenido.";
+    preview.textContent = "Todavía no hay contenido.";
     return;
   }
 
@@ -531,9 +531,9 @@ function contentBlocksToHtml(blocks) {
 }
 
 function getContentBlockLabel(type) {
-  if (type === "subtitle") return "Subtitulo";
+  if (type === "subtitle") return "Subtítulo";
   if (type === "source") return "Fuente";
-  return "Parrafo";
+  return "Párrafo";
 }
 
 function getListText(list) {

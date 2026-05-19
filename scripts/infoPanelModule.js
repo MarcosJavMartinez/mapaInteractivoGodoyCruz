@@ -146,7 +146,7 @@ function openImageViewer(images, startIndex = 0) {
   frame.addEventListener("click", (event) => event.stopPropagation());
 
   const closeButton = createCloseButton("image-viewer-close", closeImageViewer);
-  closeButton.setAttribute("aria-label", "Cerrar visor de imagenes");
+  closeButton.setAttribute("aria-label", "Cerrar visor de imágenes");
 
   const stage = document.createElement("div");
   stage.className = "image-viewer-stage";

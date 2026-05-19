@@ -81,6 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindOverlayControls(aboutOverlay, aboutOpenButtons, [aboutCloseButton]);
   bindLoaderReturn(loader, loaderReturnButtons, [helpOverlay, aboutOverlay]);
   bindMobileMenu(menuToggleButton, siteNav);
+  setupHelpDemo(helpOverlay);
 
   try {
     renderer = setupRenderer(quality);
@@ -101,6 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupResizeHandler(camera, renderer, quality);
     setupCameraViewEditor(camera);
     setupMarkerEditor(camera, scene, buttons);
+    setupNavigationModesWhenAvailable(camera, renderer, scene);
     setupEventListeners(buttons, camera, quality);
     setLoaderProgress(32);
 
@@ -112,7 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (databasePlaces.length > 0) {
       createMarkersFromPlaces(scene, buttons, databasePlaces);
       setLoaderProgress(88);
-      markExperienceReady("Puedes comenzar; los modelos se cargaran en segundo plano.");
+      markExperienceReady("Podés comenzar; los modelos se cargarán en segundo plano.");
     } else {
       markExperienceReady("La base de datos no respondio; no hay marcadores para mostrar.");
     }
@@ -205,4 +207,39 @@ function bindMobileMenu(toggleButton, nav) {
       toggleButton.setAttribute("aria-expanded", "false");
     });
   });
+}
+
+async function setupNavigationModesWhenAvailable(camera, renderer, scene) {
+  try {
+    const module = await import("./navigationModeModule.js");
+    module.setupNavigationModes(camera, renderer, scene);
+  } catch (error) {
+    console.warn("No se pudo iniciar el modo persona", error);
+  }
+}
+
+function setupHelpDemo(helpOverlay) {
+  if (!helpOverlay) return;
+
+  const demo = helpOverlay.querySelector(".help-demo");
+  const actionButtons = helpOverlay.querySelectorAll("[data-help-action]");
+  if (!demo || !actionButtons.length) return;
+
+  const setHelpAction = (activeButton) => {
+    const action = activeButton.dataset.helpAction;
+    demo.dataset.helpDemo = action;
+    actionButtons.forEach((item) => {
+      const isActive = item === activeButton;
+      item.classList.toggle("active", isActive);
+      item.setAttribute("aria-pressed", String(isActive));
+    });
+  };
+
+  actionButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setHelpAction(button);
+    });
+  });
+
+  setHelpAction(actionButtons[0]);
 }

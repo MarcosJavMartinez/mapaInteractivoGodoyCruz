@@ -15,29 +15,40 @@ const FACADE_VIEW_HEIGHT = 18;
 const CAMERA_ANIMATION_DURATION = 900;
 const DEFAULT_MARKER_COLOR = 0xffffff;
 const ACTIVE_MARKER_COLOR = 0xffd35a;
+const CENTER_POINTER = { clientX: 0, clientY: 0 };
 
 export function setupEventListeners(buttons, camera, quality = getQualitySettings()) {
   document.body.addEventListener("click", (event) => onClick(event, buttons, camera));
   document.body.addEventListener("touchstart", (event) => onTouchStart(event, buttons, camera));
   document.body.addEventListener("pointermove", (event) => onPointerMove(event, buttons, camera, quality));
   document.addEventListener("marker:deselected", clearActiveMarker);
+  document.addEventListener("navigation:mode-changed", clearHoveredMarker);
+  setupCenteredMarkerRaycast(buttons, camera, quality);
 }
 
 function onClick(event, buttons, camera) {
   if (!isSceneEvent(event)) return;
 
+  if (isWalkPointerMode()) {
+    if (document.pointerLockElement !== event.target) return;
+
+    event.preventDefault();
+    handleSceneInteraction(getCenterPointer(), buttons, camera, { keepCameraPosition: true });
+    return;
+  }
+
   event.preventDefault();
-  handleTouchEvent(event, buttons, camera);
+  handleSceneInteraction(event, buttons, camera);
 }
 
 function onTouchStart(event, buttons, camera) {
   if (!isSceneEvent(event)) return;
 
   event.preventDefault();
-  handleTouchEvent(event.changedTouches[0], buttons, camera);
+  handleSceneInteraction(event.changedTouches[0], buttons, camera);
 }
 
-function handleTouchEvent(event, buttons, camera) {
+function handleSceneInteraction(event, buttons, camera, options = {}) {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
@@ -46,7 +57,9 @@ function handleTouchEvent(event, buttons, camera) {
   if (intersects.length > 0) {
     const button = intersects[0].object;
     setActiveMarker(button);
-    focusCameraOnMarker(camera, button);
+    if (!options.keepCameraPosition) {
+      focusCameraOnMarker(camera, button);
+    }
 
     const title = button.userData.title;
     const imageUrl = button.userData.imageUrl;
@@ -55,6 +68,11 @@ function handleTouchEvent(event, buttons, camera) {
     const interiorImages = button.userData.interiorImages;
 
     if (title || imageUrl || text || exteriorImages?.length || interiorImages?.length) {
+      if (options.keepCameraPosition && document.pointerLockElement) {
+        document.exitPointerLock?.();
+        setHoveredMarker(null);
+        document.body.classList.remove("is-over-marker");
+      }
       showContent(title, imageUrl, text, exteriorImages, interiorImages);
     }
   }
@@ -85,6 +103,8 @@ function clearActiveMarker() {
 }
 
 function onPointerMove(event, buttons, camera, quality) {
+  if (isWalkPointerMode()) return;
+
   if (!isSceneEvent(event)) {
     setHoveredMarker(null);
     document.body.classList.remove("is-over-marker");
@@ -109,6 +129,41 @@ function isSceneEvent(event) {
   return event.target instanceof HTMLCanvasElement;
 }
 
+function setupCenteredMarkerRaycast(buttons, camera, quality) {
+  let lastCenteredRaycast = 0;
+
+  function updateCenteredMarker(now) {
+    requestAnimationFrame(updateCenteredMarker);
+
+    if (!isWalkPointerMode() || !(document.pointerLockElement instanceof HTMLCanvasElement)) return;
+    if (now - lastCenteredRaycast < quality.pointerRaycastInterval) return;
+    lastCenteredRaycast = now;
+
+    const marker = getMarkerAtScreenPoint(getCenterPointer(), buttons, camera);
+    setHoveredMarker(marker);
+    document.body.classList.toggle("is-over-marker", Boolean(marker));
+  }
+
+  requestAnimationFrame(updateCenteredMarker);
+}
+
+function getMarkerAtScreenPoint(point, buttons, camera) {
+  mouse.x = (point.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(point.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  return raycaster.intersectObjects(buttons)[0]?.object || null;
+}
+
+function getCenterPointer() {
+  CENTER_POINTER.clientX = window.innerWidth / 2;
+  CENTER_POINTER.clientY = window.innerHeight / 2;
+  return CENTER_POINTER;
+}
+
+function isWalkPointerMode() {
+  return document.body.classList.contains("navigation-mode-walk");
+}
+
 function setHoveredMarker(marker) {
   if (hoveredMarker === marker) return;
 
@@ -128,6 +183,11 @@ function resetHoveredMarker() {
   hoveredMarker.userData.isHovered = false;
   hoveredMarker.material.opacity = 1;
   hoveredMarker = null;
+}
+
+function clearHoveredMarker() {
+  resetHoveredMarker();
+  document.body.classList.remove("is-over-marker");
 }
 
 function focusCameraOnMarker(camera, marker) {

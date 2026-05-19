@@ -6,29 +6,29 @@ const place = {
   slug: "parroquia-san-vicente-ferrer",
   title: "Parroquia San Vicente Ferrer",
   descriptionHtml: `
-    <p>De todos los templos religiosos que tiene Godoy Cruz, sin duda, uno de los mas representativos es la parroquia San Vicente Ferrer, ubicada, en la actualidad, en calle Lavalle al 60.</p>
+    <p>De todos los templos religiosos que tiene Godoy Cruz, sin duda, uno de los más representativos es la parroquia San Vicente Ferrer, ubicada, en la actualidad, en calle Lavalle al 60.</p>
 
-    <p>En el ano 1753, Don Tomas de Coria establecio en sus terrenos un oratorio erigido en honor a San Vicente Ferrer, religioso espanol miembro de la orden dominicana. Este sitio venia a satisfacer las necesidades religiosas de los habitantes de la region, quienes concurrian alli a celebrar bautismos, casamientos, novenas, etc. En 1804 se elevo al rango de parroquia alrededor de la cual se establecio un poblado llamado Villa de San Vicente.</p>
+    <p>En el año 1753, Don Tomás de Coria estableció en sus terrenos un oratorio erigido en honor a San Vicente Ferrer, religioso español miembro de la orden dominicana. Este sitio venía a satisfacer las necesidades religiosas de los habitantes de la región, quienes concurrían allí a celebrar bautismos, casamientos, novenas, etc. En 1804 se elevó al rango de parroquia alrededor de la cual se estableció un poblado llamado Villa de San Vicente.</p>
 
-    <p>Esta parroquia estuvo situada en el terreno frente al angulo noreste de la plaza actual de Godoy Cruz, entre las calles Antonio Tomba, Rivadavia y Balcarce, hasta el actual Espacio Verde Luis Menotti Pescarmona. Sin embargo, el terremoto acaecido el 20 de marzo de 1861 en toda la zona de Cuyo destruyo parcialmente el templo, lo que condiciono su traslado.</p>
+    <p>Esta parroquia estuvo situada en el terreno frente al ángulo noreste de la plaza actual de Godoy Cruz, entre las calles Antonio Tomba, Rivadavia y Balcarce, hasta el actual Espacio Verde Luis Menotti Pescarmona. Sin embargo, el terremoto acaecido el 20 de marzo de 1861 en toda la zona de Cuyo destruyó parcialmente el templo, lo que condicionó su traslado.</p>
 
-    <p>A raiz de esta perdida, los vecinos e integrantes de la comision pro-templo, como Balbino Arizu (1858-1936), decidieron edificar una nueva iglesia en la cuadra sur, frente a la plaza departamental. Los esfuerzos dieron sus frutos y en 1906 se comenzo a erigir. La inauguracion se produjo en 1912 y fue consagrada por el obispo Jose Americo Orzali.</p>
+    <p>A raíz de esta pérdida, los vecinos e integrantes de la comisión pro-templo, como Balbino Arizu (1858-1936), decidieron edificar una nueva iglesia en la cuadra sur, frente a la plaza departamental. Los esfuerzos dieron sus frutos y en 1906 se comenzó a erigir. La inauguración se produjo en 1912 y fue consagrada por el obispo José Américo Orzali.</p>
 
-    <p>Desde el ano 2023, gracias a las gestiones del parroco Horacio Day, el Vaticano la declaro como Basilica, ya que cuenta con los requisitos historicos, arquitectonicos y pastorales.</p>
+    <p>Desde el año 2023, gracias a las gestiones del párroco Horacio Day, el Vaticano la declaró como Basílica, ya que cuenta con los requisitos históricos, arquitectónicos y pastorales.</p>
 
     <p><strong>Texto:</strong> Andrea Segura / Gutierrez Camila, equipo MUVI GC.</p>
     <p><strong>Fuentes:</strong></p>
     <p><strong>Imagenes</strong></p>
     <ul>
-      <li>Img 1: Archivo Fotografico Equipo MUVI GC.</li>
-      <li>Img 2: Archivo Fotografico Biblioteca-Mediateca Manuel Belgrano, Godoy Cruz.</li>
-      <li>Img 3, 4 y 5: Archivo Fotografico Instituto San Vicente Ferrer.</li>
+      <li>Img 1: Archivo Fotográfico Equipo MUVI GC.</li>
+      <li>Img 2: Archivo Fotográfico Biblioteca-Mediateca Manuel Belgrano, Godoy Cruz.</li>
+      <li>Img 3, 4 y 5: Archivo Fotográfico Instituto San Vicente Ferrer.</li>
     </ul>
     <p><strong>Bibliografia:</strong></p>
     <ul>
-      <li>Braverman A. Girini, L. (2007). San Vicente Ferrer. Patrimonio Arquitectonico y Urbano de Godoy Cruz.</li>
+      <li>Braverman A. Girini, L. (2007). San Vicente Ferrer. Patrimonio Arquitectónico y Urbano de Godoy Cruz.</li>
       <li>Mastrangelo, F. (2016). Godoy Cruz, una historia. Municipalidad de Godoy Cruz.</li>
-      <li>Arguello, E. (4 de diciembre de 2023). La parroquia San Vicente Ferrer fue nombrada basilica por el Vaticano. MendozaPost.</li>
+      <li>Argüello, E. (4 de diciembre de 2023). La parroquia San Vicente Ferrer fue nombrada basílica por el Vaticano. MendozaPost.</li>
     </ul>
   `,
   mainImageUrl: "images/M-25/25.2.parroquiasanvicenteferrer/25.2.parroquiasanvicenteferrer.1.MUVI GC_DCeIC_MGC.jpg",
