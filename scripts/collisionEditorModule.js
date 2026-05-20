@@ -17,6 +17,7 @@ const VISUAL_OFFSET_Y = 0.01;
 const SLIDER_CENTER = 0;
 const MOVE_RANGE = 80;
 const SIZE_RANGE = 160;
+const HEIGHT_RANGE = 80;
 const ROTATE_RANGE = 180;
 const SMALL_BOX_SIZE = 8;
 const SMALL_BOX_HEIGHT = 4;
@@ -126,6 +127,7 @@ function createPanel(state) {
     createDeltaSlider("Mover Z", { min: -MOVE_RANGE, max: MOVE_RANGE, step: 0.05 }, (delta) => moveSelectedCollider(state, 0, delta)),
     createDeltaSlider("Ancho", { min: -SIZE_RANGE, max: SIZE_RANGE, step: 0.05 }, (delta) => resizeSelectedCollider(state, delta, 0)),
     createDeltaSlider("Fondo", { min: -SIZE_RANGE, max: SIZE_RANGE, step: 0.05 }, (delta) => resizeSelectedCollider(state, 0, delta)),
+    createDeltaSlider("Techo", { min: -HEIGHT_RANGE, max: HEIGHT_RANGE, step: 0.05 }, (delta) => resizeSelectedColliderTop(state, delta)),
     createDeltaSlider("Rotar", { min: -ROTATE_RANGE, max: ROTATE_RANGE, step: 0.5, unit: "deg" }, (delta) => rotateSelectedCollider(state, degreesToRadians(delta))),
   ];
 
@@ -518,6 +520,17 @@ function resizeSelectedCollider(state, x, z) {
   if (nextMaxZ - nextMinZ >= 0.35) {
     visual.obstacle.box.min.z = nextMinZ;
     visual.obstacle.box.max.z = nextMaxZ;
+  }
+  syncVisualToBox(visual);
+}
+
+function resizeSelectedColliderTop(state, y) {
+  const visual = getSelectedVisual(state);
+  if (!visual) return;
+
+  const nextMaxY = visual.obstacle.box.max.y + y;
+  if (nextMaxY - visual.obstacle.box.min.y >= 0.35) {
+    visual.obstacle.box.max.y = nextMaxY;
   }
   syncVisualToBox(visual);
 }
