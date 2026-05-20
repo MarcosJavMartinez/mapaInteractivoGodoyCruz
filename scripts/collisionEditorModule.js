@@ -22,6 +22,8 @@ const ROTATE_RANGE = 180;
 const SMALL_BOX_SIZE = 8;
 const SMALL_BOX_HEIGHT = 4;
 const LOCAL_MOVE_AXIS = new Vector3(0, 1, 0);
+const EDGE_REPEAT_INTERVAL_MS = 45;
+const EDGE_REPEAT_STEP_MULTIPLIER = 4;
 
 const ACTION_GROUP_NAVIGATION = "collision-editor-actions collision-editor-actions-navigation";
 const ACTION_GROUP_TOOLS = "collision-editor-actions collision-editor-actions-tools";
@@ -228,6 +230,7 @@ function createDeltaSlider(label, options, onDelta) {
   controls.className = "collision-editor-slider-controls";
 
   let lastValue = SLIDER_CENTER;
+  let edgeRepeatId = null;
 
   const applyNextValue = (rawValue) => {
     const nextValue = clamp(Number(rawValue), options.min, options.max);
@@ -241,8 +244,40 @@ function createDeltaSlider(label, options, onDelta) {
     }
   };
 
+  const getEdgeDirection = () => {
+    const currentValue = Number(input.value);
+    if (currentValue <= options.min) return -1;
+    if (currentValue >= options.max) return 1;
+    return 0;
+  };
+
+  const applyEdgeRepeat = () => {
+    const direction = getEdgeDirection();
+    if (!direction) return;
+
+    onDelta(direction * Number(options.step) * EDGE_REPEAT_STEP_MULTIPLIER);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+
+  const startEdgeRepeat = () => {
+    if (edgeRepeatId) return;
+    edgeRepeatId = window.setInterval(applyEdgeRepeat, EDGE_REPEAT_INTERVAL_MS);
+  };
+
+  const stopEdgeRepeat = () => {
+    if (!edgeRepeatId) return;
+    window.clearInterval(edgeRepeatId);
+    edgeRepeatId = null;
+  };
+
   input.addEventListener("input", () => applyNextValue(input.value));
+  input.addEventListener("pointerdown", startEdgeRepeat);
+  input.addEventListener("pointerup", stopEdgeRepeat);
+  input.addEventListener("pointercancel", stopEdgeRepeat);
+  input.addEventListener("lostpointercapture", stopEdgeRepeat);
   numberInput.addEventListener("change", () => applyNextValue(numberInput.value));
+  window.addEventListener("pointerup", stopEdgeRepeat);
+  window.addEventListener("blur", stopEdgeRepeat);
 
   header.append(title, value);
   controls.append(input, numberInput);
