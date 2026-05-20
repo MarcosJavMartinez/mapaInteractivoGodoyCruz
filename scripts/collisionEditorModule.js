@@ -131,6 +131,8 @@ function createPanel(state) {
 
   const utilityActions = createActionRow([
     ["Fijar ajuste", () => resetSliders(panel._collisionEditor)],
+    ["Activar todas", () => setAllCollidersEnabled(panel, state, true)],
+    ["Desactivar todas", () => setAllCollidersEnabled(panel, state, false)],
     ["Guardar", () => saveCurrentColliders(panel, state), "save"],
     ["Actualizar", () => refreshColliderVisuals(state)],
     ["Ocultar mallas", () => toggleVisuals(state, panel), "toggleVisuals"],
@@ -533,6 +535,18 @@ function toggleSelectedColliderEnabled(panel, state) {
   if (!visual) return;
 
   visual.obstacle.enabled = visual.obstacle.enabled === false;
+  syncNavigationObstacles(state);
+  updateColliderMaterials(state);
+  updatePanel(panel, state);
+}
+
+function setAllCollidersEnabled(panel, state, isEnabled) {
+  const colliders = getEditableColliders(state);
+  if (!colliders.length) return;
+
+  colliders.forEach((collider) => {
+    collider.enabled = isEnabled;
+  });
   syncNavigationObstacles(state);
   updateColliderMaterials(state);
   updatePanel(panel, state);
