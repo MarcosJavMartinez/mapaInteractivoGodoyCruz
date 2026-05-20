@@ -117,7 +117,7 @@ function createPanel(state) {
     ["Anterior", () => selectRelativeCollider(panel, state, -1)],
     ["Siguiente", () => selectRelativeCollider(panel, state, 1)],
     ["Enfocar", () => focusSelectedCollider(state)],
-    ["Caja chica", () => shrinkSelectedColliderNearCamera(panel, state)],
+    ["Caja chica", () => shrinkSelectedColliderToModel(panel, state)],
     ["Desactivar caja", () => toggleSelectedColliderEnabled(panel, state), "toggleEnabled"],
   ]);
 
@@ -538,14 +538,14 @@ function toggleSelectedColliderEnabled(panel, state) {
   updatePanel(panel, state);
 }
 
-function shrinkSelectedColliderNearCamera(panel, state) {
+function shrinkSelectedColliderToModel(panel, state) {
   const visual = getSelectedVisual(state);
   if (!visual) return;
 
-  const controlsTarget = state.camera?.userData.controls?.target;
-  const center = controlsTarget || visual.obstacle.box.getCenter(new Vector3());
+  const referenceBox = visual.obstacle.defaultBox || visual.obstacle.box;
+  const center = referenceBox.getCenter(new Vector3());
   const halfSize = SMALL_BOX_SIZE / 2;
-  const groundY = visual.obstacle.box.min.y;
+  const groundY = referenceBox.min.y;
   visual.obstacle.box.min.set(center.x - halfSize, groundY, center.z - halfSize);
   visual.obstacle.box.max.set(center.x + halfSize, groundY + SMALL_BOX_HEIGHT, center.z + halfSize);
   visual.obstacle.enabled = true;
