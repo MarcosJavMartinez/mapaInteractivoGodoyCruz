@@ -8,6 +8,32 @@ export async function fetchPlaces() {
   return response.json();
 }
 
+export async function fetchCollisionOverrides() {
+  const response = await fetch("/api/collision-overrides");
+
+  if (!response.ok) {
+    throw new Error(`No se pudieron cargar las colisiones (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function saveCollisionOverrides(colliders) {
+  const response = await fetch("/api/collision-overrides", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ colliders }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudieron guardar las colisiones (${response.status})`);
+  }
+
+  return response.json();
+}
+
 export async function savePlaceCameraView(placeId, cameraView) {
   const response = await fetch(`/api/places/${placeId}/camera-view`, {
     method: "PUT",

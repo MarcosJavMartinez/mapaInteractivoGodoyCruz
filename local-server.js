@@ -16,6 +16,7 @@ const mimeTypes = {
   ".gif": "image/gif",
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
+  ".hdr": "image/vnd.radiance",
   ".glb": "model/gltf-binary",
   ".gltf": "model/gltf+json",
   ".bin": "application/octet-stream",

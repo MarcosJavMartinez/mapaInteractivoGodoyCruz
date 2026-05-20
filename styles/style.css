@@ -191,6 +191,11 @@ select {
   color: #fff;
   background: var(--wine-accent);
 }
+.environment-toggle-button.active {
+  color: var(--warm-brown-dark);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(122, 20, 95, 0.18);
+}
 .navigation-mode-button:disabled {
   cursor: wait;
   opacity: 0.48;
@@ -1535,6 +1540,147 @@ label {
 .camera-view-editor-finder button:hover {
   background: linear-gradient(135deg, #64104d, #8f2472);
 }
+.collision-editor-panel {
+  position: fixed;
+  left: 0.75rem;
+  top: calc(var(--site-header-height) + 0.75rem);
+  z-index: 1200;
+  display: grid;
+  gap: 0.58rem;
+  width: min(92vw, 27rem);
+  box-sizing: border-box;
+  color: var(--warm-brown-dark);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 244, 228, 0.06)),
+    var(--glass-panel-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  font-size: var(--font-size-body);
+  line-height: 1.35;
+  padding: clamp(1rem, 2.8vw, 1.45rem);
+  pointer-events: auto;
+  user-select: text;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+.collision-editor-panel[hidden] {
+  display: none;
+}
+.collision-editor-header {
+  min-height: 2rem;
+}
+.collision-editor-panel h2 {
+  color: var(--wine-accent);
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-title);
+  line-height: 1.12;
+  margin: 0 2.2rem 0 0;
+}
+.collision-editor-panel p {
+  margin: 0;
+}
+.collision-editor-status {
+  color: var(--warm-brown-dark);
+  font-weight: var(--font-weight-subtitle);
+}
+.collision-editor-details {
+  color: #5a4638;
+  background: rgba(255, 249, 239, 0.56);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: var(--font-size-small);
+  line-height: 1.35;
+  padding: 0.48rem 0.55rem;
+}
+.collision-editor-select-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--warm-brown-dark);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-subtitle);
+}
+.collision-editor-select {
+  width: 100%;
+  min-height: 2.2rem;
+  box-sizing: border-box;
+  color: var(--warm-brown-dark);
+  background: rgba(255, 249, 239, 0.82);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  font-size: var(--font-size-small);
+  padding: 0.42rem 0.5rem;
+}
+.collision-editor-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.8rem, 1fr));
+  gap: 0.4rem;
+}
+.collision-editor-actions button {
+  min-height: 1.8rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--wine-accent), #a52a83);
+  border: 1px solid rgba(122, 20, 95, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 0.45rem 1rem rgba(58, 38, 27, 0.22);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-action);
+  line-height: 1;
+  padding: 0.5rem 0.7rem;
+}
+.collision-editor-actions button:hover {
+  background: linear-gradient(135deg, #64104d, #8f2472);
+}
+.collision-editor-slider {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--warm-brown-dark);
+  background: rgba(255, 249, 239, 0.5);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 0.48rem 0.55rem;
+}
+.collision-editor-slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-subtitle);
+  line-height: 1.2;
+}
+.collision-editor-slider-header span:last-child {
+  color: var(--wine-accent);
+  font-family: Consolas, "Courier New", monospace;
+  font-weight: var(--font-weight-body);
+}
+.collision-editor-slider input {
+  width: 100%;
+  accent-color: var(--wine-accent);
+}
+.collision-editor-slider-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.9rem;
+  align-items: center;
+  gap: 0.55rem;
+}
+.collision-editor-slider-controls input[type="range"] {
+  width: 100%;
+}
+.collision-editor-number {
+  width: 100%;
+  min-height: 1.7rem;
+  box-sizing: border-box;
+  color: var(--warm-brown-dark);
+  background: rgba(255, 249, 239, 0.72);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: var(--font-size-small);
+  line-height: 1;
+  padding: 0.25rem 0.35rem;
+}
 .marker-editor-panel {
   position: fixed;
   right: 0.75rem;
@@ -2195,6 +2341,19 @@ label {
   .camera-view-editor-finder button,
   .camera-view-editor-actions button {
     width: 100%;
+  }
+
+  .collision-editor-panel {
+    left: 0.5rem;
+    top: calc(var(--site-header-height) + 0.5rem);
+    width: calc(100vw - 1rem);
+    font-size: 0.72rem;
+    gap: 0.55rem;
+    padding: 0.65rem;
+  }
+
+  .collision-editor-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .marker-editor-panel {

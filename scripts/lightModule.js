@@ -49,7 +49,12 @@ export function setupLights(scene, renderer, quality = getQualitySettings()) {
   scene.add(coolFillLight);
   scene.add(coolFillLight.target);
 
-  const sunController = createSunController(sunLight);
+  const sunController = createSunController({
+    sunLight,
+    skyLight,
+    ambientLight,
+    coolFillLight,
+  });
   sunController.setProgress(0.5);
   return sunController;
 }
@@ -73,10 +78,19 @@ function createDirectionalLight({ position, target, color, intensity, shadowSize
   return light;
 }
 
-function createSunController(sunLight) {
+function createSunController({ sunLight, skyLight, ambientLight, coolFillLight }) {
   const sunriseColor = new Color(0xffb36f);
   const noonColor = new Color(0xfff0d0);
   const sunsetColor = new Color(0xff9f63);
+  const dawnSkyColor = new Color(0xb9cfe8);
+  const noonSkyColor = new Color(0xd9eaff);
+  const sunsetSkyColor = new Color(0xd0b5d4);
+  const dawnGroundColor = new Color(0x7b6754);
+  const noonGroundColor = new Color(0x7f775f);
+  const sunsetGroundColor = new Color(0x745b55);
+  const dawnFillColor = new Color(0xc7d9ff);
+  const noonFillColor = new Color(0xd6e6ff);
+  const sunsetFillColor = new Color(0xc6b2ff);
 
   return {
     setProgress(progress) {
@@ -87,6 +101,12 @@ function createSunController(sunLight) {
       const to = firstHalf ? SUN_PATH.noon : SUN_PATH.sunset;
       const fromColor = firstHalf ? sunriseColor : noonColor;
       const toColor = firstHalf ? noonColor : sunsetColor;
+      const fromSkyColor = firstHalf ? dawnSkyColor : noonSkyColor;
+      const toSkyColor = firstHalf ? noonSkyColor : sunsetSkyColor;
+      const fromGroundColor = firstHalf ? dawnGroundColor : noonGroundColor;
+      const toGroundColor = firstHalf ? noonGroundColor : sunsetGroundColor;
+      const fromFillColor = firstHalf ? dawnFillColor : noonFillColor;
+      const toFillColor = firstHalf ? noonFillColor : sunsetFillColor;
 
       sunLight.position.set(
         lerp(from[0], to[0], localProgress),
@@ -99,6 +119,21 @@ function createSunController(sunLight) {
         : lerp(1.45, 1.08, localProgress);
       sunLight.target.position.set(...SUN_TARGET);
       sunLight.target.updateMatrixWorld();
+
+      skyLight.color.copy(fromSkyColor).lerp(toSkyColor, localProgress);
+      skyLight.groundColor.copy(fromGroundColor).lerp(toGroundColor, localProgress);
+      skyLight.intensity = firstHalf
+        ? lerp(0.46, 0.58, localProgress)
+        : lerp(0.58, 0.48, localProgress);
+
+      ambientLight.intensity = firstHalf
+        ? lerp(0.035, 0.045, localProgress)
+        : lerp(0.045, 0.034, localProgress);
+
+      coolFillLight.color.copy(fromFillColor).lerp(toFillColor, localProgress);
+      coolFillLight.intensity = firstHalf
+        ? lerp(0.18, 0.24, localProgress)
+        : lerp(0.24, 0.16, localProgress);
     },
   };
 }

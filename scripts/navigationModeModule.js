@@ -259,7 +259,7 @@ function moveWithCollisionStep(position, movement, state, radius) {
   const nextPosition = position.clone().add(movement);
   clampCameraPosition(nextPosition);
 
-  if (currentObstacle && isInsideObstacleBox(position, currentObstacle.box)) {
+  if (currentObstacle && isInsideObstacle(position, currentObstacle)) {
     const currentCenter = getObstacleCenter(currentObstacle);
     const currentDistanceSq = planarDistanceSq(position, currentCenter);
     const nextDistanceSq = planarDistanceSq(nextPosition, currentCenter);
@@ -306,12 +306,23 @@ function getBlockingObstacle(position, state, radius) {
   const obstacles = getNearbyNavigationObstacles(position, state);
   if (!obstacles.length) return null;
 
-  return obstacles.find(({ box }) => isCircleTouchingBox(position, radius, box)) || null;
+  return obstacles.find((obstacle) => isCircleTouchingObstacle(position, radius, obstacle)) || null;
 }
 
 function getNearbyNavigationObstacles(position, state) {
   const obstacles = state.scene?.userData.navigationObstacles || [];
-  return obstacles.filter(({ box }) => isBoxNearPointXZ(box, position, NEAR_OBSTACLE_RADIUS));
+  return obstacles.filter((obstacle) => isObstacleNearPointXZ(obstacle, position, NEAR_OBSTACLE_RADIUS));
+}
+
+function isObstacleNearPointXZ(obstacle, position, radius) {
+  if (hasObstacleRotation(obstacle)) {
+    const center = getObstacleCenter(obstacle);
+    const half = getObstacleHalfSize(obstacle);
+    const reach = Math.hypot(half.x, half.z) + radius;
+    return planarDistanceSq(position, center) <= reach ** 2;
+  }
+
+  return isBoxNearPointXZ(obstacle.box, position, radius);
 }
 
 function isBoxNearPointXZ(box, position, radius) {
@@ -332,6 +343,19 @@ function planarDistanceSq(position, point) {
   return ((position.x - point.x) ** 2) + ((position.z - point.z) ** 2);
 }
 
+function isCircleTouchingObstacle(position, radius, obstacle) {
+  if (hasObstacleRotation(obstacle)) {
+    const localPosition = worldToObstacleLocal(position, obstacle);
+    const half = getObstacleHalfSize(obstacle);
+    const closestX = clamp(localPosition.x, -half.x, half.x);
+    const closestZ = clamp(localPosition.z, -half.z, half.z);
+    const distanceSq = ((localPosition.x - closestX) ** 2) + ((localPosition.z - closestZ) ** 2);
+    return distanceSq <= radius ** 2;
+  }
+
+  return isCircleTouchingBox(position, radius, obstacle.box);
+}
+
 function isCircleTouchingBox(position, radius, box) {
   const closestX = clamp(position.x, box.min.x, box.max.x);
   const closestZ = clamp(position.z, box.min.z, box.max.z);
@@ -341,12 +365,29 @@ function isCircleTouchingBox(position, radius, box) {
 
 function resolveCurrentPenetration(position, state, radius) {
   const obstacle = getBlockingObstacle(position, state, radius);
-  if (!obstacle || !isInsideObstacleBox(position, obstacle.box)) return;
+  if (!obstacle || !isInsideObstacle(position, obstacle)) return;
 
-  const pushedPosition = getNearestPositionOutsideBox(position, obstacle.box, radius);
+  const pushedPosition = getNearestPositionOutsideObstacle(position, obstacle, radius);
   position.x = pushedPosition.x;
   position.z = pushedPosition.z;
   clampCameraPosition(position);
+}
+
+function getNearestPositionOutsideObstacle(position, obstacle, radius) {
+  if (hasObstacleRotation(obstacle)) {
+    const localPosition = worldToObstacleLocal(position, obstacle);
+    const half = getObstacleHalfSize(obstacle);
+    const exits = [
+      { axis: "x", value: -half.x - radius - COLLISION_EPSILON, distance: Math.abs(localPosition.x + half.x) },
+      { axis: "x", value: half.x + radius + COLLISION_EPSILON, distance: Math.abs(half.x - localPosition.x) },
+      { axis: "z", value: -half.z - radius - COLLISION_EPSILON, distance: Math.abs(localPosition.z + half.z) },
+      { axis: "z", value: half.z + radius + COLLISION_EPSILON, distance: Math.abs(half.z - localPosition.z) },
+    ].sort((a, b) => a.distance - b.distance);
+    localPosition[exits[0].axis] = exits[0].value;
+    return obstacleLocalToWorld(localPosition, obstacle);
+  }
+
+  return getNearestPositionOutsideBox(position, obstacle.box, radius);
 }
 
 function getNearestPositionOutsideBox(position, box, radius) {
@@ -361,11 +402,59 @@ function getNearestPositionOutsideBox(position, box, radius) {
   return pushedPosition;
 }
 
+function isInsideObstacle(position, obstacle) {
+  if (hasObstacleRotation(obstacle)) {
+    const localPosition = worldToObstacleLocal(position, obstacle);
+    const half = getObstacleHalfSize(obstacle);
+    return localPosition.x > -half.x
+      && localPosition.x < half.x
+      && localPosition.z > -half.z
+      && localPosition.z < half.z;
+  }
+
+  return isInsideObstacleBox(position, obstacle.box);
+}
+
 function isInsideObstacleBox(position, box) {
   return position.x > box.min.x
     && position.x < box.max.x
     && position.z > box.min.z
     && position.z < box.max.z;
+}
+
+function hasObstacleRotation(obstacle) {
+  return Math.abs(obstacle.rotationY || 0) > 0.0001;
+}
+
+function getObstacleHalfSize(obstacle) {
+  return {
+    x: (obstacle.box.max.x - obstacle.box.min.x) / 2,
+    z: (obstacle.box.max.z - obstacle.box.min.z) / 2,
+  };
+}
+
+function worldToObstacleLocal(position, obstacle) {
+  const center = getObstacleCenter(obstacle);
+  const dx = position.x - center.x;
+  const dz = position.z - center.z;
+  const angle = -(obstacle.rotationY || 0);
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    x: dx * cos - dz * sin,
+    z: dx * sin + dz * cos,
+  };
+}
+
+function obstacleLocalToWorld(localPosition, obstacle) {
+  const center = getObstacleCenter(obstacle);
+  const angle = obstacle.rotationY || 0;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    x: center.x + localPosition.x * cos - localPosition.z * sin,
+    z: center.z + localPosition.x * sin + localPosition.z * cos,
+  };
 }
 
 function saveOrbitControls(camera, state) {

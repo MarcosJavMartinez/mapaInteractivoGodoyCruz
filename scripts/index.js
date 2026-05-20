@@ -7,6 +7,9 @@ import { setupEventListeners } from "./eventModule.js";
 import { setupQualitySelector } from "./qualityModule.js";
 import { setupCameraViewEditor } from "./cameraViewEditorModule.js";
 import { setupMarkerEditor } from "./markerEditorModule.js";
+import { setupCloudShadows } from "./cloudShadowModule.js";
+import { setupEnvironment } from "./environmentModule.js";
+import { setupCollisionEditor } from "./collisionEditorModule.js";
 import { fetchPlaces } from "./apiClient.js";
 
 const buttons = [];
@@ -33,6 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const siteNav = document.querySelector(".site-nav");
   const qualitySelector = document.querySelector(".quality-selector");
   const sunSlider = document.querySelector(".sun-slider");
+  const environmentToggleButtons = document.querySelectorAll(".environment-toggle-button");
   const quality = setupQualitySelector(qualitySelector, { reloadOnChange: true });
 
   loader?.classList.add("active");
@@ -91,9 +95,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     scene.fog = new Fog(0xd7e2e6, 240, 720);
 
     const sunController = setupLights(scene, renderer, quality);
+    const environmentController = setupEnvironment(scene);
+    bindEnvironmentToggle(environmentController, environmentToggleButtons);
+    setupCloudShadows(scene);
     const updateSunFromSlider = () => {
       if (!sunSlider) return;
-      sunController.setProgress(Number(sunSlider.value) / 100);
+      const sunProgress = Number(sunSlider.value) / 100;
+      sunController.setProgress(sunProgress);
+      environmentController?.setProgress(sunProgress);
     };
     sunSlider?.addEventListener("input", updateSunFromSlider);
     updateSunFromSlider();
@@ -102,6 +111,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupResizeHandler(camera, renderer, quality);
     setupCameraViewEditor(camera);
     setupMarkerEditor(camera, scene, buttons);
+    setupCollisionEditor(scene, camera, renderer);
     setupNavigationModesWhenAvailable(camera, renderer, scene);
     setupEventListeners(buttons, camera, quality);
     setLoaderProgress(32);
@@ -205,6 +215,25 @@ function bindMobileMenu(toggleButton, nav) {
       nav.classList.remove("active");
       toggleButton.classList.remove("active");
       toggleButton.setAttribute("aria-expanded", "false");
+    });
+  });
+}
+
+function bindEnvironmentToggle(environmentController, buttons) {
+  if (!environmentController || !buttons.length) return;
+
+  const setWhiteBackground = (isActive) => {
+    environmentController.setWhiteBackground(isActive);
+    buttons.forEach((button) => {
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+      button.textContent = isActive ? "Ver cielo" : "Fondo blanco";
+    });
+  };
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setWhiteBackground(button.getAttribute("aria-pressed") !== "true");
     });
   });
 }

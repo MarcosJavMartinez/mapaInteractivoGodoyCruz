@@ -1,5 +1,6 @@
 import { GLTFLoader } from "../vendor/three/examples/jsm/loaders/GLTFLoader.js";
 import { Box3, LoadingManager, Mesh, MeshStandardMaterial, Vector3 } from "../vendor/three/build/three.module.js";
+import { fetchCollisionOverrides } from "./apiClient.js";
 import { getQualitySettings } from "./qualityModule.js";
 
 const DEFAULT_MODEL_COLOR = 0xd8c9aa;
@@ -45,17 +46,25 @@ const MODEL_PATHS = [
   "models/Bloques Entorno.glb",
 ];
 
+let collisionOverridesPromise = null;
+
 export function loadModels(scene, options = {}) {
   const quality = options.quality || getQualitySettings();
   const manager = new LoadingManager();
   const gltfLoader = new GLTFLoader(manager);
+  const pendingSetups = [];
   scene.userData.navigationObstacles = [];
+  scene.userData.navigationColliderCandidates = [];
   scene.userData.navigationCollidersReady = false;
+  scene.userData.navigationCollisionOverrides = {};
+  collisionOverridesPromise = loadCollisionOverrides(scene);
 
   manager.onProgress = (url, itemsLoaded, itemsTotal) => {
     options.onProgress?.(url, itemsLoaded, itemsTotal);
   };
-  manager.onLoad = () => {
+  manager.onLoad = async () => {
+    await collisionOverridesPromise;
+    await Promise.allSettled(pendingSetups);
     markNavigationCollidersReady(scene);
     options.onLoad?.();
   };
@@ -67,11 +76,14 @@ export function loadModels(scene, options = {}) {
     gltfLoader.load(
       path,
       (gltf) => {
-        try {
-          setupObject(gltf.scene, path, scene, quality);
-        } catch (error) {
-          console.error("Error al configurar el objeto:", error);
-        }
+        const setup = collisionOverridesPromise.then(() => {
+          try {
+            setupObject(gltf.scene, path, scene, quality);
+          } catch (error) {
+            console.error("Error al configurar el objeto:", error);
+          }
+        });
+        pendingSetups.push(setup);
       },
       undefined,
       (error) => {
@@ -110,11 +122,8 @@ function setupObject(object, path, scene, quality) {
 }
 
 function registerNavigationObstacle(object, path, scene) {
-  if (!shouldCreateNavigationObstacle(path)) return;
-
   const box = new Box3().setFromObject(object);
   if (box.isEmpty()) return;
-  if (!isBlockingObstacle(box)) return;
 
   const navigationBox = box.clone();
   navigationBox.min.x -= NAVIGATION_COLLIDER_PADDING;
@@ -122,13 +131,61 @@ function registerNavigationObstacle(object, path, scene) {
   navigationBox.max.x += NAVIGATION_COLLIDER_PADDING;
   navigationBox.max.z += NAVIGATION_COLLIDER_PADDING;
 
-  const size = navigationBox.getSize(new Vector3());
-  scene.userData.navigationObstacles ||= [];
-  scene.userData.navigationObstacles.push({
-    box: navigationBox,
+  const override = scene.userData.navigationCollisionOverrides?.[path];
+  const defaultEnabled = shouldCreateNavigationObstacle(path) && isBlockingObstacle(box);
+  const colliderBox = override ? boxFromOverride(override, navigationBox) : navigationBox;
+  const size = colliderBox.getSize(new Vector3());
+  const collider = {
+    box: colliderBox,
+    defaultBox: navigationBox.clone(),
     path,
     size: size.toArray(),
-  });
+    enabled: typeof override?.enabled === "boolean" ? override.enabled : defaultEnabled,
+    rotationY: Number.isFinite(override?.rotationY) ? override.rotationY : 0,
+  };
+
+  scene.userData.navigationColliderCandidates ||= [];
+  scene.userData.navigationColliderCandidates.push(collider);
+  if (collider.enabled) {
+    scene.userData.navigationObstacles ||= [];
+    scene.userData.navigationObstacles.push(collider);
+  }
+}
+
+async function loadCollisionOverrides(scene) {
+  try {
+    const data = await fetchCollisionOverrides();
+    scene.userData.navigationCollisionOverrides = createOverrideMap(data?.colliders);
+  } catch (error) {
+    console.warn("No se pudieron cargar los ajustes de colision", error);
+    scene.userData.navigationCollisionOverrides = {};
+  }
+}
+
+function createOverrideMap(colliders) {
+  if (!Array.isArray(colliders)) return {};
+
+  return colliders.reduce((map, collider) => {
+    if (typeof collider?.path === "string" && isVectorArray(collider.min) && isVectorArray(collider.max)) {
+      map[collider.path] = collider;
+    }
+    return map;
+  }, {});
+}
+
+function boxFromOverride(override, fallbackBox) {
+  const box = new Box3(
+    new Vector3(override.min[0], override.min[1], override.min[2]),
+    new Vector3(override.max[0], override.max[1], override.max[2])
+  );
+
+  return box.isEmpty() ? fallbackBox : box;
+}
+
+function isVectorArray(value) {
+  return Array.isArray(value)
+    && value.length === 3
+    && value.every(Number.isFinite);
 }
 
 function isBlockingObstacle(box) {

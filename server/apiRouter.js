@@ -5,6 +5,7 @@ const { createPlaceRepository } = require("./repositories/placeRepository");
 
 const UPLOAD_DIR = path.join(process.cwd(), "images", "uploads");
 const UPLOAD_ROUTE = "images/uploads";
+const COLLISION_OVERRIDES_PATH = path.join(process.cwd(), "data", "collision-overrides.json");
 const MAX_UPLOAD_BODY_BYTES = 30 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Map([
   ["image/jpeg", ".jpg"],
@@ -37,6 +38,24 @@ async function routeApiRequest(req, res, pathname, places) {
 
   if (req.method === "GET" && pathname === "/api/places") {
     sendJson(res, 200, places.listPlaces());
+    return;
+  }
+
+  if (req.method === "GET" && pathname === "/api/collision-overrides") {
+    sendJson(res, 200, readCollisionOverrides());
+    return;
+  }
+
+  if (req.method === "PUT" && pathname === "/api/collision-overrides") {
+    const body = await readJsonBody(req);
+
+    if (!isCollisionOverridesUpdate(body)) {
+      sendJson(res, 400, { error: "Invalid collision data" });
+      return;
+    }
+
+    const overrides = saveCollisionOverrides(body.colliders);
+    sendJson(res, 200, overrides);
     return;
   }
 
@@ -146,6 +165,33 @@ function sendJson(res, statusCode, payload) {
     "Cache-Control": "no-store",
   });
   res.end(JSON.stringify(payload));
+}
+
+function readCollisionOverrides() {
+  try {
+    if (!fs.existsSync(COLLISION_OVERRIDES_PATH)) {
+      return { version: 1, colliders: [] };
+    }
+
+    const data = JSON.parse(fs.readFileSync(COLLISION_OVERRIDES_PATH, "utf8"));
+    return isCollisionOverridesUpdate(data)
+      ? { version: 1, colliders: normalizeCollisionOverrides(data.colliders) }
+      : { version: 1, colliders: [] };
+  } catch (error) {
+    console.warn("No se pudieron leer los ajustes de colision", error);
+    return { version: 1, colliders: [] };
+  }
+}
+
+function saveCollisionOverrides(colliders) {
+  const payload = {
+    version: 1,
+    colliders: normalizeCollisionOverrides(colliders),
+  };
+
+  fs.mkdirSync(path.dirname(COLLISION_OVERRIDES_PATH), { recursive: true });
+  fs.writeFileSync(COLLISION_OVERRIDES_PATH, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  return payload;
 }
 
 function readJsonBody(req, maxBodyBytes = 1_000_000) {
@@ -273,6 +319,40 @@ function isCameraView(view) {
     && view.target.length === 3
     && view.position.every(Number.isFinite)
     && view.target.every(Number.isFinite);
+}
+
+function isCollisionOverridesUpdate(value) {
+  return Array.isArray(value?.colliders)
+    && value.colliders.every(isCollisionOverride);
+}
+
+function isCollisionOverride(collider) {
+  return typeof collider?.path === "string"
+    && collider.path.trim().length > 0
+    && isVectorArray(collider.min)
+    && isVectorArray(collider.max)
+    && (collider.enabled === undefined || typeof collider.enabled === "boolean")
+    && (collider.rotationY === undefined || Number.isFinite(collider.rotationY));
+}
+
+function normalizeCollisionOverrides(colliders) {
+  return colliders.map((collider) => ({
+    path: collider.path.trim(),
+    min: collider.min.map(cleanNumber),
+    max: collider.max.map(cleanNumber),
+    enabled: collider.enabled !== false,
+    rotationY: cleanNumber(collider.rotationY || 0),
+  }));
+}
+
+function isVectorArray(value) {
+  return Array.isArray(value)
+    && value.length === 3
+    && value.every(Number.isFinite);
+}
+
+function cleanNumber(value) {
+  return Number(value.toFixed(6));
 }
 
 function isPlaceUpdate(place) {
