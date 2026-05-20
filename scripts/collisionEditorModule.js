@@ -20,6 +20,7 @@ const SIZE_RANGE = 160;
 const ROTATE_RANGE = 180;
 const SMALL_BOX_SIZE = 8;
 const SMALL_BOX_HEIGHT = 4;
+const LOCAL_MOVE_AXIS = new Vector3(0, 1, 0);
 
 export function setupCollisionEditor(scene, camera, renderer) {
   if (!scene || !camera || !renderer) return;
@@ -487,11 +488,16 @@ function moveSelectedCollider(state, x, z) {
   const visual = getSelectedVisual(state);
   if (!visual) return;
 
-  visual.obstacle.box.min.x += x;
-  visual.obstacle.box.max.x += x;
-  visual.obstacle.box.min.z += z;
-  visual.obstacle.box.max.z += z;
+  const movement = getLocalMoveVector(visual.obstacle, x, z);
+  visual.obstacle.box.min.x += movement.x;
+  visual.obstacle.box.max.x += movement.x;
+  visual.obstacle.box.min.z += movement.z;
+  visual.obstacle.box.max.z += movement.z;
   syncVisualToBox(visual);
+}
+
+function getLocalMoveVector(obstacle, x, z) {
+  return new Vector3(x, 0, z).applyAxisAngle(LOCAL_MOVE_AXIS, obstacle.rotationY || 0);
 }
 
 function resizeSelectedCollider(state, x, z) {
