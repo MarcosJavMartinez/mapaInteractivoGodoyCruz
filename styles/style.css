@@ -1633,17 +1633,51 @@ label {
 }
 .collision-editor-actions button {
   min-height: 1.8rem;
-  color: #fff;
-  background: linear-gradient(135deg, var(--wine-accent), #a52a83);
+  color: var(--wine-accent);
+  background: rgba(255, 249, 239, 0.76);
   border: 1px solid rgba(122, 20, 95, 0.18);
   border-radius: 8px;
-  box-shadow: 0 0.45rem 1rem rgba(58, 38, 27, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-action);
   line-height: 1;
   padding: 0.5rem 0.7rem;
 }
 .collision-editor-actions button:hover {
+  color: #fff;
+  background: linear-gradient(135deg, #64104d, #8f2472);
+}
+.collision-editor-actions-navigation {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.collision-editor-actions-tools,
+.collision-editor-actions-bulk {
+  padding-top: 0.1rem;
+}
+.collision-editor-actions-bulk button:first-child {
+  color: #155f68;
+  border-color: rgba(47, 135, 149, 0.24);
+}
+.collision-editor-actions-bulk button:first-child:hover {
+  color: #fff;
+  background: linear-gradient(135deg, #1f7380, #2f8795);
+}
+.collision-editor-actions-bulk button:last-child {
+  color: #8f2472;
+}
+.collision-editor-actions-bulk button:last-child:hover {
+  color: #fff;
+  background: linear-gradient(135deg, #7a145f, #a52a83);
+}
+.collision-editor-actions-save {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+}
+.collision-editor-actions-save button:last-child {
+  color: #fff;
+  background: linear-gradient(135deg, var(--wine-accent), #a52a83);
+  box-shadow: 0 0.45rem 1rem rgba(58, 38, 27, 0.2);
+}
+.collision-editor-actions-save button:last-child:hover {
   background: linear-gradient(135deg, #64104d, #8f2472);
 }
 .collision-editor-slider {

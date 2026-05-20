@@ -23,6 +23,11 @@ const SMALL_BOX_SIZE = 8;
 const SMALL_BOX_HEIGHT = 4;
 const LOCAL_MOVE_AXIS = new Vector3(0, 1, 0);
 
+const ACTION_GROUP_NAVIGATION = "collision-editor-actions collision-editor-actions-navigation";
+const ACTION_GROUP_TOOLS = "collision-editor-actions collision-editor-actions-tools";
+const ACTION_GROUP_BULK = "collision-editor-actions collision-editor-actions-bulk";
+const ACTION_GROUP_SAVE = "collision-editor-actions collision-editor-actions-save";
+
 export function setupCollisionEditor(scene, camera, renderer) {
   if (!scene || !camera || !renderer) return;
 
@@ -114,50 +119,67 @@ function createPanel(state) {
   });
   modelSelectField.append(modelSelectTitle, modelSelect);
 
-  const navigationActions = createActionRow([
+  const selectionActions = createActionRow([
     ["Anterior", () => selectRelativeCollider(panel, state, -1)],
     ["Siguiente", () => selectRelativeCollider(panel, state, 1)],
     ["Enfocar", () => focusSelectedCollider(state)],
-    ["Caja chica", () => shrinkSelectedColliderToModel(panel, state)],
+  ], ACTION_GROUP_NAVIGATION);
+
+  const colliderActions = createActionRow([
     ["Desactivar caja", () => toggleSelectedColliderEnabled(panel, state), "toggleEnabled"],
-  ]);
+    ["Recrear caja", () => shrinkSelectedColliderToModel(panel, state)],
+    ["Ver mallas", () => toggleVisuals(state, panel), "toggleVisuals"],
+  ], ACTION_GROUP_TOOLS);
 
   const sliders = [
+    createDeltaSlider("Rotar", { min: -ROTATE_RANGE, max: ROTATE_RANGE, step: 0.5, unit: "deg" }, (delta) => rotateSelectedCollider(state, degreesToRadians(delta))),
     createDeltaSlider("Mover X", { min: -MOVE_RANGE, max: MOVE_RANGE, step: 0.05 }, (delta) => moveSelectedCollider(state, delta, 0)),
     createDeltaSlider("Mover Z", { min: -MOVE_RANGE, max: MOVE_RANGE, step: 0.05 }, (delta) => moveSelectedCollider(state, 0, delta)),
     createDeltaSlider("Ancho", { min: -SIZE_RANGE, max: SIZE_RANGE, step: 0.05 }, (delta) => resizeSelectedCollider(state, delta, 0)),
     createDeltaSlider("Fondo", { min: -SIZE_RANGE, max: SIZE_RANGE, step: 0.05 }, (delta) => resizeSelectedCollider(state, 0, delta)),
     createDeltaSlider("Techo", { min: -HEIGHT_RANGE, max: HEIGHT_RANGE, step: 0.05 }, (delta) => resizeSelectedColliderTop(state, delta)),
-    createDeltaSlider("Rotar", { min: -ROTATE_RANGE, max: ROTATE_RANGE, step: 0.5, unit: "deg" }, (delta) => rotateSelectedCollider(state, degreesToRadians(delta))),
   ];
 
-  const utilityActions = createActionRow([
-    ["Fijar ajuste", () => resetSliders(panel._collisionEditor)],
+  const bulkActions = createActionRow([
     ["Activar todas", () => setAllCollidersEnabled(panel, state, true)],
     ["Desactivar todas", () => setAllCollidersEnabled(panel, state, false)],
-    ["Guardar", () => saveCurrentColliders(panel, state), "save"],
-    ["Actualizar", () => refreshColliderVisuals(state)],
-    ["Ocultar mallas", () => toggleVisuals(state, panel), "toggleVisuals"],
-  ]);
+  ], ACTION_GROUP_BULK);
 
-  panel.append(header, status, details, modelSelectField, navigationActions, ...sliders.map((item) => item.field), utilityActions);
+  const saveActions = createActionRow([
+    ["Reset controles", () => resetSliders(panel._collisionEditor)],
+    ["Guardar", () => saveCurrentColliders(panel, state), "save"],
+  ], ACTION_GROUP_SAVE);
+
+  panel.append(
+    header,
+    status,
+    details,
+    modelSelectField,
+    selectionActions,
+    ...sliders.map((item) => item.field),
+    colliderActions,
+    bulkActions,
+    saveActions
+  );
   panel._collisionEditor = {
     status,
     details,
     modelSelect,
     sliders,
     buttons: {
-      ...navigationActions.buttons,
-      ...utilityActions.buttons,
+      ...selectionActions.buttons,
+      ...colliderActions.buttons,
+      ...bulkActions.buttons,
+      ...saveActions.buttons,
     },
   };
   attachPanelRefresh(panel, state);
   return panel;
 }
 
-function createActionRow(actions) {
+function createActionRow(actions, className = "collision-editor-actions") {
   const row = document.createElement("div");
-  row.className = "collision-editor-actions";
+  row.className = className;
   row.buttons = {};
 
   actions.forEach(([label, action, key]) => {
