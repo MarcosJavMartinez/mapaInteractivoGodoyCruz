@@ -4,6 +4,7 @@ import {
   vectorToNumberArray,
   vectorToText,
 } from "./vectorTextUtils.js";
+import { setupControlPanWhileEditing } from "./editorControlPanModule.js";
 
 const UPDATE_INTERVAL_MS = 120;
 const EDITOR_PASSWORD = "muvi1950";
@@ -74,8 +75,8 @@ export function setupCameraViewEditor(camera) {
 
   panel.append(header, marker, currentView, actions, finder);
   document.body.appendChild(panel);
-  setupEditorAccessShortcut(panel, camera);
-  setupControlPanWhileEditing(panel, camera);
+  const controlPan = setupControlPanWhileEditing(panel, camera);
+  setupEditorAccessShortcut(panel, controlPan);
 
   document.addEventListener("marker:selected", (event) => {
     activeMarker = event.detail?.marker || null;
@@ -103,10 +104,10 @@ export function setupCameraViewEditor(camera) {
   requestAnimationFrame(update);
 }
 
-function setupEditorAccessShortcut(panel, camera) {
+function setupEditorAccessShortcut(panel, controlPan) {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !panel.hidden) {
-      hideEditor(panel, camera);
+      hideEditor(panel, controlPan);
       return;
     }
 
@@ -114,7 +115,7 @@ function setupEditorAccessShortcut(panel, camera) {
 
     event.preventDefault();
     if (!panel.hidden) {
-      hideEditor(panel, camera);
+      hideEditor(panel, controlPan);
       return;
     }
 
@@ -135,49 +136,9 @@ function showEditor(panel) {
   panel.hidden = false;
 }
 
-function hideEditor(panel, camera) {
+function hideEditor(panel, controlPan) {
   panel.hidden = true;
-  setCameraPanEnabled(camera, false);
-}
-
-function setupControlPanWhileEditing(panel, camera) {
-  let isControlDown = false;
-
-  document.addEventListener("keydown", (event) => {
-    if (event.code !== "ControlLeft" && event.code !== "ControlRight") return;
-
-    isControlDown = true;
-    setCameraPanEnabled(camera, !panel.hidden);
-  });
-
-  document.addEventListener("keyup", (event) => {
-    if (event.code !== "ControlLeft" && event.code !== "ControlRight") return;
-
-    isControlDown = false;
-    setCameraPanEnabled(camera, false);
-  });
-
-  window.addEventListener("blur", () => {
-    isControlDown = false;
-    setCameraPanEnabled(camera, false);
-  });
-
-  function update() {
-    requestAnimationFrame(update);
-
-    if (panel.hidden && isControlDown) {
-      setCameraPanEnabled(camera, false);
-    }
-  }
-
-  requestAnimationFrame(update);
-}
-
-function setCameraPanEnabled(camera, isEnabled) {
-  const controls = camera?.userData.controls;
-  if (!controls) return;
-
-  controls.enablePan = Boolean(isEnabled);
+  controlPan?.disable();
 }
 
 async function saveCurrentView(camera, marker, button) {

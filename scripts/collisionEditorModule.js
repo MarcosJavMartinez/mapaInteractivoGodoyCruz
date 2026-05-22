@@ -11,6 +11,7 @@ import {
   Vector3,
 } from "../vendor/three/build/three.module.js";
 import { saveCollisionOverrides } from "./apiClient.js";
+import { setupControlPanWhileEditing } from "./editorControlPanModule.js";
 
 const EDITOR_PASSWORD = "muvi1950";
 const VISUAL_OFFSET_Y = 0.01;
@@ -41,8 +42,6 @@ export function setupCollisionEditor(scene, camera, renderer) {
     raycaster: new Raycaster(),
     pointer: new Vector2(),
     pointerDown: null,
-    isControlPanActive: false,
-    isControlDown: false,
     visuals: [],
     selectedIndex: -1,
     isOpen: false,
@@ -79,7 +78,10 @@ export function setupCollisionEditor(scene, camera, renderer) {
   });
 
   setupColliderSelection(panel, state);
-  setupControlPanWhileEditing(panel, state);
+  const controlPan = setupControlPanWhileEditing(panel, camera, {
+    isOpen: () => state.isOpen,
+  });
+  state.controlPan = controlPan;
 }
 
 function createPanel(state) {
@@ -312,14 +314,14 @@ function openEditor(panel, state) {
     selectCollider(state, 0);
   }
   updatePanel(panel, state);
-  setCameraPanEnabled(state, state.isControlDown);
+  state.controlPan?.sync();
 }
 
 function closeEditor(panel, state) {
   state.isOpen = false;
   panel.hidden = true;
   state.group.visible = false;
-  setCameraPanEnabled(state, false);
+  state.controlPan?.disable();
 }
 
 function createColliderGroup() {
@@ -497,38 +499,6 @@ function getColliderVolume(object) {
 
   const size = obstacle.box.getSize(new Vector3());
   return size.x * size.y * size.z;
-}
-
-function setupControlPanWhileEditing(panel, state) {
-  document.addEventListener("keydown", (event) => {
-    if (event.code !== "ControlLeft" && event.code !== "ControlRight") return;
-    state.isControlDown = true;
-    setCameraPanEnabled(state, !panel.hidden);
-  }, true);
-
-  document.addEventListener("keyup", (event) => {
-    if (event.code !== "ControlLeft" && event.code !== "ControlRight") return;
-    state.isControlDown = false;
-    setCameraPanEnabled(state, false);
-  }, true);
-
-  window.addEventListener("blur", () => {
-    state.isControlDown = false;
-    setCameraPanEnabled(state, false);
-  });
-}
-
-function setCameraPanEnabled(state, isEnabled) {
-  const controls = state.camera?.userData.controls;
-  if (!controls) return;
-
-  state.isControlPanActive = Boolean(isEnabled);
-  controls.enablePan = state.isControlPanActive;
-  if (state.isControlPanActive && controls.enabled === false) {
-    controls.enabled = true;
-  } else if (!state.isControlPanActive && document.body.classList.contains("navigation-mode-walk")) {
-    controls.enabled = false;
-  }
 }
 
 function formatSliderValue(value, unit = "") {

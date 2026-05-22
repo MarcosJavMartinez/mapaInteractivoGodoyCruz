@@ -43,6 +43,7 @@ import {
   vectorToNumberArray,
   vectorToText,
 } from "./vectorTextUtils.js";
+import { setupControlPanWhileEditing } from "./editorControlPanModule.js";
 
 const EDITOR_PASSWORD = "muvi1950";
 const MARKER_MIN_Y = 0;
@@ -65,6 +66,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
   let editorStage = EDITOR_STAGE_IDLE;
   const markerProjection = createMarkerEditorProjection(scene);
   let projectedMarkerPosition = null;
+  let controlPan = null;
   const panel = document.createElement("aside");
   panel.className = "marker-editor-panel";
   panel.setAttribute("aria-label", "Editor de marcadores");
@@ -80,7 +82,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
   closeButton.setAttribute("aria-label", "Cerrar");
   closeButton.textContent = "X";
   closeButton.addEventListener("click", () => {
-    setEditorPanEnabled(camera, false);
+    controlPan?.disable();
     hideEditor(panel);
   });
   header.append(title, closeButton);
@@ -517,6 +519,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     gallerySection.section
   );
   document.body.appendChild(panel);
+  controlPan = setupControlPanWhileEditing(panel, camera);
 
   document.addEventListener("marker:selected", (event) => {
     const selectedMarker = event.detail?.marker || null;
@@ -583,7 +586,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     const nextStage = getSelectedMarkerStage(activeMarker, isCreatingNewMarker, editorStage);
     setWorkflowStage(nextStage);
   }, () => {
-    setEditorPanEnabled(camera, false);
+    controlPan?.disable();
   });
 
   setWorkflowStage(EDITOR_STAGE_IDLE);
@@ -623,7 +626,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
         previewPanel: previewPanel.panel,
       },
     });
-    setEditorPanEnabled(camera, stage === EDITOR_STAGE_GHOST || stage === EDITOR_STAGE_POSITION);
+    controlPan?.sync();
   }
 }
 
@@ -989,13 +992,6 @@ function setupEditorShortcut(panel, onOpen, onClose) {
       showEditor(panel);
     }
   });
-}
-
-function setEditorPanEnabled(camera, isEnabled) {
-  const controls = camera?.userData.controls;
-  if (controls) {
-    controls.enablePan = Boolean(isEnabled);
-  }
 }
 
 function isMarkerEditorShortcut(event) {
