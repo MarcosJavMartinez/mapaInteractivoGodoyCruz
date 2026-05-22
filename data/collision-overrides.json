@@ -34,17 +34,17 @@
     {
       "path": "models/M05.glb",
       "min": [
-        -11.885321,
+        -9.339617,
         -1.940795,
-        -26.247272
+        -25.310019
       ],
       "max": [
-        6.529802,
+        2.725506,
         -0.169992,
-        -1.118095
+        -2.380842
       ],
       "enabled": true,
-      "rotationY": 0
+      "rotationY": -0.253073
     },
     {
       "path": "models/Base.glb",
@@ -79,17 +79,17 @@
     {
       "path": "models/M06.glb",
       "min": [
-        -21.799259,
+        -17.414345,
         -1.911574,
-        1.443761
+        1.838306
       ],
       "max": [
-        -1.775806,
+        -6.240892,
         -0.090426,
-        39.179419
+        39.073964
       ],
       "enabled": true,
-      "rotationY": 0
+      "rotationY": -0.270526
     },
     {
       "path": "models/M07 Galpones FFRR.glb",
@@ -109,16 +109,31 @@
     {
       "path": "models/M00 Plaza.glb",
       "min": [
-        -101.561329,
+        -63.949711,
         -14.000083,
-        -223.558689
+        38.701656
       ],
       "max": [
-        134.923671,
+        -36.764711,
         0.158252,
-        129.896446
+        72.156791
       ],
-      "enabled": false,
+      "enabled": true,
+      "rotationY": -0.287979
+    },
+    {
+      "path": "models/M16 Teatro.glb",
+      "min": [
+        -114.852806,
+        -2.000015,
+        25.725868
+      ],
+      "max": [
+        -68.579824,
+        2.308591,
+        69.70305
+      ],
+      "enabled": true,
       "rotationY": 0
     },
     {
@@ -137,16 +152,16 @@
       "rotationY": 0
     },
     {
-      "path": "models/M16 Teatro.glb",
+      "path": "models/M18 Compañia Maria 1.glb",
       "min": [
-        -114.852806,
-        -2.000015,
-        25.725868
+        10.646217,
+        -1.985032,
+        53.066397
       ],
       "max": [
-        -68.579824,
-        2.308591,
-        69.70305
+        45.386609,
+        0.379431,
+        86.383339
       ],
       "enabled": true,
       "rotationY": 0
@@ -162,21 +177,6 @@
         -79.908632,
         0.502295,
         108.531593
-      ],
-      "enabled": true,
-      "rotationY": 0
-    },
-    {
-      "path": "models/M18 Compañia Maria 1.glb",
-      "min": [
-        10.646217,
-        -1.985032,
-        53.066397
-      ],
-      "max": [
-        45.386609,
-        0.379431,
-        86.383339
       ],
       "enabled": true,
       "rotationY": 0
@@ -227,21 +227,6 @@
       "rotationY": -0.226893
     },
     {
-      "path": "models/M25 Iglesia 3.glb",
-      "min": [
-        -77.020167,
-        -2.056953,
-        80.116103
-      ],
-      "max": [
-        -45.612731,
-        4.499638,
-        112.948496
-      ],
-      "enabled": true,
-      "rotationY": -0.200713
-    },
-    {
       "path": "models/M26.glb",
       "min": [
         -43.309507,
@@ -255,6 +240,21 @@
       ],
       "enabled": true,
       "rotationY": 0
+    },
+    {
+      "path": "models/M25 Iglesia 3.glb",
+      "min": [
+        -77.020167,
+        -2.056953,
+        80.116103
+      ],
+      "max": [
+        -45.612731,
+        4.499638,
+        112.948496
+      ],
+      "enabled": true,
+      "rotationY": -0.200713
     },
     {
       "path": "models/M53 Cristoforo Colombo.glb",
@@ -302,21 +302,6 @@
       "rotationY": 0
     },
     {
-      "path": "models/M68 Molino del Plata.glb",
-      "min": [
-        60.609699,
-        -2.239976,
-        -276.980448
-      ],
-      "max": [
-        111.775657,
-        3.277829,
-        -185.910532
-      ],
-      "enabled": true,
-      "rotationY": 0
-    },
-    {
       "path": "models/M04 Casa Olaya.glb",
       "min": [
         -261.561329,
@@ -329,6 +314,21 @@
         277.146446
       ],
       "enabled": false,
+      "rotationY": 0
+    },
+    {
+      "path": "models/M68 Molino del Plata.glb",
+      "min": [
+        60.609699,
+        -2.239976,
+        -276.980448
+      ],
+      "max": [
+        111.775657,
+        3.277829,
+        -185.910532
+      ],
+      "enabled": true,
       "rotationY": 0
     },
     {
