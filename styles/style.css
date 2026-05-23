@@ -1686,6 +1686,17 @@ label {
 .collision-editor-actions-save button:last-child {
   box-shadow: 0 0.45rem 1rem rgba(58, 38, 27, 0.2);
 }
+.collision-editor-actions-save button[data-save-state="saved"],
+.collision-editor-actions-save button[data-save-state="saved"]:hover {
+  color: #fff;
+  background: linear-gradient(135deg, var(--warm-brown), var(--warm-brown-dark));
+  border-color: rgba(132, 83, 47, 0.28);
+}
+.collision-editor-actions-save button[data-save-state="error"],
+.collision-editor-actions-save button[data-save-state="error"]:hover {
+  color: #fff;
+  background: linear-gradient(135deg, var(--wine-accent), var(--wine-accent-strong));
+}
 .collision-editor-slider {
   display: grid;
   gap: 0.35rem;

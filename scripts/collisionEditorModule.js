@@ -25,6 +25,15 @@ const SMALL_BOX_HEIGHT = 4;
 const LOCAL_MOVE_AXIS = new Vector3(0, 1, 0);
 const EDGE_REPEAT_INTERVAL_MS = 45;
 const EDGE_REPEAT_STEP_MULTIPLIER = 4;
+const SAVE_BUTTON_IDLE_TEXT = "Guardar";
+const SAVE_BUTTON_BUSY_TEXT = "Guardando...";
+const SAVE_BUTTON_SAVED_TEXT = "✓ Guardado";
+const SAVE_BUTTON_ERROR_TEXT = "Error";
+const COLLIDER_FILL_COLOR = 0x84532f;
+const COLLIDER_EDGE_COLOR = 0x7a145f;
+const COLLIDER_SELECTED_COLOR = 0x7a145f;
+const COLLIDER_DISABLED_COLOR = 0x7a5c42;
+const COLLIDER_DIRECTION_COLOR = 0x3f2b21;
 
 const ACTION_GROUP_NAVIGATION = "collision-editor-actions collision-editor-actions-navigation";
 const ACTION_GROUP_TOOLS = "collision-editor-actions collision-editor-actions-tools";
@@ -118,7 +127,11 @@ function createPanel(state) {
   const modelSelect = document.createElement("select");
   modelSelect.className = "collision-editor-select";
   modelSelect.addEventListener("change", () => {
+    const previousIndex = state.selectedIndex;
     selectCollider(state, Number(modelSelect.value));
+    if (previousIndex !== state.selectedIndex) {
+      resetCollisionEditorSaveButton(panel);
+    }
     updatePanel(panel, state);
   });
   modelSelectField.append(modelSelectTitle, modelSelect);
@@ -136,12 +149,30 @@ function createPanel(state) {
   ], ACTION_GROUP_TOOLS);
 
   const sliders = [
-    createDeltaSlider("Rotar", { min: -ROTATE_RANGE, max: ROTATE_RANGE, step: 0.5, unit: "deg" }, (delta) => rotateSelectedCollider(state, degreesToRadians(delta))),
-    createDeltaSlider("Mover X", { min: -MOVE_RANGE, max: MOVE_RANGE, step: 0.05 }, (delta) => moveSelectedCollider(state, delta, 0)),
-    createDeltaSlider("Mover Z", { min: -MOVE_RANGE, max: MOVE_RANGE, step: 0.05 }, (delta) => moveSelectedCollider(state, 0, delta)),
-    createDeltaSlider("Ancho", { min: -SIZE_RANGE, max: SIZE_RANGE, step: 0.05 }, (delta) => resizeSelectedCollider(state, delta, 0)),
-    createDeltaSlider("Fondo", { min: -SIZE_RANGE, max: SIZE_RANGE, step: 0.05 }, (delta) => resizeSelectedCollider(state, 0, delta)),
-    createDeltaSlider("Techo", { min: -HEIGHT_RANGE, max: HEIGHT_RANGE, step: 0.05 }, (delta) => resizeSelectedColliderTop(state, delta)),
+    createDeltaSlider("Rotar", { min: -ROTATE_RANGE, max: ROTATE_RANGE, step: 0.5, unit: "deg" }, (delta) => {
+      rotateSelectedCollider(state, degreesToRadians(delta));
+      markCollisionEditorDirty(panel);
+    }),
+    createDeltaSlider("Mover X", { min: -MOVE_RANGE, max: MOVE_RANGE, step: 0.05 }, (delta) => {
+      moveSelectedCollider(state, delta, 0);
+      markCollisionEditorDirty(panel);
+    }),
+    createDeltaSlider("Mover Z", { min: -MOVE_RANGE, max: MOVE_RANGE, step: 0.05 }, (delta) => {
+      moveSelectedCollider(state, 0, delta);
+      markCollisionEditorDirty(panel);
+    }),
+    createDeltaSlider("Ancho", { min: -SIZE_RANGE, max: SIZE_RANGE, step: 0.05 }, (delta) => {
+      resizeSelectedCollider(state, delta, 0);
+      markCollisionEditorDirty(panel);
+    }),
+    createDeltaSlider("Fondo", { min: -SIZE_RANGE, max: SIZE_RANGE, step: 0.05 }, (delta) => {
+      resizeSelectedCollider(state, 0, delta);
+      markCollisionEditorDirty(panel);
+    }),
+    createDeltaSlider("Techo", { min: -HEIGHT_RANGE, max: HEIGHT_RANGE, step: 0.05 }, (delta) => {
+      resizeSelectedColliderTop(state, delta);
+      markCollisionEditorDirty(panel);
+    }),
   ];
 
   const bulkActions = createActionRow([
@@ -153,6 +184,7 @@ function createPanel(state) {
     ["Reset controles", () => resetSliders(panel._collisionEditor)],
     ["Guardar", () => saveCurrentColliders(panel, state), "save"],
   ], ACTION_GROUP_SAVE);
+  saveActions.buttons.save?.setAttribute("aria-live", "polite");
 
   panel.append(
     header,
@@ -308,6 +340,7 @@ function attachPanelRefresh(panel, state) {
 function openEditor(panel, state) {
   state.isOpen = true;
   panel.hidden = false;
+  resetCollisionEditorSaveButton(panel);
   refreshColliderVisuals(state);
   state.group.visible = true;
   if (state.selectedIndex < 0 && state.visuals.length) {
@@ -372,7 +405,7 @@ function createColliderVisual(obstacle, index) {
   const fill = new Mesh(
     new BoxGeometry(1, 1, 1),
     new MeshBasicMaterial({
-      color: 0x2f8795,
+      color: COLLIDER_FILL_COLOR,
       transparent: true,
       opacity: 0.16,
       depthWrite: false,
@@ -382,7 +415,7 @@ function createColliderVisual(obstacle, index) {
   const edges = new LineSegments(
     new EdgesGeometry(new BoxGeometry(1, 1, 1)),
     new LineBasicMaterial({
-      color: 0x7a145f,
+      color: COLLIDER_EDGE_COLOR,
       transparent: true,
       opacity: 0.78,
     })
@@ -390,7 +423,7 @@ function createColliderVisual(obstacle, index) {
   const directionMarker = new Mesh(
     new BoxGeometry(0.12, 0.12, 1),
     new MeshBasicMaterial({
-      color: 0xffd35a,
+      color: COLLIDER_DIRECTION_COLOR,
       transparent: true,
       opacity: 0.92,
       depthWrite: false,
@@ -436,7 +469,11 @@ function selectCollider(state, index) {
 function selectRelativeCollider(panel, state, direction) {
   if (!state.visuals.length) return;
 
+  const previousIndex = state.selectedIndex;
   selectCollider(state, state.selectedIndex + direction);
+  if (previousIndex !== state.selectedIndex) {
+    resetCollisionEditorSaveButton(panel);
+  }
   updatePanel(panel, state);
 }
 
@@ -444,9 +481,9 @@ function updateColliderMaterials(state) {
   state.visuals.forEach((visual, visualIndex) => {
     const isSelected = visualIndex === state.selectedIndex;
     const isEnabled = visual.obstacle.enabled !== false;
-    visual.fill.material.color.setHex(isSelected ? 0xffd35a : (isEnabled ? 0x2f8795 : 0x7f858a));
+    visual.fill.material.color.setHex(isSelected ? COLLIDER_SELECTED_COLOR : (isEnabled ? COLLIDER_FILL_COLOR : COLLIDER_DISABLED_COLOR));
     visual.fill.material.opacity = isSelected ? (isEnabled ? 0.32 : 0.22) : (isEnabled ? 0.18 : 0.13);
-    visual.edges.material.color.setHex(isSelected ? 0xffd35a : (isEnabled ? 0x7a145f : 0x6f7478));
+    visual.edges.material.color.setHex(isSelected ? COLLIDER_SELECTED_COLOR : (isEnabled ? COLLIDER_EDGE_COLOR : COLLIDER_DISABLED_COLOR));
     visual.edges.material.opacity = isSelected ? 1 : (isEnabled ? 0.82 : 0.62);
     visual.directionMarker.visible = true;
     visual.directionMarker.material.opacity = isEnabled ? 0.92 : 0.38;
@@ -471,7 +508,11 @@ function setupColliderSelection(panel, state) {
     const selectedIndex = getColliderIndexAtPointer(event, state);
     if (selectedIndex < 0) return;
 
+    const previousIndex = state.selectedIndex;
     selectCollider(state, selectedIndex);
+    if (previousIndex !== state.selectedIndex) {
+      resetCollisionEditorSaveButton(panel);
+    }
     updatePanel(panel, state);
   });
 }
@@ -575,6 +616,7 @@ function toggleSelectedColliderEnabled(panel, state) {
   if (!visual) return;
 
   visual.obstacle.enabled = visual.obstacle.enabled === false;
+  markCollisionEditorDirty(panel);
   syncNavigationObstacles(state);
   updateColliderMaterials(state);
   updatePanel(panel, state);
@@ -587,6 +629,7 @@ function setAllCollidersEnabled(panel, state, isEnabled) {
   colliders.forEach((collider) => {
     collider.enabled = isEnabled;
   });
+  markCollisionEditorDirty(panel);
   syncNavigationObstacles(state);
   updateColliderMaterials(state);
   updatePanel(panel, state);
@@ -604,6 +647,7 @@ function shrinkSelectedColliderToModel(panel, state) {
   visual.obstacle.box.max.set(center.x + halfSize, groundY + SMALL_BOX_HEIGHT, center.z + halfSize);
   visual.obstacle.enabled = true;
   visual.obstacle.rotationY = 0;
+  markCollisionEditorDirty(panel);
   syncVisualToBox(visual);
   syncNavigationObstacles(state);
   updateColliderMaterials(state);
@@ -686,18 +730,16 @@ async function saveCurrentColliders(panel, state) {
   const saveButton = fields?.buttons.save;
   if (!fields || !state.visuals.length) return;
 
-  setCollisionEditorBusy(saveButton, true, "Guardando...");
+  setCollisionEditorButtonState(saveButton, "busy");
   try {
     const saved = await saveCollisionOverrides(serializeColliders(getEditableColliders(state)));
     const enabledCount = saved.colliders.filter((collider) => collider.enabled !== false).length;
     fields.status.textContent = `Colisiones guardadas: ${enabledCount}/${saved.colliders.length}`;
-    setCollisionEditorBusy(saveButton, false);
-    showTemporaryButtonText(saveButton, "Guardado");
+    setCollisionEditorButtonState(saveButton, "saved");
   } catch (error) {
     console.warn("No se pudieron guardar las colisiones", error);
     fields.status.textContent = "No se pudieron guardar las colisiones.";
-    setCollisionEditorBusy(saveButton, false);
-    showTemporaryButtonText(saveButton, "Error");
+    setCollisionEditorButtonState(saveButton, "error");
   }
 }
 
@@ -729,25 +771,36 @@ function syncNavigationObstacles(state) {
   }));
 }
 
-function setCollisionEditorBusy(button, isBusy, label) {
-  if (!button) return;
-  if (isBusy) {
-    button.dataset.originalText = button.textContent;
-    button.textContent = label;
-  } else {
-    button.textContent = button.dataset.originalText || "Guardar";
-    delete button.dataset.originalText;
-  }
-  button.disabled = isBusy;
+function markCollisionEditorDirty(panel) {
+  resetCollisionEditorSaveButton(panel);
 }
 
-function showTemporaryButtonText(button, label) {
+function resetCollisionEditorSaveButton(panel) {
+  const saveButton = panel?._collisionEditor?.buttons.save;
+  if (!saveButton || saveButton.dataset.saveState === "busy") return;
+
+  setCollisionEditorButtonState(saveButton, "idle");
+}
+
+function setCollisionEditorButtonState(button, state) {
   if (!button) return;
-  const originalText = button.dataset.originalText || "Guardar";
-  button.textContent = label;
-  window.setTimeout(() => {
-    button.textContent = originalText;
-  }, 1200);
+
+  const states = {
+    idle: SAVE_BUTTON_IDLE_TEXT,
+    busy: SAVE_BUTTON_BUSY_TEXT,
+    saved: SAVE_BUTTON_SAVED_TEXT,
+    error: SAVE_BUTTON_ERROR_TEXT,
+  };
+
+  button.textContent = states[state] || SAVE_BUTTON_IDLE_TEXT;
+  button.disabled = state === "busy";
+
+  if (state === "idle") {
+    delete button.dataset.saveState;
+    return;
+  }
+
+  button.dataset.saveState = state;
 }
 
 function getSelectedVisual(state) {
