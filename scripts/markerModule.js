@@ -33,10 +33,11 @@ function createMarker(scene, buttons, place) {
   const material = new SpriteMaterial({
     map: getMarkerTexture(),
     transparent: true,
-    alphaTest: 0.08,
-    depthTest: false,
+    alphaTest: 0.18,
+    depthTest: true,
     depthWrite: false,
     fog: false,
+    toneMapped: false,
   });
 
   const sprite = new Sprite(material);
@@ -67,6 +68,7 @@ function getMarkerTexture() {
 
   markerTexture = new TextureLoader().load("images/marcador-de-alfiler-01.png");
   markerTexture.generateMipmaps = false;
+  markerTexture.premultiplyAlpha = true;
   markerTexture.minFilter = LinearFilter;
   markerTexture.magFilter = LinearFilter;
   markerTexture.wrapS = ClampToEdgeWrapping;

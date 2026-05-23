@@ -16,46 +16,42 @@ const CAMERA_ANIMATION_DURATION = 900;
 const DEFAULT_MARKER_COLOR = 0xffffff;
 const ACTIVE_MARKER_COLOR = 0xffd35a;
 const CENTER_POINTER = { clientX: 0, clientY: 0 };
+const MARKER_OCCLUSION_MARGIN = 0.55;
 
-export function setupEventListeners(buttons, camera, quality = getQualitySettings()) {
-  document.body.addEventListener("click", (event) => onClick(event, buttons, camera));
-  document.body.addEventListener("touchstart", (event) => onTouchStart(event, buttons, camera));
-  document.body.addEventListener("pointermove", (event) => onPointerMove(event, buttons, camera, quality));
+export function setupEventListeners(buttons, camera, scene, quality = getQualitySettings()) {
+  document.body.addEventListener("click", (event) => onClick(event, buttons, camera, scene));
+  document.body.addEventListener("touchstart", (event) => onTouchStart(event, buttons, camera, scene));
+  document.body.addEventListener("pointermove", (event) => onPointerMove(event, buttons, camera, scene, quality));
   document.addEventListener("marker:deselected", clearActiveMarker);
   document.addEventListener("navigation:mode-changed", clearHoveredMarker);
-  setupCenteredMarkerRaycast(buttons, camera, quality);
+  setupCenteredMarkerRaycast(buttons, camera, scene, quality);
 }
 
-function onClick(event, buttons, camera) {
+function onClick(event, buttons, camera, scene) {
   if (!isSceneEvent(event)) return;
 
   if (isWalkPointerMode()) {
     if (document.pointerLockElement !== event.target) return;
 
     event.preventDefault();
-    handleSceneInteraction(getCenterPointer(), buttons, camera, { keepCameraPosition: true });
+    handleSceneInteraction(getCenterPointer(), buttons, camera, scene, { keepCameraPosition: true });
     return;
   }
 
   event.preventDefault();
-  handleSceneInteraction(event, buttons, camera);
+  handleSceneInteraction(event, buttons, camera, scene);
 }
 
-function onTouchStart(event, buttons, camera) {
+function onTouchStart(event, buttons, camera, scene) {
   if (!isSceneEvent(event)) return;
 
   event.preventDefault();
-  handleSceneInteraction(event.changedTouches[0], buttons, camera);
+  handleSceneInteraction(event.changedTouches[0], buttons, camera, scene);
 }
 
-function handleSceneInteraction(event, buttons, camera, options = {}) {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-
-  const intersects = raycaster.intersectObjects(buttons);
-  if (intersects.length > 0) {
-    const button = intersects[0].object;
+function handleSceneInteraction(event, buttons, camera, scene, options = {}) {
+  const button = getMarkerAtScreenPoint(event, buttons, camera, scene);
+  if (button) {
     setActiveMarker(button);
     if (!options.keepCameraPosition) {
       focusCameraOnMarker(camera, button);
@@ -102,7 +98,7 @@ function clearActiveMarker() {
   activeMarker = null;
 }
 
-function onPointerMove(event, buttons, camera, quality) {
+function onPointerMove(event, buttons, camera, scene, quality) {
   if (isWalkPointerMode()) return;
 
   if (!isSceneEvent(event)) {
@@ -115,12 +111,7 @@ function onPointerMove(event, buttons, camera, quality) {
   if (now - lastPointerRaycast < quality.pointerRaycastInterval) return;
   lastPointerRaycast = now;
 
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-
-  const intersects = raycaster.intersectObjects(buttons);
-  const marker = intersects[0]?.object || null;
+  const marker = getMarkerAtScreenPoint(event, buttons, camera, scene);
   setHoveredMarker(marker);
   document.body.classList.toggle("is-over-marker", Boolean(marker));
 }
@@ -129,7 +120,7 @@ function isSceneEvent(event) {
   return event.target instanceof HTMLCanvasElement;
 }
 
-function setupCenteredMarkerRaycast(buttons, camera, quality) {
+function setupCenteredMarkerRaycast(buttons, camera, scene, quality) {
   let lastCenteredRaycast = 0;
 
   function updateCenteredMarker(now) {
@@ -139,7 +130,7 @@ function setupCenteredMarkerRaycast(buttons, camera, quality) {
     if (now - lastCenteredRaycast < quality.pointerRaycastInterval) return;
     lastCenteredRaycast = now;
 
-    const marker = getMarkerAtScreenPoint(getCenterPointer(), buttons, camera);
+    const marker = getMarkerAtScreenPoint(getCenterPointer(), buttons, camera, scene);
     setHoveredMarker(marker);
     document.body.classList.toggle("is-over-marker", Boolean(marker));
   }
@@ -147,11 +138,18 @@ function setupCenteredMarkerRaycast(buttons, camera, quality) {
   requestAnimationFrame(updateCenteredMarker);
 }
 
-function getMarkerAtScreenPoint(point, buttons, camera) {
+function getMarkerAtScreenPoint(point, buttons, camera, scene) {
   mouse.x = (point.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(point.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  return raycaster.intersectObjects(buttons)[0]?.object || null;
+
+  const markerIntersections = raycaster.intersectObjects(buttons);
+  if (!markerIntersections.length) return null;
+
+  const occluderDistance = getClosestMarkerOccluderDistance(scene);
+  return markerIntersections
+    .find((intersection) => isMarkerIntersectionVisible(intersection, occluderDistance))
+    ?.object || null;
 }
 
 function getCenterPointer() {
@@ -162,6 +160,37 @@ function getCenterPointer() {
 
 function isWalkPointerMode() {
   return document.body.classList.contains("navigation-mode-walk");
+}
+
+function getClosestMarkerOccluderDistance(scene) {
+  if (!scene) return Infinity;
+
+  const occluder = raycaster.intersectObjects(scene.children, true)
+    .find((intersection) => isMarkerOccluder(intersection.object));
+  return occluder?.distance ?? Infinity;
+}
+
+function isMarkerIntersectionVisible(markerIntersection, occluderDistance) {
+  return markerIntersection.distance <= occluderDistance + MARKER_OCCLUSION_MARGIN;
+}
+
+function isMarkerOccluder(object) {
+  if (!object || object.isSprite) return false;
+  if (!object.visible || !object.isMesh) return false;
+
+  let current = object;
+  while (current) {
+    if (
+      current.userData?.ignoreMarkerInteractionOcclusion
+      || current.userData?.ignoreMarkerEditorProjection
+      || current.userData?.isDraftMarker
+    ) {
+      return false;
+    }
+    current = current.parent;
+  }
+
+  return true;
 }
 
 function setHoveredMarker(marker) {

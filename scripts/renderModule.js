@@ -108,7 +108,7 @@ function updateMarkerScales(markers, camera, now) {
       marker.material.opacity = marker.userData.isHovered
         ? 0.78 + (pulse / MARKER_HOVER_SCALE) * 0.22
         : 1;
-      marker.material.transparent = marker.userData.isHovered;
+      marker.material.transparent = true;
     }
   }
 }

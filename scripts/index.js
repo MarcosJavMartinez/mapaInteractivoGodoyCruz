@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupMarkerEditor(camera, scene, buttons);
     setupCollisionEditor(scene, camera, renderer);
     setupNavigationModesWhenAvailable(camera, renderer, scene);
-    setupEventListeners(buttons, camera, quality);
+    setupEventListeners(buttons, camera, scene, quality);
     setLoaderProgress(32);
 
     render(scene, camera, renderer, quality, buttons);

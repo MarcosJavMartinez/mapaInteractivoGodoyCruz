@@ -107,6 +107,9 @@ function setupObject(object, path, scene, quality) {
     depthWrite: true,
   });
   const isBaseModel = path.toLowerCase().includes("base");
+  if (isBaseModel) {
+    object.userData.ignoreMarkerInteractionOcclusion = true;
+  }
 
   object.traverse((child) => {
     if (child.isMesh || child instanceof Mesh) {

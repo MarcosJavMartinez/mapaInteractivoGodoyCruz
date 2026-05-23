@@ -133,6 +133,8 @@ function createUnderfill() {
   const material = new MeshBasicMaterial({
     color: 0x829ca8,
     side: DoubleSide,
+    depthTest: false,
+    depthWrite: false,
     fog: false,
   });
 
