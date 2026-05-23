@@ -2016,6 +2016,17 @@ label {
 .marker-editor-actions button.active {
   background: linear-gradient(135deg, var(--warm-brown), var(--warm-brown-dark));
 }
+.marker-editor-actions button[data-save-state="saved"],
+.marker-editor-actions button[data-save-state="saved"]:hover {
+  color: #fff;
+  background: linear-gradient(135deg, var(--warm-brown), var(--warm-brown-dark));
+  border-color: rgba(132, 83, 47, 0.28);
+}
+.marker-editor-actions button[data-save-state="error"],
+.marker-editor-actions button[data-save-state="error"]:hover {
+  color: #fff;
+  background: linear-gradient(135deg, var(--wine-accent), var(--wine-accent-strong));
+}
 .marker-editor-delete-button {
   background: var(--wine-accent) !important;
 }

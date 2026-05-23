@@ -65,10 +65,11 @@ export function createContentBlockList() {
   return list;
 }
 
-export function setupContentBlockList({ list, fields, setFeedback }) {
+export function setupContentBlockList({ list, fields, setFeedback, onDirty }) {
   list.addEventListener("input", (event) => {
     if (!event.target.matches("textarea")) return;
 
+    onDirty?.();
     fields.textInput.value = contentBlocksToHtml(readContentBlocksFromList(list));
     updateContentPreview(fields.contentPreview, fields.textInput.value);
     updateEditorPreview(fields);
@@ -93,6 +94,7 @@ export function setupContentBlockList({ list, fields, setFeedback }) {
     }
 
     fields.textInput.value = contentBlocksToHtml(blocks);
+    onDirty?.();
     syncContentBlockList(fields);
     updateContentPreview(fields.contentPreview, fields.textInput.value);
     updateEditorPreview(fields);
@@ -114,10 +116,11 @@ export function createImageListEditor(labelText) {
   return list;
 }
 
-export function setupImageListEditor({ list, type, fields, setFeedback }) {
+export function setupImageListEditor({ list, type, fields, setFeedback, onDirty }) {
   list.addEventListener("input", (event) => {
     if (!event.target.matches("input")) return;
 
+    onDirty?.();
     const image = event.target.closest(".marker-editor-image-row")?.querySelector("img");
     if (image) {
       image.src = event.target.value.trim();
@@ -148,6 +151,7 @@ export function setupImageListEditor({ list, type, fields, setFeedback }) {
     }
 
     writeImagesToFields(type, images, fields);
+    onDirty?.();
     syncImageListEditors(fields);
     updateEditorPreview(fields);
     rememberEditorImagePaths(fields);
@@ -243,11 +247,11 @@ export function addContentBlock({ type, draftInput, textInput, preview, fields, 
   if (!draftText) {
     setFeedback(fields, "Escribí el texto y después elegí un botón para agregarlo.", FEEDBACK_ERROR);
     draftInput.focus();
-    return;
+    return false;
   }
 
   const blockHtml = createContentBlockHtml(type, draftText);
-  if (!blockHtml) return;
+  if (!blockHtml) return false;
 
   textInput.value = appendHtmlBlock(textInput.value, blockHtml);
   draftInput.value = "";
@@ -255,6 +259,7 @@ export function addContentBlock({ type, draftInput, textInput, preview, fields, 
   updateContentPreview(preview, textInput.value);
   updateEditorPreview(fields);
   setFeedback(fields, "Contenido agregado. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
+  return true;
 }
 
 export function addImagePath({ type, draftInput, fields, setFeedback }) {
@@ -262,7 +267,7 @@ export function addImagePath({ type, draftInput, fields, setFeedback }) {
   if (!imagePath) {
     setFeedback(fields, "Arrastra una foto o pega la ruta y elegi donde agregarla.", FEEDBACK_ERROR);
     draftInput.focus();
-    return;
+    return false;
   }
 
   if (type === "main") {
@@ -273,7 +278,7 @@ export function addImagePath({ type, draftInput, fields, setFeedback }) {
     updateEditorPreview(fields);
     rememberEditorImagePaths(fields);
     setFeedback(fields, "Foto principal lista. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
-    return;
+    return true;
   }
 
   const galleryInput = type === "interior"
@@ -285,6 +290,7 @@ export function addImagePath({ type, draftInput, fields, setFeedback }) {
   updateEditorPreview(fields);
   rememberEditorImagePaths(fields);
   setFeedback(fields, "Foto agregada. Cuando termines, toca Guardar.", FEEDBACK_SUCCESS);
+  return true;
 }
 
 export function createImageDropZone(text) {
@@ -295,7 +301,7 @@ export function createImageDropZone(text) {
   return dropZone;
 }
 
-export function setupImageDropZone({ dropZone, type, fields, setFeedback }) {
+export function setupImageDropZone({ dropZone, type, fields, setFeedback, onDirty }) {
   dropZone.addEventListener("dragover", (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -331,6 +337,7 @@ export function setupImageDropZone({ dropZone, type, fields, setFeedback }) {
       setFeedback(fields, dropZone.textContent);
       const uploadedImages = await uploadDroppedImages(files);
       addUploadedImagesToFields(type, uploadedImages, fields, setFeedback);
+      onDirty?.();
     } catch (error) {
       console.warn("No se pudo subir la imagen", error);
       setFeedback(fields, "No se pudieron subir las imágenes. Intentá otra vez.", FEEDBACK_ERROR);

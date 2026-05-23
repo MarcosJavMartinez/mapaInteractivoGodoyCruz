@@ -56,6 +56,10 @@ const EDITOR_STAGE_EDIT = "edit";
 const FEEDBACK_INFO = "info";
 const FEEDBACK_SUCCESS = "success";
 const FEEDBACK_ERROR = "error";
+const MARKER_SAVE_BUTTON_BUSY_TEXT = "Guardando...";
+const MARKER_SAVE_BUTTON_CREATE_TEXT = "Creando...";
+const MARKER_SAVE_BUTTON_SAVED_TEXT = "\u2713 Guardado";
+const MARKER_SAVE_BUTTON_ERROR_TEXT = "Revisar";
 
 export function setupMarkerEditor(camera, scene, buttons) {
   if (!camera) return;
@@ -67,6 +71,8 @@ export function setupMarkerEditor(camera, scene, buttons) {
   const markerProjection = createMarkerEditorProjection(scene);
   let projectedMarkerPosition = null;
   let controlPan = null;
+  let saveButton = null;
+  const markEditorDirty = () => resetMarkerEditorSaveButton(saveButton, isCreatingNewMarker);
   const panel = document.createElement("aside");
   panel.className = "marker-editor-panel";
   panel.setAttribute("aria-label", "Editor de marcadores");
@@ -160,12 +166,14 @@ export function setupMarkerEditor(camera, scene, buttons) {
   document.body.appendChild(previewPanel.panel);
   fields.previewPanel = previewPanel;
   titleInput.input.addEventListener("input", () => {
+    markEditorDirty();
     if (titleInput.input.value.trim()) {
       clearFieldInvalid(titleInput.input);
     }
     updateEditorPreview(fields);
   });
   mainImageInput.input.addEventListener("input", () => {
+    markEditorDirty();
     syncImageListEditors(fields);
     updateEditorPreview(fields);
   });
@@ -173,6 +181,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     cleanupRemovedEditorUploadedImages(fields);
   });
   exteriorImagesInput.input.addEventListener("input", () => {
+    markEditorDirty();
     syncImageListEditors(fields);
     updateEditorPreview(fields);
   });
@@ -180,6 +189,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     cleanupRemovedEditorUploadedImages(fields);
   });
   interiorImagesInput.input.addEventListener("input", () => {
+    markEditorDirty();
     syncImageListEditors(fields);
     updateEditorPreview(fields);
   });
@@ -190,24 +200,28 @@ export function setupMarkerEditor(camera, scene, buttons) {
     list: contentBlockList,
     fields,
     setFeedback,
+    onDirty: markEditorDirty,
   });
   setupImageListEditor({
     list: mainImageList,
     type: "main",
     fields,
     setFeedback,
+    onDirty: markEditorDirty,
   });
   setupImageListEditor({
     list: exteriorImageList,
     type: "exterior",
     fields,
     setFeedback,
+    onDirty: markEditorDirty,
   });
   setupImageListEditor({
     list: interiorImageList,
     type: "interior",
     fields,
     setFeedback,
+    onDirty: markEditorDirty,
   });
 
   const positionActions = document.createElement("div");
@@ -226,16 +240,40 @@ export function setupMarkerEditor(camera, scene, buttons) {
     isPreviewFollowingTarget = false;
     updateAnchorButton();
   };
+  const stopFollowingTargetForManualPosition = () => {
+    if (!isPreviewFollowingTarget) return;
+
+    stopFollowingTarget();
+    setPreviewMarkerVisible(markerProjection, Boolean(parseNumberList(positionInput.input.value)));
+    setFeedback(fields, "Editá la ubicación manualmente o tocá Seguir vista para volver a tomarla.");
+  };
+  const getPositionFromCurrentTarget = () => {
+    const targetPosition = clampMarkerPosition(vectorToNumberArray(camera.userData.controls?.target));
+    if (!targetPosition) return null;
+
+    projectedMarkerPosition = updateProjectionMarker({
+      projection: markerProjection,
+      position: targetPosition,
+      scene,
+      clampPosition: clampMarkerPosition,
+    });
+    updatePreviewMarker(markerProjection, projectedMarkerPosition || targetPosition, clampMarkerPosition);
+    return projectedMarkerPosition || targetPosition;
+  };
   newMarkerButton.addEventListener("click", () => {
     isCreatingNewMarker = true;
     activeMarker = null;
+    resetMarkerEditorSaveButton(saveButton, isCreatingNewMarker);
     startFollowingTarget();
     clearEditor(fields, camera);
     setFeedback(fields, "Mové la vista hasta el lugar elegido y tocá Ubicar acá.");
     document.dispatchEvent(new CustomEvent("marker:deselected"));
     setWorkflowStage(EDITOR_STAGE_GHOST);
   });
+  positionInput.input.addEventListener("focus", stopFollowingTargetForManualPosition);
   positionInput.input.addEventListener("input", () => {
+    stopFollowingTargetForManualPosition();
+    markEditorDirty();
     const position = clampMarkerPosition(parseNumberList(positionInput.input.value));
     setFieldInvalid(positionInput.input, !position);
     if (editorStage !== EDITOR_STAGE_POSITION || !activeMarker) return;
@@ -265,36 +303,29 @@ export function setupMarkerEditor(camera, scene, buttons) {
   const subtitleButton = createButton("Agregar subtítulo");
   const paragraphButton = createButton("Agregar párrafo");
   const sourcesButton = createButton("Agregar fuente");
-  subtitleButton.addEventListener("click", () => addContentBlock({
-    type: "subtitle",
-    draftInput: contentDraftInput.input,
-    textInput: textInput.input,
-    preview: contentPreview,
-    fields,
-    setFeedback,
-  }));
-  paragraphButton.addEventListener("click", () => addContentBlock({
-    type: "paragraph",
-    draftInput: contentDraftInput.input,
-    textInput: textInput.input,
-    preview: contentPreview,
-    fields,
-    setFeedback,
-  }));
-  sourcesButton.addEventListener("click", () => addContentBlock({
-    type: "source",
-    draftInput: contentDraftInput.input,
-    textInput: textInput.input,
-    preview: contentPreview,
-    fields,
-    setFeedback,
-  }));
+  const addDraftContentBlock = (type) => {
+    const didChange = addContentBlock({
+      type,
+      draftInput: contentDraftInput.input,
+      textInput: textInput.input,
+      preview: contentPreview,
+      fields,
+      setFeedback,
+    });
+    if (didChange) markEditorDirty();
+  };
+  subtitleButton.addEventListener("click", () => addDraftContentBlock("subtitle"));
+  paragraphButton.addEventListener("click", () => addDraftContentBlock("paragraph"));
+  sourcesButton.addEventListener("click", () => addDraftContentBlock("source"));
   insertActions.append(subtitleButton, paragraphButton, sourcesButton);
   textInput.input.addEventListener("input", () => {
+    markEditorDirty();
     syncContentBlockList(fields);
     updateContentPreview(contentPreview, textInput.input.value);
     updateEditorPreview(fields);
   });
+  contentDraftInput.input.addEventListener("input", markEditorDirty);
+  imageDraftInput.input.addEventListener("input", markEditorDirty);
 
   const advancedContentSection = createEditorSection("Avanzado");
   advancedContentSection.section.classList.add("marker-editor-advanced-section");
@@ -305,42 +336,39 @@ export function setupMarkerEditor(camera, scene, buttons) {
   const mainImageButton = createButton("Usar principal");
   const exteriorImageButton = createButton("Agregar exterior");
   const interiorImageButton = createButton("Agregar interior");
-  mainImageButton.addEventListener("click", () => addImagePath({
-    type: "main",
-    draftInput: imageDraftInput.input,
-    fields,
-    setFeedback,
-  }));
-  exteriorImageButton.addEventListener("click", () => addImagePath({
-    type: "exterior",
-    draftInput: imageDraftInput.input,
-    fields,
-    setFeedback,
-  }));
-  interiorImageButton.addEventListener("click", () => addImagePath({
-    type: "interior",
-    draftInput: imageDraftInput.input,
-    fields,
-    setFeedback,
-  }));
+  const addDraftImagePath = (type) => {
+    const didChange = addImagePath({
+      type,
+      draftInput: imageDraftInput.input,
+      fields,
+      setFeedback,
+    });
+    if (didChange) markEditorDirty();
+  };
+  mainImageButton.addEventListener("click", () => addDraftImagePath("main"));
+  exteriorImageButton.addEventListener("click", () => addDraftImagePath("exterior"));
+  interiorImageButton.addEventListener("click", () => addDraftImagePath("interior"));
   imageActions.append(mainImageButton, exteriorImageButton, interiorImageButton);
   setupImageDropZone({
     dropZone: mainImageDropZone,
     type: "main",
     fields,
     setFeedback,
+    onDirty: markEditorDirty,
   });
   setupImageDropZone({
     dropZone: exteriorImagesDropZone,
     type: "exterior",
     fields,
     setFeedback,
+    onDirty: markEditorDirty,
   });
   setupImageDropZone({
     dropZone: interiorImagesDropZone,
     type: "interior",
     fields,
     setFeedback,
+    onDirty: markEditorDirty,
   });
 
   const advancedGallerySection = createEditorSection("Listas");
@@ -349,7 +377,8 @@ export function setupMarkerEditor(camera, scene, buttons) {
 
   const saveActions = document.createElement("div");
   saveActions.className = "marker-editor-actions marker-editor-actions-inline";
-  const saveButton = createButton("Guardar");
+  saveButton = createButton("Guardar");
+  saveButton.setAttribute("aria-live", "polite");
   const placeDraftButton = createButton("Ubicar acá");
   const cancelLocationButton = createButton("Cancelar");
   const finishPositionButton = createButton("Confirmar lugar");
@@ -377,9 +406,8 @@ export function setupMarkerEditor(camera, scene, buttons) {
     setWorkflowStage(EDITOR_STAGE_IDLE);
   };
   placeDraftButton.addEventListener("click", () => {
-    const targetPosition = clampMarkerPosition(vectorToNumberArray(camera.userData.controls?.target));
     const position = isPreviewFollowingTarget
-      ? projectedMarkerPosition || targetPosition
+      ? getPositionFromCurrentTarget()
       : clampMarkerPosition(parseNumberList(positionInput.input.value));
 
     if (!position) {
@@ -410,7 +438,9 @@ export function setupMarkerEditor(camera, scene, buttons) {
     setWorkflowStage(EDITOR_STAGE_IDLE);
   });
   finishPositionButton.addEventListener("click", () => {
-    const position = clampMarkerPosition(parseNumberList(positionInput.input.value));
+    const position = isPreviewFollowingTarget
+      ? getPositionFromCurrentTarget()
+      : clampMarkerPosition(parseNumberList(positionInput.input.value));
     if (!position) {
       setFieldInvalid(positionInput.input, true);
       setFeedback(fields, "No se pudo usar ese lugar. Proba mover un poco la vista.", FEEDBACK_ERROR);
@@ -423,6 +453,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     activeMarker?.position.set(...position);
     updatePlacedPositionPreview(placedPositionPreview, position);
     stopFollowingTarget();
+    markEditorDirty();
     setFeedback(fields, isCreatingNewMarker
       ? "Lugar confirmado. Completa los datos y toca Guardar."
       : "Lugar actualizado. Guarda para aplicar el cambio.",
@@ -430,10 +461,12 @@ export function setupMarkerEditor(camera, scene, buttons) {
     setWorkflowStage(EDITOR_STAGE_EDIT);
   });
   editContentButton.addEventListener("click", () => {
+    resetMarkerEditorSaveButton(saveButton, isCreatingNewMarker);
     setFeedback(fields, "Completa o cambia los datos y toca Guardar.");
     setWorkflowStage(EDITOR_STAGE_EDIT);
   });
   editPositionButton.addEventListener("click", () => {
+    resetMarkerEditorSaveButton(saveButton, isCreatingNewMarker);
     startFollowingTarget();
     setFeedback(fields, "Mueve la vista hasta el nuevo lugar y confirma.");
     setWorkflowStage(EDITOR_STAGE_POSITION);
@@ -467,6 +500,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
     isCreatingNewMarker = false;
     stopFollowingTarget();
     clearFields(fields, "Sin marcador seleccionado");
+    resetMarkerEditorSaveButton(saveButton, isCreatingNewMarker);
     clearFeedback(fields);
     updateEditorPreview(fields);
     document.dispatchEvent(new CustomEvent("marker:deselected"));
@@ -530,6 +564,7 @@ export function setupMarkerEditor(camera, scene, buttons) {
 
     activeMarker = selectedMarker;
     isCreatingNewMarker = Boolean(activeMarker?.userData.isDraftMarker);
+    resetMarkerEditorSaveButton(saveButton, isCreatingNewMarker);
     stopFollowingTarget();
     populateEditor(activeMarker, fields);
     setFeedback(fields, activeMarker
@@ -636,6 +671,36 @@ function getSelectedMarkerStage(marker, isCreatingNewMarker, currentStage) {
   return currentStage === EDITOR_STAGE_EDIT ? EDITOR_STAGE_EDIT : EDITOR_STAGE_POSITION;
 }
 
+function getMarkerEditorSaveIdleText(isCreatingNewMarker) {
+  return isCreatingNewMarker ? "Guardar" : "Guardar cambios";
+}
+
+function resetMarkerEditorSaveButton(button, isCreatingNewMarker) {
+  if (!button || button.dataset.saveState === "busy") return;
+  setMarkerEditorSaveButtonState(button, "idle", { isCreatingNewMarker });
+}
+
+function setMarkerEditorSaveButtonState(button, state, { isCreatingNewMarker = false, isNewPlace = false } = {}) {
+  if (!button) return;
+
+  const labels = {
+    idle: getMarkerEditorSaveIdleText(isCreatingNewMarker),
+    busy: isNewPlace ? MARKER_SAVE_BUTTON_CREATE_TEXT : MARKER_SAVE_BUTTON_BUSY_TEXT,
+    saved: MARKER_SAVE_BUTTON_SAVED_TEXT,
+    error: MARKER_SAVE_BUTTON_ERROR_TEXT,
+  };
+
+  button.textContent = labels[state] || labels.idle;
+  button.disabled = state === "busy";
+
+  if (state === "idle") {
+    delete button.dataset.saveState;
+    return;
+  }
+
+  button.dataset.saveState = state;
+}
+
 function updateWorkflowUi({ stage, isCreatingNewMarker, hasActiveMarker, workflowHelp, sections, buttons, fields }) {
   const isIdle = stage === EDITOR_STAGE_IDLE;
   const isGhostStage = stage === EDITOR_STAGE_GHOST;
@@ -657,7 +722,9 @@ function updateWorkflowUi({ stage, isCreatingNewMarker, hasActiveMarker, workflo
   buttons.deleteButton.hidden = !hasExistingMarker;
 
   buttons.finishPositionButton.textContent = "Confirmar lugar";
-  buttons.saveButton.textContent = isCreatingNewMarker ? "Guardar" : "Guardar cambios";
+  if (!buttons.saveButton.dataset.saveState) {
+    buttons.saveButton.textContent = getMarkerEditorSaveIdleText(isCreatingNewMarker);
+  }
   buttons.editContentButton.textContent = isCreatingNewMarker ? "Cargar datos" : "Editar contenido";
   buttons.deselectButton.textContent = "Deseleccionar";
 
@@ -730,12 +797,14 @@ function populateEditor(marker, fields) {
 async function saveCurrentMarker(marker, fields, context) {
   if (fields.contentDraftInput.value.trim()) {
     setFeedback(fields, "Tocá Agregar párrafo, Agregar subtítulo o Agregar fuente antes de guardar.", FEEDBACK_ERROR);
+    setMarkerEditorSaveButtonState(fields.saveButton, "error", { isCreatingNewMarker: context.isCreatingNewMarker });
     fields.contentDraftInput.focus();
     return;
   }
 
   if (fields.imageDraftInput.value.trim()) {
     setFeedback(fields, "Toca Usar principal, Agregar exterior o Agregar interior antes de guardar.", FEEDBACK_ERROR);
+    setMarkerEditorSaveButtonState(fields.saveButton, "error", { isCreatingNewMarker: context.isCreatingNewMarker });
     fields.imageDraftInput.focus();
     return;
   }
@@ -744,7 +813,7 @@ async function saveCurrentMarker(marker, fields, context) {
   if (!title) {
     setFieldInvalid(fields.titleInput, true);
     setFeedback(fields, "Falta el título.", FEEDBACK_ERROR);
-    showTemporaryButtonText(fields.saveButton, "Falta título");
+    setMarkerEditorSaveButtonState(fields.saveButton, "error", { isCreatingNewMarker: context.isCreatingNewMarker });
     return;
   }
   setFieldInvalid(fields.titleInput, false);
@@ -754,7 +823,7 @@ async function saveCurrentMarker(marker, fields, context) {
   if (!position) {
     setFieldInvalid(fields.positionInput, true);
     setFeedback(fields, "Revisá la ubicación antes de guardar.", FEEDBACK_ERROR);
-    showTemporaryButtonText(fields.saveButton, "Revisar");
+    setMarkerEditorSaveButtonState(fields.saveButton, "error", { isCreatingNewMarker: context.isCreatingNewMarker });
     return;
   }
   setFieldInvalid(fields.positionInput, false);
@@ -769,18 +838,20 @@ async function saveCurrentMarker(marker, fields, context) {
     interiorImages: splitLines(fields.interiorImagesInput.value),
   };
 
-  setButtonBusy(fields.saveButton, true, context.isCreatingNewMarker || !marker?.userData.placeId ? "Creando..." : "Guardando...");
-  setFeedback(fields, context.isCreatingNewMarker || !marker?.userData.placeId
+  const isNewPlace = context.isCreatingNewMarker || !marker?.userData.placeId;
+  setMarkerEditorSaveButtonState(fields.saveButton, "busy", { isCreatingNewMarker: context.isCreatingNewMarker, isNewPlace });
+  setFeedback(fields, isNewPlace
     ? "Guardando marcador..."
     : "Guardando cambios...");
 
   try {
-    if (context.isCreatingNewMarker || !marker?.userData.placeId) {
+    if (isNewPlace) {
       payload.cameraView = getCurrentCameraView(context.camera);
       const savedPlace = await createPlace(payload);
       const createdMarker = marker || createMarkerFromPlace(context.scene, context.buttons, savedPlace);
       syncMarker(createdMarker, savedPlace);
       populateEditor(createdMarker, fields);
+      setMarkerEditorSaveButtonState(fields.saveButton, "saved", { isCreatingNewMarker: context.isCreatingNewMarker });
       setFeedback(fields, "Marcador guardado.", FEEDBACK_SUCCESS);
       animateEditorPreviewSaved(fields.previewPanel, () => context.onCreated(createdMarker));
       return;
@@ -789,13 +860,13 @@ async function saveCurrentMarker(marker, fields, context) {
     const savedPlace = await savePlace(marker.userData.placeId, payload);
     syncMarker(marker, savedPlace);
     populateEditor(marker, fields);
+    setMarkerEditorSaveButtonState(fields.saveButton, "saved", { isCreatingNewMarker: context.isCreatingNewMarker });
     setFeedback(fields, "Cambios guardados.", FEEDBACK_SUCCESS);
     animateEditorPreviewSaved(fields.previewPanel, () => context.onSaved?.(marker));
   } catch (error) {
     console.warn("No se pudo guardar el marcador", error);
+    setMarkerEditorSaveButtonState(fields.saveButton, "error", { isCreatingNewMarker: context.isCreatingNewMarker });
     setFeedback(fields, getErrorMessage(error, "No se pudo guardar. Intenta otra vez."), FEEDBACK_ERROR);
-  } finally {
-    setButtonBusy(fields.saveButton, false);
   }
 }
 
