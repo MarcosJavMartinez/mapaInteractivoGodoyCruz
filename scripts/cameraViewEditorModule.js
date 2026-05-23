@@ -8,11 +8,16 @@ import { setupControlPanWhileEditing } from "./editorControlPanModule.js";
 
 const UPDATE_INTERVAL_MS = 120;
 const EDITOR_PASSWORD = "muvi1950";
+const CAMERA_VIEW_SAVE_IDLE_TEXT = "Guardar vista";
+const CAMERA_VIEW_SAVE_BUSY_TEXT = "Guardando...";
+const CAMERA_VIEW_SAVE_SAVED_TEXT = "\u2713 Guardado";
+const CAMERA_VIEW_SAVE_ERROR_TEXT = "Revisar";
 
 export function setupCameraViewEditor(camera) {
   if (!camera) return;
 
   let activeMarker = null;
+  let controlPan = null;
   const panel = document.createElement("aside");
   panel.className = "camera-view-editor-panel";
   panel.setAttribute("aria-label", "Editor de vistas de cámara");
@@ -28,7 +33,7 @@ export function setupCameraViewEditor(camera) {
   closeButton.type = "button";
   closeButton.setAttribute("aria-label", "Cerrar");
   closeButton.textContent = "X";
-  closeButton.addEventListener("click", () => hideEditor(panel, camera));
+  closeButton.addEventListener("click", () => hideEditor(panel, controlPan));
   header.append(title, closeButton);
 
   const marker = document.createElement("p");
@@ -61,12 +66,14 @@ export function setupCameraViewEditor(camera) {
   finderInput.placeholder = "{\nposition: [88, 14, 72.8],\ntarget: [88, 8, 30.8]\n}";
   goToViewButton.type = "button";
   goToViewButton.textContent = "Ir a vista";
-  goToViewButton.addEventListener("click", () => goToPastedView(camera, finderInput, goToViewButton));
+  goToViewButton.addEventListener("click", () => goToPastedView(camera, finderInput, goToViewButton, saveViewButton));
   finder.append(finderTitle, finderInput);
 
   saveViewButton.type = "button";
-  saveViewButton.textContent = "Guardar vista";
+  saveViewButton.textContent = CAMERA_VIEW_SAVE_IDLE_TEXT;
+  saveViewButton.setAttribute("aria-live", "polite");
   saveViewButton.addEventListener("click", () => saveCurrentView(camera, activeMarker, saveViewButton));
+  finderInput.addEventListener("input", () => resetCameraViewSaveButton(saveViewButton));
 
   actions.className = "camera-view-editor-actions";
   actions.append(saveViewButton);
@@ -75,16 +82,22 @@ export function setupCameraViewEditor(camera) {
 
   panel.append(header, marker, currentView, actions, finder);
   document.body.appendChild(panel);
-  const controlPan = setupControlPanWhileEditing(panel, camera);
+  controlPan = setupControlPanWhileEditing(panel, camera);
   setupEditorAccessShortcut(panel, controlPan);
 
   document.addEventListener("marker:selected", (event) => {
     activeMarker = event.detail?.marker || null;
+    resetCameraViewSaveButton(saveViewButton);
     const markerTitle = event.detail?.title || "sin título";
     const placeId = activeMarker?.userData.placeId;
     marker.textContent = placeId
-      ? `Marcador: ${markerTitle} | DB #${placeId}`
-      : `Marcador: ${markerTitle} | sin DB`;
+      ? `Marcador: ${markerTitle} | guardado #${placeId}`
+      : `Marcador: ${markerTitle} | sin guardar`;
+  });
+  document.addEventListener("marker:deselected", () => {
+    activeMarker = null;
+    marker.textContent = "Marcador: ninguno";
+    resetCameraViewSaveButton(saveViewButton);
   });
 
   let lastUpdate = 0;
@@ -95,10 +108,12 @@ export function setupCameraViewEditor(camera) {
     if (now - lastUpdate < UPDATE_INTERVAL_MS) return;
     lastUpdate = now;
 
-    const cameraPosition = vectorToText(camera.position, { fixed: true });
-    const controlsTarget = vectorToText(camera.userData.controls?.target, { fixed: true });
+    const currentViewText = getCurrentCameraViewText(camera);
 
-    currentViewInput.value = `position: [${cameraPosition}]\ntarget: [${controlsTarget}]`;
+    if (currentViewInput.value !== currentViewText) {
+      currentViewInput.value = currentViewText;
+      resetCameraViewSaveButton(saveViewButton);
+    }
   }
 
   requestAnimationFrame(update);
@@ -143,32 +158,33 @@ function hideEditor(panel, controlPan) {
 
 async function saveCurrentView(camera, marker, button) {
   if (!marker) {
-    showTemporaryButtonText(button, "Elegir marcador");
+    setCameraViewSaveButtonState(button, "error", { text: "Elegir marcador" });
     return;
   }
 
   const view = getCurrentCameraView(camera);
 
   if (!view) {
-    showTemporaryButtonText(button, "Sin target");
+    setCameraViewSaveButtonState(button, "error", { text: "Sin vista" });
     return;
   }
 
   marker.userData.cameraView = view;
 
   if (!marker.userData.placeId) {
-    showTemporaryButtonText(button, "Sin DB");
+    setCameraViewSaveButtonState(button, "error", { text: "Sin guardar" });
     return;
   }
 
   try {
+    setCameraViewSaveButtonState(button, "busy");
     const savedPlace = await savePlaceCameraView(marker.userData.placeId, view);
     if (savedPlace?.cameraView) {
       marker.userData.cameraView = savedPlace.cameraView;
     }
-    showTemporaryButtonText(button, "Guardada DB");
+    setCameraViewSaveButtonState(button, "saved");
   } catch (_error) {
-    showTemporaryButtonText(button, "Error DB");
+    setCameraViewSaveButtonState(button, "error", { text: "Error" });
   }
 }
 
@@ -179,7 +195,40 @@ function getCurrentCameraView(camera) {
   return position && target ? { position, target } : null;
 }
 
-function goToPastedView(camera, input, button) {
+function getCurrentCameraViewText(camera) {
+  const cameraPosition = vectorToText(camera.position, { fixed: true });
+  const controlsTarget = vectorToText(camera.userData.controls?.target, { fixed: true });
+
+  return `position: [${cameraPosition}]\ntarget: [${controlsTarget}]`;
+}
+
+function resetCameraViewSaveButton(button) {
+  if (!button || button.dataset.saveState === "busy") return;
+  setCameraViewSaveButtonState(button, "idle");
+}
+
+function setCameraViewSaveButtonState(button, state, { text } = {}) {
+  if (!button) return;
+
+  const labels = {
+    idle: CAMERA_VIEW_SAVE_IDLE_TEXT,
+    busy: CAMERA_VIEW_SAVE_BUSY_TEXT,
+    saved: CAMERA_VIEW_SAVE_SAVED_TEXT,
+    error: text || CAMERA_VIEW_SAVE_ERROR_TEXT,
+  };
+
+  button.textContent = labels[state] || labels.idle;
+  button.disabled = state === "busy";
+
+  if (state === "idle") {
+    delete button.dataset.saveState;
+    return;
+  }
+
+  button.dataset.saveState = state;
+}
+
+function goToPastedView(camera, input, button, saveButton) {
   const view = parseCameraView(input.value);
   if (!view) {
     showTemporaryButtonText(button, "Revisar datos");
@@ -196,6 +245,7 @@ function goToPastedView(camera, input, button) {
     camera.lookAt(...view.target);
   }
 
+  resetCameraViewSaveButton(saveButton);
   showTemporaryButtonText(button, "Listo");
 }
 
