@@ -2495,14 +2495,17 @@ label {
 
   .info-panel.is-collapsed {
     display: grid;
-    align-content: center;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-content: stretch;
     justify-items: center;
-    gap: 0.55rem;
-    width: 3.65rem;
-    min-height: 7.2rem;
-    bottom: auto;
-    padding: 0.55rem 0.45rem;
+    gap: 0;
+    width: 3.7rem;
+    top: var(--site-header-height);
+    bottom: var(--site-footer-height);
+    min-height: 0;
+    padding: 0.8rem 0.45rem;
     overflow: hidden;
+    border-radius: 0;
   }
 
   .info-panel.is-collapsed > :not(.info-panel-toggle):not(.info-panel-close) {
@@ -2514,15 +2517,21 @@ label {
     position: static;
     display: grid;
     place-items: center;
-    width: 2.1rem;
-    height: 2.1rem;
     margin: 0;
+  }
+
+  .info-panel.is-collapsed .info-panel-toggle {
+    align-self: center;
+    grid-row: 2;
+    width: 2.1rem;
+    height: 3.5rem;
+    border-radius: 999px;
     padding: 0;
   }
 
   .info-panel.is-collapsed .info-panel-close {
-    color: var(--warm-brown-dark);
-    background: var(--paper-strong);
+    align-self: start;
+    grid-row: 1;
   }
 
   .image-viewer-frame {
