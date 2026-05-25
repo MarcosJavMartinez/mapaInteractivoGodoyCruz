@@ -1488,7 +1488,7 @@ label {
   padding: clamp(0.75rem, 2vw, 1.25rem);
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 244, 228, 0.08)),
-    rgba(255, 249, 239, 0.56);
+    rgba(255, 249, 239, 0.68);
   backdrop-filter: blur(8px) saturate(1.04);
   -webkit-backdrop-filter: blur(8px) saturate(1.04);
 }
@@ -1537,7 +1537,7 @@ label {
   border-radius: 6px;
   box-shadow:
     0 1.25rem 3rem rgba(28, 18, 13, 0.46),
-    0 0 0 1px rgba(255, 249, 239, 0.1);
+    0 0 0 1px rgba(255, 249, 239, 0.45);
   object-fit: contain;
   object-position: center;
   opacity: 1;
@@ -1556,6 +1556,9 @@ label {
 .image-viewer-stage img.is-zoomed {
   max-width: 100%;
   max-height: 100%;
+  box-shadow:
+    0 1.3rem 3.2rem rgba(28, 18, 13, 0.5),
+    0 0 0 2px rgba(122, 20, 95, 0.28);
   cursor: zoom-out;
 }
 .image-viewer-stage img.is-changing {
@@ -1575,8 +1578,8 @@ label {
   gap: 0;
   overflow: hidden;
   color: var(--warm-brown-dark);
-  background: var(--paper-soft);
-  border: 1px solid var(--glass-border);
+  background: var(--paper-strong);
+  border: 1px solid rgba(132, 83, 47, 0.22);
   border-radius: 999px;
   box-shadow: 0 0.45rem 1.15rem rgba(28, 18, 13, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   margin: 0;
@@ -1593,8 +1596,8 @@ label {
   height: 4.5rem;
   float: none;
   color: var(--warm-brown-dark);
-  background: var(--paper-soft);
-  border: 1px solid var(--glass-border);
+  background: var(--paper-strong);
+  border: 1px solid rgba(132, 83, 47, 0.22);
   border-radius: 999px;
   box-shadow: 0 0.55rem 1.25rem rgba(28, 18, 13, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   cursor: pointer;
@@ -1646,7 +1649,7 @@ label {
   height: 3.25rem;
   float: none;
   padding: 0;
-  background: var(--paper-soft);
+  background: var(--paper-strong);
   border: 2px solid transparent;
   border-radius: 6px;
   box-shadow: 0 0.45rem 1rem rgba(28, 18, 13, 0.3);
