@@ -135,16 +135,6 @@ body.navigation-mode-walk.is-over-marker::after {
   bottom: calc(var(--site-footer-height) + env(safe-area-inset-bottom));
   width: 52vw;
 }
-.touch-look-pad::after {
-  content: "Mirar";
-  position: absolute;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: 1.15rem;
-  color: rgba(255, 249, 239, 0.68);
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-subtitle);
-  text-shadow: 0 1px 0 rgba(47, 31, 22, 0.42);
-}
 .touch-action-button {
   position: absolute;
   right: max(1rem, env(safe-area-inset-right));

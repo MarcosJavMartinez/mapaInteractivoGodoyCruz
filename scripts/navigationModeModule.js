@@ -636,7 +636,7 @@ function createTouchControls() {
       <span class="touch-joystick-knob"></span>
     </div>
     <div class="touch-look-pad" data-touch-look-pad></div>
-    <button class="touch-action-button touch-action-button-interact" type="button" data-touch-interact>Ver ficha</button>
+    <button class="touch-action-button touch-action-button-interact" type="button" data-touch-interact>Click en marcador</button>
   `;
   document.body.appendChild(root);
 
