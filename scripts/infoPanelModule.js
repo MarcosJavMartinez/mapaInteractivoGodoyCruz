@@ -162,6 +162,8 @@ function openImageViewer(images, startIndex = 0) {
   closeImageViewer();
   let currentIndex = Math.min(Math.max(0, startIndex), images.length - 1);
   let imageTransitionTimer = null;
+  let swipeStartX = 0;
+  let swipeStartY = 0;
 
   const overlay = document.createElement("div");
   overlay.className = "image-viewer-overlay";
@@ -286,6 +288,24 @@ function openImageViewer(images, startIndex = 0) {
 
   previousButton.addEventListener("click", showPrevious);
   nextButton.addEventListener("click", showNext);
+  stage.addEventListener("touchstart", (event) => {
+    const touch = event.changedTouches[0];
+    if (!touch || image.classList.contains("is-zoomed")) return;
+    swipeStartX = touch.clientX;
+    swipeStartY = touch.clientY;
+  }, { passive: true });
+  stage.addEventListener("touchend", (event) => {
+    const touch = event.changedTouches[0];
+    if (!touch || image.classList.contains("is-zoomed")) return;
+    const deltaX = touch.clientX - swipeStartX;
+    const deltaY = touch.clientY - swipeStartY;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+    if (deltaX < 0) {
+      showNext();
+    } else {
+      showPrevious();
+    }
+  }, { passive: true });
   document.addEventListener("keydown", activeImageViewerKeyHandler);
   activeImageViewerCleanup = () => clearTimeout(imageTransitionTimer);
   updateImage(false);
@@ -293,9 +313,9 @@ function openImageViewer(images, startIndex = 0) {
   frame.appendChild(closeButton);
   stage.appendChild(image);
   frame.appendChild(stage);
-  controls.appendChild(previousButton);
   controls.appendChild(counter);
-  controls.appendChild(nextButton);
+  frame.appendChild(previousButton);
+  frame.appendChild(nextButton);
   frame.appendChild(controls);
   frame.appendChild(thumbnails);
   overlay.appendChild(frame);
