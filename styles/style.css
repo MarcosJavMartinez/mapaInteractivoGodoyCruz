@@ -1291,9 +1291,14 @@ label {
   box-sizing: border-box;
   border-radius: 0 12px 12px 0;
   border-left: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   opacity: 0;
   transform: translateX(-105%);
   transition:
@@ -1344,10 +1349,17 @@ label {
 }
 .info-panel p,
 .info-panel li {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: var(--warm-brown-text);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-body);
   line-height: 1.48;
+}
+.info-panel div,
+.info-panel ul,
+.info-panel ol {
+  max-width: 100%;
 }
 .info-panel::-webkit-scrollbar {
   width: 6px;
