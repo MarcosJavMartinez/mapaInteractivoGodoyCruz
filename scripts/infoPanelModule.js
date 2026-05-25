@@ -1,3 +1,4 @@
+import { toAssetUrl } from "./assetUrlModule.js";
 import { sanitizeHtml } from "./htmlSanitizer.js";
 
 let currentInfoPanel = null;
@@ -32,9 +33,10 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
     panel.appendChild(titleElement);
   }
 
-  if (imageUrl) {
+  const mainImage = primaryImages[0];
+  if (mainImage) {
     const image = document.createElement("img");
-    image.src = imageUrl;
+    image.src = mainImage;
     image.className = "panel-image";
     image.addEventListener("click", () => openImageViewer(galleryImages, 0));
     panel.appendChild(image);
@@ -75,7 +77,8 @@ function collectUniqueImages(images, usedImages) {
       if (!imageUrl || usedImages.has(imageUrl)) return false;
       usedImages.add(imageUrl);
       return true;
-    });
+    })
+    .map(toAssetUrl);
 }
 
 function hideCurrentInfoPanel() {

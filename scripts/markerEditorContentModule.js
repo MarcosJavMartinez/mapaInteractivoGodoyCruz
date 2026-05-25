@@ -1,4 +1,5 @@
 import { deleteUploadedImage, uploadImage } from "./apiClient.js";
+import { toAssetUrl } from "./assetUrlModule.js";
 import { sanitizeHtml } from "./htmlSanitizer.js";
 
 const FEEDBACK_SUCCESS = "success";
@@ -123,7 +124,7 @@ export function setupImageListEditor({ list, type, fields, setFeedback, onDirty 
     onDirty?.();
     const image = event.target.closest(".marker-editor-image-row")?.querySelector("img");
     if (image) {
-      image.src = event.target.value.trim();
+      image.src = toAssetUrl(event.target.value);
     }
 
     writeImagesToFields(type, readImagesFromList(list), fields);
@@ -182,7 +183,7 @@ export function updateEditorPreview(fields) {
 
   preview.image.hidden = !mainImage;
   if (mainImage) {
-    preview.image.src = mainImage;
+    preview.image.src = toAssetUrl(mainImage);
   } else {
     preview.image.removeAttribute("src");
   }
@@ -391,7 +392,7 @@ function renderPreviewGallery(gallery, images) {
 
   images.forEach((imageUrl) => {
     const image = document.createElement("img");
-    image.src = imageUrl;
+    image.src = toAssetUrl(imageUrl);
     image.alt = "";
     gallery.appendChild(image);
   });
@@ -578,7 +579,7 @@ function renderImageList(list, images) {
     const row = document.createElement("div");
     row.className = "marker-editor-image-row";
     const image = document.createElement("img");
-    image.src = imageUrl;
+    image.src = toAssetUrl(imageUrl);
     image.alt = "";
     const input = document.createElement("input");
     input.type = "text";
