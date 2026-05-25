@@ -164,13 +164,22 @@ function openImageViewer(images, startIndex = 0) {
   let imageTransitionTimer = null;
   let swipeStartX = 0;
   let swipeStartY = 0;
+  let viewerState = "fit";
   let zoomScale = 1;
-  let zoomOriginX = 50;
-  let zoomOriginY = 50;
+  let panX = 0;
+  let panY = 0;
   let pinchStartDistance = 0;
   let pinchStartScale = 1;
   let isPinching = false;
+  let isDraggingZoom = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragStartPanX = 0;
+  let dragStartPanY = 0;
   let suppressClickUntil = 0;
+
+  const INITIAL_ZOOM_SCALE = 2.25;
+  const MAX_ZOOM_SCALE = 5;
 
   const overlay = document.createElement("div");
   overlay.className = "image-viewer-overlay";
@@ -186,17 +195,17 @@ function openImageViewer(images, startIndex = 0) {
 
   const stage = document.createElement("div");
   stage.className = "image-viewer-stage";
+  stage.dataset.viewerState = viewerState;
 
   const image = document.createElement("img");
   image.alt = "";
   image.addEventListener("click", (event) => {
     if (isPinching || Date.now() < suppressClickUntil) return;
-    if (zoomScale > 1) {
+    if (viewerState === "zoom") {
       resetImageZoom();
       return;
     }
-    const point = getStagePointPercent(event);
-    applyImageZoom(2.25, point.x, point.y);
+    enterImageZoom(event, INITIAL_ZOOM_SCALE);
   });
   image.addEventListener("load", () => {
     const isLandscape = image.naturalWidth >= image.naturalHeight;
@@ -285,33 +294,68 @@ function openImageViewer(images, startIndex = 0) {
     updateImage();
   };
 
-  const applyImageZoom = (scale, originX = zoomOriginX, originY = zoomOriginY) => {
-    zoomScale = clamp(scale, 1, 5);
-    zoomOriginX = clamp(originX, 0, 100);
-    zoomOriginY = clamp(originY, 0, 100);
-    const isZoomed = zoomScale > 1.01;
-
+  const applyImageTransform = () => {
+    const isZoomed = viewerState === "zoom";
+    stage.dataset.viewerState = viewerState;
     image.classList.toggle("is-zoomed", isZoomed);
     stage.classList.toggle("is-zoomed", isZoomed);
-    image.style.transformOrigin = `${zoomOriginX}% ${zoomOriginY}%`;
-    image.style.transform = isZoomed ? `scale(${zoomScale})` : "";
+    image.style.transform = isZoomed ? `translate(${panX}px, ${panY}px) scale(${zoomScale})` : "";
+  };
+
+  const getPanLimit = (scale = zoomScale) => {
+    const baseWidth = image.offsetWidth || stage.clientWidth;
+    const baseHeight = image.offsetHeight || stage.clientHeight;
+    return {
+      x: Math.max(0, ((baseWidth * scale) - stage.clientWidth) / 2),
+      y: Math.max(0, ((baseHeight * scale) - stage.clientHeight) / 2),
+    };
+  };
+
+  const clampPan = () => {
+    const limit = getPanLimit();
+    panX = clamp(panX, -limit.x, limit.x);
+    panY = clamp(panY, -limit.y, limit.y);
+  };
+
+  const setPanFromPoint = (point, scale = zoomScale) => {
+    const limit = getPanLimit(scale);
+    panX = (0.5 - point.x) * 2 * limit.x;
+    panY = (0.5 - point.y) * 2 * limit.y;
+  };
+
+  const applyImageZoom = (scale, point = null) => {
+    zoomScale = clamp(scale, 1, MAX_ZOOM_SCALE);
+    viewerState = zoomScale > 1.01 ? "zoom" : "fit";
+
+    if (viewerState === "fit") {
+      panX = 0;
+      panY = 0;
+    } else if (point) {
+      setPanFromPoint(point, zoomScale);
+    } else {
+      clampPan();
+    }
+
+    applyImageTransform();
+  };
+
+  const enterImageZoom = (point, scale = INITIAL_ZOOM_SCALE) => {
+    applyImageZoom(scale, getStagePoint(point));
   };
 
   const resetImageZoom = () => {
+    viewerState = "fit";
     zoomScale = 1;
-    zoomOriginX = 50;
-    zoomOriginY = 50;
-    image.classList.remove("is-zoomed");
-    stage.classList.remove("is-zoomed");
-    image.style.transform = "";
-    image.style.transformOrigin = "";
+    panX = 0;
+    panY = 0;
+    applyImageTransform();
   };
 
-  const getStagePointPercent = (point) => {
+  const getStagePoint = (point) => {
     const rect = stage.getBoundingClientRect();
     return {
-      x: ((point.clientX - rect.left) / rect.width) * 100,
-      y: ((point.clientY - rect.top) / rect.height) * 100,
+      x: clamp((point.clientX - rect.left) / rect.width, 0, 1),
+      y: clamp((point.clientY - rect.top) / rect.height, 0, 1),
     };
   };
 
@@ -348,27 +392,42 @@ function openImageViewer(images, startIndex = 0) {
   nextButton.addEventListener("click", showNext);
   stage.addEventListener("wheel", (event) => {
     event.preventDefault();
-    const point = getStagePointPercent(event);
-    const zoomDelta = -event.deltaY * 0.0016;
-    const nextScale = zoomScale * (1 + zoomDelta);
-    applyImageZoom(nextScale, point.x, point.y);
+    if (viewerState === "fit" && event.deltaY > 0) return;
+
+    const point = getStagePoint(event);
+    const wheelFactor = Math.exp(-event.deltaY * 0.0014);
+    const nextScale = viewerState === "fit"
+      ? INITIAL_ZOOM_SCALE * wheelFactor
+      : zoomScale * wheelFactor;
+    applyImageZoom(nextScale, point);
   }, { passive: false });
   stage.addEventListener("mousemove", (event) => {
-    if (zoomScale <= 1) return;
-    const point = getStagePointPercent(event);
-    applyImageZoom(zoomScale, point.x, point.y);
+    if (viewerState !== "zoom") return;
+    setPanFromPoint(getStagePoint(event));
+    applyImageTransform();
   });
   stage.addEventListener("touchstart", (event) => {
     if (event.touches.length === 2) {
       event.preventDefault();
       isPinching = true;
+      viewerState = "zoom";
       pinchStartDistance = getTouchDistance(event.touches);
       pinchStartScale = zoomScale;
       return;
     }
 
     const touch = event.changedTouches[0];
-    if (!touch || zoomScale > 1) return;
+    if (!touch) return;
+    if (viewerState === "zoom") {
+      event.preventDefault();
+      isDraggingZoom = true;
+      dragStartX = touch.clientX;
+      dragStartY = touch.clientY;
+      dragStartPanX = panX;
+      dragStartPanY = panY;
+      return;
+    }
+
     swipeStartX = touch.clientX;
     swipeStartY = touch.clientY;
   }, { passive: false });
@@ -376,16 +435,18 @@ function openImageViewer(images, startIndex = 0) {
     if (event.touches.length === 2 && pinchStartDistance > 0) {
       event.preventDefault();
       const midpoint = getTouchMidpoint(event.touches);
-      const point = getStagePointPercent(midpoint);
+      const point = getStagePoint(midpoint);
       const nextScale = pinchStartScale * (getTouchDistance(event.touches) / pinchStartDistance);
-      applyImageZoom(nextScale, point.x, point.y);
+      applyImageZoom(nextScale, point);
       return;
     }
 
-    if (event.touches.length === 1 && zoomScale > 1) {
+    if (event.touches.length === 1 && isDraggingZoom) {
       event.preventDefault();
-      const point = getStagePointPercent(event.touches[0]);
-      applyImageZoom(zoomScale, point.x, point.y);
+      panX = dragStartPanX + (event.touches[0].clientX - dragStartX);
+      panY = dragStartPanY + (event.touches[0].clientY - dragStartY);
+      clampPan();
+      applyImageTransform();
     }
   }, { passive: false });
   stage.addEventListener("touchend", (event) => {
@@ -396,10 +457,19 @@ function openImageViewer(images, startIndex = 0) {
       setTimeout(() => {
         isPinching = false;
       }, 120);
+      if (zoomScale <= 1.01) {
+        resetImageZoom();
+      }
+    }
+
+    if (!event.touches.length && isDraggingZoom) {
+      isDraggingZoom = false;
+      suppressClickUntil = Date.now() + 250;
+      return;
     }
 
     const touch = event.changedTouches[0];
-    if (!touch || zoomScale > 1) return;
+    if (!touch || viewerState === "zoom") return;
     const deltaX = touch.clientX - swipeStartX;
     const deltaY = touch.clientY - swipeStartY;
     if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
