@@ -391,15 +391,12 @@ function openImageViewer(images, startIndex = 0) {
   previousButton.addEventListener("click", showPrevious);
   nextButton.addEventListener("click", showNext);
   stage.addEventListener("wheel", (event) => {
-    event.preventDefault();
-    if (viewerState === "fit" && event.deltaY > 0) return;
+    if (viewerState !== "zoom") return;
 
+    event.preventDefault();
     const point = getStagePoint(event);
     const wheelFactor = Math.exp(-event.deltaY * 0.0014);
-    const nextScale = viewerState === "fit"
-      ? INITIAL_ZOOM_SCALE * wheelFactor
-      : zoomScale * wheelFactor;
-    applyImageZoom(nextScale, point);
+    applyImageZoom(zoomScale * wheelFactor, point);
   }, { passive: false });
   stage.addEventListener("mousemove", (event) => {
     if (viewerState !== "zoom") return;
