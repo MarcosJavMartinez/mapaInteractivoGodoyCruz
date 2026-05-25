@@ -8,11 +8,7 @@
   ],
   "functions": {
     "api/[...path].js": {
-      "includeFiles": [
-        "server/**",
-        "data/muvi.sqlite",
-        "data/collision-overrides.json"
-      ]
+      "includeFiles": "{server/**,data/muvi.sqlite,data/collision-overrides.json}"
     }
   }
 }
