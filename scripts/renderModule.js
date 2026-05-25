@@ -14,6 +14,8 @@ const IDLE_AUTO_ROTATE_SPEED = 0.18;
 const MARKER_HOVER_SCALE = 0.14;
 const MARKER_ACTIVE_OUTLINE_SCALE = 1.12;
 const MARKER_ACTIVE_OUTLINE_PULSE_SCALE = 0.035;
+const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 0.82;
+const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 0.85;
 
 export function setupRenderer(quality = getQualitySettings()) {
   const renderer = new WebGLRenderer({
@@ -106,7 +108,7 @@ function updateMarkerScales(markers, camera, now) {
     const scale = baseScale * (1 + pulse);
 
     marker.scale.setScalar(scale);
-    updateMarkerActiveOutline(marker, now);
+    updateMarkerActiveEffects(marker, now);
 
     if (marker.material) {
       marker.material.opacity = marker.userData.isHovered
@@ -117,21 +119,42 @@ function updateMarkerScales(markers, camera, now) {
   }
 }
 
-function updateMarkerActiveOutline(marker, now) {
+function updateMarkerActiveEffects(marker, now) {
   const outline = marker.userData.activeOutline;
-  if (!outline?.material) return;
+  const ripple = marker.userData.activeRipple;
 
   const isActive = Boolean(marker.userData.isActive);
-  outline.visible = isActive;
+  if (outline?.material) {
+    outline.visible = isActive;
+  }
+  if (ripple?.material) {
+    ripple.visible = isActive;
+  }
+
   if (!isActive) {
-    outline.material.opacity = 0;
+    if (outline?.material) {
+      outline.material.opacity = 0;
+    }
+    if (ripple?.material) {
+      ripple.material.opacity = 0;
+    }
     return;
   }
 
-  const pulse = (Math.sin(now * 0.0052) + 1) * 0.5;
-  outline.scale.setScalar(MARKER_ACTIVE_OUTLINE_SCALE + pulse * MARKER_ACTIVE_OUTLINE_PULSE_SCALE);
-  outline.material.opacity = 0.34 + pulse * 0.18;
-  outline.material.transparent = true;
+  const outlinePulse = (Math.sin(now * 0.0052) + 1) * 0.5;
+  if (outline?.material) {
+    outline.scale.setScalar(MARKER_ACTIVE_OUTLINE_SCALE + outlinePulse * MARKER_ACTIVE_OUTLINE_PULSE_SCALE);
+    outline.material.opacity = 0.34 + outlinePulse * 0.18;
+    outline.material.transparent = true;
+  }
+
+  if (ripple?.material) {
+    const ripplePulse = (now * 0.00125) % 1;
+    const rippleScale = MARKER_ACTIVE_RIPPLE_MIN_SCALE + ripplePulse * MARKER_ACTIVE_RIPPLE_PULSE_SCALE;
+    ripple.scale.set(rippleScale, rippleScale, rippleScale);
+    ripple.material.opacity = 0.54 * (1 - ripplePulse);
+    ripple.material.transparent = true;
+  }
 }
 
 function clamp(value, min, max) {

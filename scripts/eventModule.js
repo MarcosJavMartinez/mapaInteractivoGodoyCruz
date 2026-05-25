@@ -257,19 +257,32 @@ function setupMarkerSelectionFeedback(camera) {
   });
 
   const markerPosition = new Vector3();
+  const markerTopPosition = new Vector3();
+  const projectedMarkerPosition = new Vector3();
+  const projectedMarkerTopPosition = new Vector3();
+  const cameraUp = new Vector3();
   const updateFeedbackPosition = () => {
     requestAnimationFrame(updateFeedbackPosition);
     if (!markerFeedback || markerFeedback.hidden || !activeMarker) return;
 
     activeMarker.getWorldPosition(markerPosition);
-    markerPosition.project(camera);
+    cameraUp.copy(camera.up).normalize();
+    markerTopPosition.copy(markerPosition).addScaledVector(cameraUp, activeMarker.scale.y * 1.08);
+    projectedMarkerPosition.copy(markerPosition).project(camera);
+    projectedMarkerTopPosition.copy(markerTopPosition).project(camera);
 
-    const isVisible = markerPosition.z >= -1 && markerPosition.z <= 1;
+    const isVisible = projectedMarkerPosition.z >= -1 && projectedMarkerPosition.z <= 1;
     markerFeedback.classList.toggle("is-hidden", !isVisible);
     if (!isVisible) return;
 
-    markerFeedback.style.left = `${((markerPosition.x + 1) / 2) * window.innerWidth}px`;
-    markerFeedback.style.top = `${((-markerPosition.y + 1) / 2) * window.innerHeight}px`;
+    const markerScreenY = ((-projectedMarkerPosition.y + 1) / 2) * window.innerHeight;
+    const markerTopScreenY = ((-projectedMarkerTopPosition.y + 1) / 2) * window.innerHeight;
+    const markerScreenHeight = Math.max(0, markerScreenY - markerTopScreenY);
+    const cardLift = clamp(markerScreenHeight + 18, 72, Math.max(72, markerScreenY - 64));
+
+    markerFeedback.style.setProperty("--marker-card-lift", `${cardLift}px`);
+    markerFeedback.style.left = `${((projectedMarkerPosition.x + 1) / 2) * window.innerWidth}px`;
+    markerFeedback.style.top = `${markerScreenY}px`;
   };
 
   requestAnimationFrame(updateFeedbackPosition);
@@ -363,4 +376,8 @@ function easeInOutCubic(progress) {
   return progress < 0.5
     ? 4 * progress * progress * progress
     : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }

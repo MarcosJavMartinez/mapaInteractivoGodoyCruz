@@ -83,7 +83,7 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
 
   document.body.appendChild(panel);
   document.body.classList.add("info-panel-open");
-  document.body.classList.remove("info-panel-collapsed");
+  document.body.classList.toggle("info-panel-collapsed", shouldUseMobileSheet);
   requestAnimationFrame(() => panel.classList.add("active"));
   currentInfoPanel = panel;
   watchInfoPanelOutsideClicks(panel);
@@ -713,6 +713,7 @@ function setInfoPanelCollapsed(panel, isCollapsed) {
 function setMobileSheetExpanded(panel, isExpanded) {
   panel.classList.toggle("is-expanded", isExpanded);
   panel.classList.toggle("is-compact", !isExpanded);
+  document.body.classList.toggle("info-panel-collapsed", !isExpanded);
 
   const toggle = panel.querySelector(".info-panel-toggle");
   if (!toggle) return;
