@@ -648,7 +648,9 @@ function createTouchControls() {
     interactButton: root.querySelector("[data-touch-interact]"),
     movement: { x: 0, y: 0, strength: 0 },
     joystickPointerId: null,
+    joystickTouchId: null,
     lookPointerId: null,
+    lookTouchId: null,
     joystickCenter: { x: 0, y: 0 },
     lastLookPoint: { x: 0, y: 0 },
   };
@@ -695,6 +697,35 @@ function bindTouchNavigationControls(camera, state) {
     });
   });
 
+  controls.joystick?.addEventListener("touchstart", (event) => {
+    if (state.mode !== MODE_WALK || controls.joystickTouchId !== null) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    event.preventDefault();
+    controls.joystickTouchId = touch.identifier;
+    const rect = controls.joystick.getBoundingClientRect();
+    controls.joystickCenter.x = rect.left + rect.width / 2;
+    controls.joystickCenter.y = rect.top + rect.height / 2;
+    updateTouchMovement(touch, controls);
+  }, { passive: false });
+
+  document.addEventListener("touchmove", (event) => {
+    if (controls.joystickTouchId === null) return;
+    const touch = getChangedTouch(event, controls.joystickTouchId);
+    if (!touch) return;
+    event.preventDefault();
+    updateTouchMovement(touch, controls);
+  }, { passive: false });
+
+  ["touchend", "touchcancel"].forEach((eventName) => {
+    document.addEventListener(eventName, (event) => {
+      if (controls.joystickTouchId === null) return;
+      const touch = getChangedTouch(event, controls.joystickTouchId);
+      if (!touch) return;
+      resetTouchMovement(controls);
+    }, { passive: false });
+  });
+
   controls.lookPad?.addEventListener("pointerdown", (event) => {
     if (state.mode !== MODE_WALK) return;
     event.preventDefault();
@@ -736,6 +767,33 @@ function bindTouchNavigationControls(camera, state) {
     });
   });
 
+  controls.lookPad?.addEventListener("touchstart", (event) => {
+    if (state.mode !== MODE_WALK || controls.lookTouchId !== null) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    event.preventDefault();
+    controls.lookTouchId = touch.identifier;
+    controls.lastLookPoint.x = touch.clientX;
+    controls.lastLookPoint.y = touch.clientY;
+  }, { passive: false });
+
+  document.addEventListener("touchmove", (event) => {
+    if (controls.lookTouchId === null) return;
+    const touch = getChangedTouch(event, controls.lookTouchId);
+    if (!touch) return;
+    event.preventDefault();
+    updateTouchLook(touch, camera, state, controls);
+  }, { passive: false });
+
+  ["touchend", "touchcancel"].forEach((eventName) => {
+    document.addEventListener(eventName, (event) => {
+      if (controls.lookTouchId === null) return;
+      const touch = getChangedTouch(event, controls.lookTouchId);
+      if (!touch) return;
+      controls.lookTouchId = null;
+    }, { passive: false });
+  });
+
   controls.interactButton?.addEventListener("click", () => {
     if (state.mode !== MODE_WALK) return;
     document.dispatchEvent(new CustomEvent("navigation:interact-centered"));
@@ -775,6 +833,7 @@ function updateTouchLook(event, camera, state, controls) {
 
 function resetTouchMovement(controls) {
   controls.joystickPointerId = null;
+  controls.joystickTouchId = null;
   controls.movement.x = 0;
   controls.movement.y = 0;
   controls.movement.strength = 0;
@@ -788,6 +847,7 @@ function resetTouchNavigation(state) {
   if (!controls) return;
   resetTouchMovement(controls);
   controls.lookPointerId = null;
+  controls.lookTouchId = null;
 }
 
 function isTouchNavigationActive(state) {
@@ -799,4 +859,8 @@ function isTouchNavigationActive(state) {
 
 function updateTouchNavigationClass(state) {
   document.body.classList.toggle("navigation-mode-touch", state.mode === MODE_WALK && isTouchNavigationActive(state));
+}
+
+function getChangedTouch(event, identifier) {
+  return Array.from(event.changedTouches).find((touch) => touch.identifier === identifier) || null;
 }
