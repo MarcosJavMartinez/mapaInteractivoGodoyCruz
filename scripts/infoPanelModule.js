@@ -13,9 +13,10 @@ export { showContent, hideCurrentInfoPanel };
 function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
   hideCurrentInfoPanel();
 
-  const primaryImages = imageUrl ? [imageUrl] : [];
-  const exteriorGalleryImages = (exteriorImages || []).filter(Boolean);
-  const interiorGalleryImages = (interiorImages || []).filter(Boolean);
+  const usedImages = new Set();
+  const primaryImages = collectUniqueImages(imageUrl ? [imageUrl] : [], usedImages);
+  const exteriorGalleryImages = collectUniqueImages(exteriorImages || [], usedImages);
+  const interiorGalleryImages = collectUniqueImages(interiorImages || [], usedImages);
   const galleryImages = [...primaryImages, ...exteriorGalleryImages, ...interiorGalleryImages];
   const exteriorStartIndex = primaryImages.length;
   const interiorStartIndex = primaryImages.length + exteriorGalleryImages.length;
@@ -65,6 +66,16 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
   requestAnimationFrame(() => panel.classList.add("active"));
   currentInfoPanel = panel;
   watchInfoPanelOutsideClicks(panel);
+}
+
+function collectUniqueImages(images, usedImages) {
+  return images
+    .map((imageUrl) => typeof imageUrl === "string" ? imageUrl.trim().replace(/\\/g, "/") : "")
+    .filter((imageUrl) => {
+      if (!imageUrl || usedImages.has(imageUrl)) return false;
+      usedImages.add(imageUrl);
+      return true;
+    });
 }
 
 function hideCurrentInfoPanel() {
