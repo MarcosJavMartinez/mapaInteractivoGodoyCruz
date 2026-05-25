@@ -22,37 +22,41 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
   const galleryImages = [...primaryImages, ...exteriorGalleryImages, ...interiorGalleryImages];
   const exteriorStartIndex = primaryImages.length;
   const interiorStartIndex = primaryImages.length + exteriorGalleryImages.length;
+  const mainImage = primaryImages[0];
 
   const panel = document.createElement("div");
   panel.className = "info-panel";
-  const shouldStartCollapsed = isMobileInfoPanel();
-  if (shouldStartCollapsed) {
-    panel.classList.add("is-collapsed");
+  const shouldUseMobileSheet = isMobileInfoPanel();
+  if (shouldUseMobileSheet) {
+    panel.classList.add("is-mobile-sheet", "is-compact");
   }
 
   panel.appendChild(createInfoPanelToggle(panel));
   panel.appendChild(createCloseButton("info-panel-close", hideCurrentInfoPanel));
+  panel.appendChild(createMobileSheetSummary(title, mainImage, text, panel));
+
+  const content = document.createElement("div");
+  content.className = "info-panel-content";
 
   if (title) {
     const titleElement = document.createElement("h2");
     titleElement.textContent = title;
-    panel.appendChild(titleElement);
+    content.appendChild(titleElement);
   }
 
-  const mainImage = primaryImages[0];
   if (mainImage) {
     const image = document.createElement("img");
     image.src = mainImage;
     image.className = "panel-image";
     image.addEventListener("click", () => openImageViewer(galleryImages, 0));
-    panel.appendChild(image);
+    content.appendChild(image);
   }
 
   const safeText = sanitizeHtml(text);
   if (safeText) {
     const textElement = document.createElement("div");
     textElement.innerHTML = safeText;
-    panel.appendChild(textElement);
+    content.appendChild(textElement);
 
     textElement.querySelectorAll("a").forEach((link) => {
       link.addEventListener("click", (event) => {
@@ -63,16 +67,21 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
   }
 
   if (exteriorGalleryImages.length > 0) {
-    panel.appendChild(createImageGallery(exteriorGalleryImages, galleryImages, exteriorStartIndex));
+    content.appendChild(createImageGallery(exteriorGalleryImages, galleryImages, exteriorStartIndex));
   }
 
   if (interiorGalleryImages.length > 0) {
-    panel.appendChild(createImageGallery(interiorGalleryImages, galleryImages, interiorStartIndex));
+    content.appendChild(createImageGallery(interiorGalleryImages, galleryImages, interiorStartIndex));
+  }
+
+  panel.appendChild(content);
+  if (shouldUseMobileSheet) {
+    setMobileSheetExpanded(panel, false);
   }
 
   document.body.appendChild(panel);
   document.body.classList.add("info-panel-open");
-  document.body.classList.toggle("info-panel-collapsed", shouldStartCollapsed);
+  document.body.classList.remove("info-panel-collapsed");
   requestAnimationFrame(() => panel.classList.add("active"));
   currentInfoPanel = panel;
   watchInfoPanelOutsideClicks(panel);
@@ -132,13 +141,56 @@ function createImageGallery(images, galleryImages, startIndex) {
   return gallery;
 }
 
+function createMobileSheetSummary(title, imageUrl, text, panel) {
+  // Compact mobile state: a quick preview that expands into the full info panel.
+  const summary = document.createElement("div");
+  summary.className = "info-panel-mobile-summary";
+
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.src = imageUrl;
+    image.alt = "";
+    summary.appendChild(image);
+  }
+
+  const copy = document.createElement("div");
+  copy.className = "info-panel-mobile-summary-copy";
+
+  const titleElement = document.createElement("strong");
+  titleElement.textContent = title || "Edificio seleccionado";
+  copy.appendChild(titleElement);
+
+  const summaryText = document.createElement("p");
+  summaryText.textContent = getPlainTextSummary(text);
+  copy.appendChild(summaryText);
+
+  const expandButton = document.createElement("button");
+  expandButton.type = "button";
+  expandButton.textContent = "Ver más información";
+  expandButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    setMobileSheetExpanded(panel, true);
+  });
+  copy.appendChild(expandButton);
+
+  summary.appendChild(copy);
+  return summary;
+}
+
+function getPlainTextSummary(htmlText) {
+  const holder = document.createElement("div");
+  holder.innerHTML = sanitizeHtml(htmlText);
+  const text = holder.textContent?.replace(/\s+/g, " ").trim() || "Toca para ver historia, fotos y detalles del edificio.";
+  return text.length > 104 ? `${text.slice(0, 104).trim()}...` : text;
+}
+
 function watchInfoPanelOutsideClicks(panel) {
   activeInfoPanelOutsideClickTimer = setTimeout(() => {
     if (currentInfoPanel !== panel) return;
 
     activeInfoPanelOutsideClickHandler = (event) => {
       if (!currentInfoPanel || currentInfoPanel.contains(event.target)) return;
-      if (isMobileInfoPanel() && currentInfoPanel.classList.contains("is-collapsed")) return;
+      if (isMobileInfoPanel()) return;
       hideCurrentInfoPanel();
     };
 
@@ -538,11 +590,20 @@ function createInfoPanelToggle(panel) {
   const button = document.createElement("button");
   button.className = "info-panel-toggle";
   button.type = "button";
-  button.setAttribute("aria-label", "Desplegar información");
-  button.setAttribute("aria-expanded", "false");
-  button.textContent = ">";
+  button.setAttribute("aria-label", "Plegar información");
+  button.setAttribute("aria-expanded", "true");
+  button.innerHTML = `
+    <span class="info-panel-toggle-icon" aria-hidden="true">i</span>
+    <span class="info-panel-toggle-text">Info del edificio</span>
+    <span class="info-panel-toggle-arrow" aria-hidden="true">&lt;</span>
+  `;
   button.addEventListener("click", (event) => {
     event.stopPropagation();
+    if (panel.classList.contains("is-mobile-sheet")) {
+      setMobileSheetExpanded(panel, !panel.classList.contains("is-expanded"));
+      return;
+    }
+
     const isCollapsed = panel.classList.toggle("is-collapsed");
     setInfoPanelCollapsed(panel, isCollapsed);
   });
@@ -556,9 +617,21 @@ function setInfoPanelCollapsed(panel, isCollapsed) {
   const toggle = panel.querySelector(".info-panel-toggle");
   if (!toggle) return;
 
-  toggle.textContent = isCollapsed ? ">" : "<";
+  toggle.querySelector(".info-panel-toggle-arrow").textContent = isCollapsed ? ">" : "<";
   toggle.setAttribute("aria-expanded", String(!isCollapsed));
   toggle.setAttribute("aria-label", isCollapsed ? "Desplegar información" : "Plegar información");
+}
+
+function setMobileSheetExpanded(panel, isExpanded) {
+  panel.classList.toggle("is-expanded", isExpanded);
+  panel.classList.toggle("is-compact", !isExpanded);
+
+  const toggle = panel.querySelector(".info-panel-toggle");
+  if (!toggle) return;
+
+  toggle.setAttribute("aria-expanded", String(isExpanded));
+  toggle.setAttribute("aria-label", isExpanded ? "Plegar información" : "Desplegar información");
+  toggle.querySelector(".info-panel-toggle-arrow").textContent = isExpanded ? "v" : "^";
 }
 
 function isMobileInfoPanel() {

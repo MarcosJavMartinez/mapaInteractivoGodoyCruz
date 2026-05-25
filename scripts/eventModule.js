@@ -8,6 +8,7 @@ let activeCameraAnimation = null;
 let activeMarker = null;
 let hoveredMarker = null;
 let lastPointerRaycast = 0;
+let markerFeedback = null;
 
 const MAP_CENTER = new Vector3(-55, 0, 45);
 const FACADE_VIEW_DISTANCE = 42;
@@ -27,6 +28,7 @@ export function setupEventListeners(buttons, camera, scene, quality = getQuality
   document.addEventListener("navigation:interact-centered", () => {
     handleSceneInteraction(getCenterPointer(), buttons, camera, scene, { keepCameraPosition: true });
   });
+  setupMarkerSelectionFeedback(camera);
   setupCenteredMarkerRaycast(buttons, camera, scene, quality);
 }
 
@@ -99,6 +101,7 @@ function clearActiveMarker() {
     activeMarker.material?.color?.setHex(DEFAULT_MARKER_COLOR);
   }
   activeMarker = null;
+  hideMarkerSelectionFeedback();
 }
 
 function onPointerMove(event, buttons, camera, scene, quality) {
@@ -225,6 +228,54 @@ function resetHoveredMarker() {
 function clearHoveredMarker() {
   resetHoveredMarker();
   document.body.classList.remove("is-over-marker");
+}
+
+function setupMarkerSelectionFeedback(camera) {
+  // DOM overlay projected from the selected 3D marker, so the pin reads as active without changing scene geometry.
+  markerFeedback = document.createElement("div");
+  markerFeedback.className = "marker-selection-feedback";
+  markerFeedback.hidden = true;
+  markerFeedback.innerHTML = `
+    <span class="marker-selection-ring" aria-hidden="true"></span>
+    <span class="marker-selection-card">
+      <strong></strong>
+      <span>Ver información</span>
+      <i aria-hidden="true">></i>
+    </span>
+  `;
+  document.body.appendChild(markerFeedback);
+
+  const title = markerFeedback.querySelector("strong");
+
+  document.addEventListener("marker:selected", (event) => {
+    title.textContent = event.detail?.title || "Edificio seleccionado";
+    markerFeedback.hidden = false;
+    markerFeedback.classList.add("active");
+  });
+
+  const markerPosition = new Vector3();
+  const updateFeedbackPosition = () => {
+    requestAnimationFrame(updateFeedbackPosition);
+    if (!markerFeedback || markerFeedback.hidden || !activeMarker) return;
+
+    activeMarker.getWorldPosition(markerPosition);
+    markerPosition.project(camera);
+
+    const isVisible = markerPosition.z >= -1 && markerPosition.z <= 1;
+    markerFeedback.classList.toggle("is-hidden", !isVisible);
+    if (!isVisible) return;
+
+    markerFeedback.style.left = `${((markerPosition.x + 1) / 2) * window.innerWidth}px`;
+    markerFeedback.style.top = `${((-markerPosition.y + 1) / 2) * window.innerHeight}px`;
+  };
+
+  requestAnimationFrame(updateFeedbackPosition);
+}
+
+function hideMarkerSelectionFeedback() {
+  if (!markerFeedback) return;
+  markerFeedback.hidden = true;
+  markerFeedback.classList.remove("active");
 }
 
 function focusCameraOnMarker(camera, marker) {
