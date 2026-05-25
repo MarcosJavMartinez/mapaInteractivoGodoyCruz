@@ -12,8 +12,8 @@ import { getQualitySettings } from "./qualityModule.js";
 const IDLE_AUTO_ROTATE_DELAY = 22000;
 const IDLE_AUTO_ROTATE_SPEED = 0.18;
 const MARKER_HOVER_SCALE = 0.14;
-const MARKER_ACTIVE_OUTLINE_SCALE = 1.16;
-const MARKER_ACTIVE_OUTLINE_PULSE_SCALE = 0.18;
+const MARKER_ACTIVE_OUTLINE_SCALE = 1.12;
+const MARKER_ACTIVE_OUTLINE_PULSE_SCALE = 0.035;
 
 export function setupRenderer(quality = getQualitySettings()) {
   const renderer = new WebGLRenderer({
@@ -130,7 +130,7 @@ function updateMarkerActiveOutline(marker, now) {
 
   const pulse = (Math.sin(now * 0.0052) + 1) * 0.5;
   outline.scale.setScalar(MARKER_ACTIVE_OUTLINE_SCALE + pulse * MARKER_ACTIVE_OUTLINE_PULSE_SCALE);
-  outline.material.opacity = 0.36 + pulse * 0.28;
+  outline.material.opacity = 0.34 + pulse * 0.18;
   outline.material.transparent = true;
 }
 

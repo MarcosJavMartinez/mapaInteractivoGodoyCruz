@@ -9,6 +9,8 @@ let activeInfoPanelOutsideClickTimer = null;
 
 const PANEL_CLOSE_ANIMATION_MS = 220;
 const MOBILE_PANEL_QUERY = "(max-width: 720px)";
+const INFO_PANEL_DRAG_CLICK_TOLERANCE = 6;
+const INFO_PANEL_DRAG_DISTANCE = 180;
 
 export { showContent, hideCurrentInfoPanel };
 
@@ -597,8 +599,15 @@ function createInfoPanelToggle(panel) {
     <span class="info-panel-toggle-text">Info del edificio</span>
     <span class="info-panel-toggle-arrow" aria-hidden="true">&lt;</span>
   `;
+  enableInfoPanelDrag(panel, button);
   button.addEventListener("click", (event) => {
     event.stopPropagation();
+    if (button.dataset.dragSuppressed === "true") {
+      event.preventDefault();
+      button.dataset.dragSuppressed = "false";
+      return;
+    }
+
     if (panel.classList.contains("is-mobile-sheet")) {
       setMobileSheetExpanded(panel, !panel.classList.contains("is-expanded"));
       return;
@@ -608,6 +617,85 @@ function createInfoPanelToggle(panel) {
     setInfoPanelCollapsed(panel, isCollapsed);
   });
   return button;
+}
+
+function enableInfoPanelDrag(panel, handle) {
+  let dragState = null;
+
+  handle.addEventListener("pointerdown", (event) => {
+    if (event.button !== undefined && event.button !== 0) return;
+
+    const isMobileSheet = panel.classList.contains("is-mobile-sheet");
+    dragState = {
+      isMobileSheet,
+      startX: event.clientX,
+      startY: event.clientY,
+      progress: isMobileSheet
+        ? Number(panel.classList.contains("is-expanded"))
+        : Number(!panel.classList.contains("is-collapsed")),
+      didDrag: false,
+    };
+
+    panel.classList.add("is-dragging");
+    handle.setPointerCapture?.(event.pointerId);
+  });
+
+  handle.addEventListener("pointermove", (event) => {
+    if (!dragState) return;
+
+    const deltaX = event.clientX - dragState.startX;
+    const deltaY = event.clientY - dragState.startY;
+    const movement = Math.hypot(deltaX, deltaY);
+    if (movement > INFO_PANEL_DRAG_CLICK_TOLERANCE) {
+      dragState.didDrag = true;
+    }
+
+    if (dragState.isMobileSheet) {
+      const progress = clamp(
+        dragState.progress + ((dragState.startY - event.clientY) / INFO_PANEL_DRAG_DISTANCE),
+        0,
+        1,
+      );
+      const nudge = dragState.progress ? (1 - progress) * 72 : -progress * 42;
+      panel.style.transform = `translateY(${nudge}px)`;
+      dragState.currentProgress = progress;
+    } else {
+      const dragDistance = Math.max(panel.offsetWidth, INFO_PANEL_DRAG_DISTANCE);
+      const progress = clamp(dragState.progress + (deltaX / dragDistance), 0, 1);
+      panel.style.transform = `translateX(${(progress - 1) * 100}%)`;
+      panel.style.opacity = "1";
+      dragState.currentProgress = progress;
+    }
+  });
+
+  handle.addEventListener("pointerup", (event) => finishInfoPanelDrag(event, panel, handle));
+  handle.addEventListener("pointercancel", (event) => finishInfoPanelDrag(event, panel, handle));
+
+  function finishInfoPanelDrag(event, targetPanel, targetHandle) {
+    if (!dragState) return;
+
+    targetPanel.classList.remove("is-dragging");
+    targetPanel.style.transform = "";
+    targetPanel.style.opacity = "";
+
+    if (dragState.didDrag) {
+      event.preventDefault();
+      targetHandle.dataset.dragSuppressed = "true";
+      setTimeout(() => {
+        targetHandle.dataset.dragSuppressed = "false";
+      }, 0);
+
+      const shouldOpen = (dragState.currentProgress ?? dragState.progress) >= 0.5;
+      if (dragState.isMobileSheet) {
+        setMobileSheetExpanded(targetPanel, shouldOpen);
+      } else {
+        setInfoPanelCollapsed(targetPanel, !shouldOpen);
+      }
+    }
+
+    targetHandle.releasePointerCapture?.(event.pointerId);
+    dragState = null;
+  }
 }
 
 function setInfoPanelCollapsed(panel, isCollapsed) {
