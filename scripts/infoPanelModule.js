@@ -300,7 +300,22 @@ function openImageViewer(images, startIndex = 0) {
 
     const imageRatio = image.naturalWidth / image.naturalHeight;
     const stageRatio = stage.clientWidth / stage.clientHeight;
-    image.classList.toggle("is-width-limited", imageRatio > stageRatio);
+    const isWidthLimited = imageRatio > stageRatio;
+    const fitWidth = isWidthLimited
+      ? stage.clientWidth
+      : stage.clientHeight * imageRatio;
+    const fitHeight = isWidthLimited
+      ? stage.clientWidth / imageRatio
+      : stage.clientHeight;
+
+    image.classList.toggle("is-width-limited", isWidthLimited);
+    image.style.width = `${Math.floor(fitWidth)}px`;
+    image.style.height = `${Math.floor(fitHeight)}px`;
+
+    if (viewerState === "zoom") {
+      clampPan();
+      applyImageTransform();
+    }
   };
 
   const applyImageTransform = () => {
