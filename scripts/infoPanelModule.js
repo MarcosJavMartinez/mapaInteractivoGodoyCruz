@@ -164,6 +164,13 @@ function openImageViewer(images, startIndex = 0) {
   let imageTransitionTimer = null;
   let swipeStartX = 0;
   let swipeStartY = 0;
+  let zoomScale = 1;
+  let zoomOriginX = 50;
+  let zoomOriginY = 50;
+  let pinchStartDistance = 0;
+  let pinchStartScale = 1;
+  let isPinching = false;
+  let suppressClickUntil = 0;
 
   const overlay = document.createElement("div");
   overlay.className = "image-viewer-overlay";
@@ -182,14 +189,20 @@ function openImageViewer(images, startIndex = 0) {
 
   const image = document.createElement("img");
   image.alt = "";
-  image.addEventListener("click", () => {
-    setImageZoomed(!image.classList.contains("is-zoomed"));
+  image.addEventListener("click", (event) => {
+    if (isPinching || Date.now() < suppressClickUntil) return;
+    if (zoomScale > 1) {
+      resetImageZoom();
+      return;
+    }
+    const point = getStagePointPercent(event);
+    applyImageZoom(2.25, point.x, point.y);
   });
   image.addEventListener("load", () => {
     const isLandscape = image.naturalWidth >= image.naturalHeight;
     image.classList.toggle("is-landscape", isLandscape);
     image.classList.toggle("is-portrait", !isLandscape);
-    setImageZoomed(false);
+    resetImageZoom();
   });
 
   const counter = document.createElement("p");
@@ -237,6 +250,7 @@ function openImageViewer(images, startIndex = 0) {
     const setImage = () => {
       image.classList.remove("is-landscape", "is-portrait", "is-zoomed");
       stage.classList.remove("is-zoomed");
+      resetImageZoom();
       image.removeAttribute("style");
       image.src = images[currentIndex];
       counter.textContent = `${currentIndex + 1} / ${images.length}`;
@@ -271,30 +285,46 @@ function openImageViewer(images, startIndex = 0) {
     updateImage();
   };
 
-  const setImageZoomed = (isZoomed) => {
+  const applyImageZoom = (scale, originX = zoomOriginX, originY = zoomOriginY) => {
+    zoomScale = clamp(scale, 1, 5);
+    zoomOriginX = clamp(originX, 0, 100);
+    zoomOriginY = clamp(originY, 0, 100);
+    const isZoomed = zoomScale > 1.01;
+
     image.classList.toggle("is-zoomed", isZoomed);
     stage.classList.toggle("is-zoomed", isZoomed);
-
-    if (!isZoomed) {
-      image.removeAttribute("style");
-      return;
-    }
-
-    const viewportWidth = Math.max(window.innerWidth, stage.clientWidth);
-    const viewportHeight = Math.max(window.innerHeight, stage.clientHeight);
-    const naturalWidth = image.naturalWidth || viewportWidth;
-    const naturalHeight = image.naturalHeight || viewportHeight;
-    const zoomWidth = Math.max(naturalWidth, Math.round(viewportWidth * 1.35));
-    const zoomHeight = Math.round(zoomWidth * (naturalHeight / naturalWidth));
-
-    image.style.width = `${zoomWidth}px`;
-    image.style.height = `${zoomHeight}px`;
-
-    requestAnimationFrame(() => {
-      stage.scrollLeft = Math.max(0, (image.offsetWidth - stage.clientWidth) / 2);
-      stage.scrollTop = Math.max(0, (image.offsetHeight - stage.clientHeight) / 2);
-    });
+    image.style.transformOrigin = `${zoomOriginX}% ${zoomOriginY}%`;
+    image.style.transform = isZoomed ? `scale(${zoomScale})` : "";
   };
+
+  const resetImageZoom = () => {
+    zoomScale = 1;
+    zoomOriginX = 50;
+    zoomOriginY = 50;
+    image.classList.remove("is-zoomed");
+    stage.classList.remove("is-zoomed");
+    image.style.transform = "";
+    image.style.transformOrigin = "";
+  };
+
+  const getStagePointPercent = (point) => {
+    const rect = stage.getBoundingClientRect();
+    return {
+      x: ((point.clientX - rect.left) / rect.width) * 100,
+      y: ((point.clientY - rect.top) / rect.height) * 100,
+    };
+  };
+
+  const getTouchDistance = (touches) => {
+    const deltaX = touches[0].clientX - touches[1].clientX;
+    const deltaY = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(deltaX, deltaY);
+  };
+
+  const getTouchMidpoint = (touches) => ({
+    clientX: (touches[0].clientX + touches[1].clientX) / 2,
+    clientY: (touches[0].clientY + touches[1].clientY) / 2,
+  });
 
   activeImageViewerKeyHandler = (event) => {
     if (event.key === "Escape") {
@@ -316,15 +346,60 @@ function openImageViewer(images, startIndex = 0) {
 
   previousButton.addEventListener("click", showPrevious);
   nextButton.addEventListener("click", showNext);
+  stage.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const point = getStagePointPercent(event);
+    const zoomDelta = -event.deltaY * 0.0016;
+    const nextScale = zoomScale * (1 + zoomDelta);
+    applyImageZoom(nextScale, point.x, point.y);
+  }, { passive: false });
+  stage.addEventListener("mousemove", (event) => {
+    if (zoomScale <= 1) return;
+    const point = getStagePointPercent(event);
+    applyImageZoom(zoomScale, point.x, point.y);
+  });
   stage.addEventListener("touchstart", (event) => {
+    if (event.touches.length === 2) {
+      event.preventDefault();
+      isPinching = true;
+      pinchStartDistance = getTouchDistance(event.touches);
+      pinchStartScale = zoomScale;
+      return;
+    }
+
     const touch = event.changedTouches[0];
-    if (!touch || image.classList.contains("is-zoomed")) return;
+    if (!touch || zoomScale > 1) return;
     swipeStartX = touch.clientX;
     swipeStartY = touch.clientY;
-  }, { passive: true });
+  }, { passive: false });
+  stage.addEventListener("touchmove", (event) => {
+    if (event.touches.length === 2 && pinchStartDistance > 0) {
+      event.preventDefault();
+      const midpoint = getTouchMidpoint(event.touches);
+      const point = getStagePointPercent(midpoint);
+      const nextScale = pinchStartScale * (getTouchDistance(event.touches) / pinchStartDistance);
+      applyImageZoom(nextScale, point.x, point.y);
+      return;
+    }
+
+    if (event.touches.length === 1 && zoomScale > 1) {
+      event.preventDefault();
+      const point = getStagePointPercent(event.touches[0]);
+      applyImageZoom(zoomScale, point.x, point.y);
+    }
+  }, { passive: false });
   stage.addEventListener("touchend", (event) => {
+    if (event.touches.length < 2) {
+      pinchStartDistance = 0;
+      pinchStartScale = zoomScale;
+      suppressClickUntil = Date.now() + 350;
+      setTimeout(() => {
+        isPinching = false;
+      }, 120);
+    }
+
     const touch = event.changedTouches[0];
-    if (!touch || image.classList.contains("is-zoomed")) return;
+    if (!touch || zoomScale > 1) return;
     const deltaX = touch.clientX - swipeStartX;
     const deltaY = touch.clientY - swipeStartY;
     if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
@@ -392,4 +467,8 @@ function setInfoPanelCollapsed(panel, isCollapsed) {
 
 function isMobileInfoPanel() {
   return matchMedia(MOBILE_PANEL_QUERY).matches;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
