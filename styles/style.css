@@ -99,7 +99,7 @@ body.navigation-mode-walk.is-over-marker::after {
 .touch-joystick {
   position: absolute;
   left: max(1rem, env(safe-area-inset-left));
-  bottom: calc(var(--site-footer-height) + 1.25rem);
+  bottom: calc(var(--site-footer-height) + 1.25rem + env(safe-area-inset-bottom));
   display: grid;
   place-items: center;
   width: 7.1rem;
@@ -132,7 +132,7 @@ body.navigation-mode-walk.is-over-marker::after {
   position: absolute;
   right: 0;
   top: var(--site-header-height);
-  bottom: var(--site-footer-height);
+  bottom: calc(var(--site-footer-height) + env(safe-area-inset-bottom));
   width: 52vw;
 }
 .touch-look-pad::after {
@@ -162,7 +162,7 @@ body.navigation-mode-walk.is-over-marker::after {
   -webkit-backdrop-filter: blur(8px) saturate(1.08);
 }
 .touch-action-button-interact {
-  bottom: calc(var(--site-footer-height) + 1.25rem);
+  bottom: calc(var(--site-footer-height) + 1.25rem + env(safe-area-inset-bottom));
 }
 
 @media (pointer: coarse), (max-width: 900px) {
@@ -172,6 +172,27 @@ body.navigation-mode-walk.is-over-marker::after {
 
   body.navigation-mode-walk.navigation-mode-touch {
     cursor: default;
+  }
+}
+
+body.info-panel-open .touch-navigation-controls,
+body.image-viewer-open .touch-navigation-controls {
+  display: none !important;
+}
+
+@media (pointer: coarse) and (min-width: 901px) {
+  .touch-joystick {
+    left: max(1.35rem, env(safe-area-inset-left));
+    bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  .touch-action-button-interact {
+    right: max(1.35rem, env(safe-area-inset-right));
+    bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  .touch-look-pad {
+    bottom: calc(1rem + env(safe-area-inset-bottom));
   }
 }
 

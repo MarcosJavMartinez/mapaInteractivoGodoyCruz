@@ -65,6 +65,7 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
   }
 
   document.body.appendChild(panel);
+  document.body.classList.add("info-panel-open");
   requestAnimationFrame(() => panel.classList.add("active"));
   currentInfoPanel = panel;
   watchInfoPanelOutsideClicks(panel);
@@ -95,6 +96,8 @@ function hideCurrentInfoPanel() {
     }, PANEL_CLOSE_ANIMATION_MS);
     currentInfoPanel = null;
   }
+
+  document.body.classList.remove("info-panel-open");
 }
 
 function createCloseButton(className, onClick) {
@@ -154,6 +157,7 @@ function openImageViewer(images, startIndex = 0) {
   const overlay = document.createElement("div");
   overlay.className = "image-viewer-overlay";
   overlay.addEventListener("click", closeImageViewer);
+  document.body.classList.add("image-viewer-open");
 
   const frame = document.createElement("div");
   frame.className = "image-viewer-frame";
@@ -299,4 +303,5 @@ function closeImageViewer() {
   }
 
   document.querySelectorAll(".image-viewer-overlay").forEach((viewer) => viewer.remove());
+  document.body.classList.remove("image-viewer-open");
 }
