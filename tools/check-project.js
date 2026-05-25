@@ -115,7 +115,7 @@ function checkAssets() {
   collectCollisionOverrideRefs(path.join(root, "data", "collision-overrides.json"), refs);
   collectDatabaseImageRefs(path.join(root, "data", "muvi.sqlite"), refs);
 
-  const missing = refs.filter((ref) => !fs.existsSync(ref.absolutePath));
+  const missing = refs.filter((ref) => !assetPathExists(ref.absolutePath));
 
   if (missing.length) {
     const lines = missing.map((ref) => `- ${ref.value} (${relative(ref.source)})`);
@@ -224,6 +224,21 @@ function listFiles(dir, predicate) {
   });
 
   return files;
+}
+
+function assetPathExists(filePath) {
+  if (!fs.existsSync(filePath)) return false;
+
+  const parsed = path.parse(path.resolve(filePath));
+  const relativePath = path.relative(parsed.root, filePath);
+  let currentPath = parsed.root;
+
+  return relativePath.split(path.sep).filter(Boolean).every((segment) => {
+    const entries = fs.readdirSync(currentPath);
+    if (!entries.includes(segment)) return false;
+    currentPath = path.join(currentPath, segment);
+    return true;
+  });
 }
 
 function relative(filePath) {
