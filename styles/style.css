@@ -1519,6 +1519,14 @@ label {
   min-height: 0;
   overflow: hidden;
   padding: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.image-viewer-stage.is-zoomed {
+  display: block;
+  overflow: auto;
+  cursor: grab;
+  touch-action: pan-x pan-y;
 }
 .image-viewer-stage img {
   box-sizing: border-box;
@@ -1532,8 +1540,7 @@ label {
   object-fit: contain;
   object-position: center;
   opacity: 1;
-  transform: scale(1);
-  transition: opacity 180ms ease, transform 220ms ease;
+  transition: opacity 180ms ease;
   cursor: zoom-in;
 }
 .image-viewer-stage img.is-landscape {
@@ -1543,10 +1550,9 @@ label {
   max-height: 100%;
 }
 .image-viewer-stage img.is-zoomed {
-  max-width: calc(100vw - 1rem);
-  max-height: calc(100vh - 1rem);
-  max-height: calc(100dvh - 1rem);
-  transform: scale(1.08);
+  max-width: none;
+  max-height: none;
+  margin: 0 auto;
   cursor: zoom-out;
 }
 .image-viewer-stage img.is-changing {
@@ -2613,9 +2619,8 @@ label {
   }
 
   .image-viewer-stage img.is-zoomed {
-    max-width: calc(100vw - 0.5rem);
-    max-height: calc(100dvh - 0.5rem);
-    transform: scale(1.04);
+    max-width: none;
+    max-height: none;
   }
 
   .image-viewer-controls {

@@ -183,12 +183,13 @@ function openImageViewer(images, startIndex = 0) {
   const image = document.createElement("img");
   image.alt = "";
   image.addEventListener("click", () => {
-    image.classList.toggle("is-zoomed");
+    setImageZoomed(!image.classList.contains("is-zoomed"));
   });
   image.addEventListener("load", () => {
     const isLandscape = image.naturalWidth >= image.naturalHeight;
     image.classList.toggle("is-landscape", isLandscape);
     image.classList.toggle("is-portrait", !isLandscape);
+    setImageZoomed(false);
   });
 
   const counter = document.createElement("p");
@@ -235,6 +236,8 @@ function openImageViewer(images, startIndex = 0) {
 
     const setImage = () => {
       image.classList.remove("is-landscape", "is-portrait", "is-zoomed");
+      stage.classList.remove("is-zoomed");
+      image.removeAttribute("style");
       image.src = images[currentIndex];
       counter.textContent = `${currentIndex + 1} / ${images.length}`;
       previousButton.hidden = images.length <= 1;
@@ -266,6 +269,31 @@ function openImageViewer(images, startIndex = 0) {
   const showNext = () => {
     currentIndex = (currentIndex + 1) % images.length;
     updateImage();
+  };
+
+  const setImageZoomed = (isZoomed) => {
+    image.classList.toggle("is-zoomed", isZoomed);
+    stage.classList.toggle("is-zoomed", isZoomed);
+
+    if (!isZoomed) {
+      image.removeAttribute("style");
+      return;
+    }
+
+    const viewportWidth = Math.max(window.innerWidth, stage.clientWidth);
+    const viewportHeight = Math.max(window.innerHeight, stage.clientHeight);
+    const naturalWidth = image.naturalWidth || viewportWidth;
+    const naturalHeight = image.naturalHeight || viewportHeight;
+    const zoomWidth = Math.max(naturalWidth, Math.round(viewportWidth * 1.35));
+    const zoomHeight = Math.round(zoomWidth * (naturalHeight / naturalWidth));
+
+    image.style.width = `${zoomWidth}px`;
+    image.style.height = `${zoomHeight}px`;
+
+    requestAnimationFrame(() => {
+      stage.scrollLeft = Math.max(0, (image.offsetWidth - stage.clientWidth) / 2);
+      stage.scrollTop = Math.max(0, (image.offsetHeight - stage.clientHeight) / 2);
+    });
   };
 
   activeImageViewerKeyHandler = (event) => {
