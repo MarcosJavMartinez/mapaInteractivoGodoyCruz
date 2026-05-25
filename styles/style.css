@@ -1531,7 +1531,7 @@ label {
 .image-viewer-stage img {
   box-sizing: border-box;
   display: block;
-  width: 100%;
+  width: auto;
   height: 100%;
   max-width: 100%;
   max-height: 100%;
@@ -1548,10 +1548,15 @@ label {
   cursor: zoom-in;
 }
 .image-viewer-stage img.is-landscape {
-  width: 100%;
+  width: auto;
   height: 100%;
   max-width: 100%;
   max-height: 100%;
+}
+
+.image-viewer-stage img.is-width-limited {
+  width: 100%;
+  height: auto;
 }
 .image-viewer-stage img.is-zoomed {
   max-width: 100%;

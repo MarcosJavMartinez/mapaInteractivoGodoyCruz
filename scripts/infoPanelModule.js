@@ -211,6 +211,7 @@ function openImageViewer(images, startIndex = 0) {
     const isLandscape = image.naturalWidth >= image.naturalHeight;
     image.classList.toggle("is-landscape", isLandscape);
     image.classList.toggle("is-portrait", !isLandscape);
+    requestAnimationFrame(updateImageFitClass);
     resetImageZoom();
   });
 
@@ -257,7 +258,7 @@ function openImageViewer(images, startIndex = 0) {
     clearTimeout(imageTransitionTimer);
 
     const setImage = () => {
-      image.classList.remove("is-landscape", "is-portrait", "is-zoomed");
+      image.classList.remove("is-landscape", "is-portrait", "is-width-limited", "is-zoomed");
       stage.classList.remove("is-zoomed");
       resetImageZoom();
       image.removeAttribute("style");
@@ -292,6 +293,14 @@ function openImageViewer(images, startIndex = 0) {
   const showNext = () => {
     currentIndex = (currentIndex + 1) % images.length;
     updateImage();
+  };
+
+  const updateImageFitClass = () => {
+    if (!image.naturalWidth || !image.naturalHeight || !stage.clientWidth || !stage.clientHeight) return;
+
+    const imageRatio = image.naturalWidth / image.naturalHeight;
+    const stageRatio = stage.clientWidth / stage.clientHeight;
+    image.classList.toggle("is-width-limited", imageRatio > stageRatio);
   };
 
   const applyImageTransform = () => {
@@ -390,6 +399,7 @@ function openImageViewer(images, startIndex = 0) {
 
   previousButton.addEventListener("click", showPrevious);
   nextButton.addEventListener("click", showNext);
+  window.addEventListener("resize", updateImageFitClass);
   stage.addEventListener("wheel", (event) => {
     if (viewerState !== "zoom") return;
 
@@ -477,7 +487,10 @@ function openImageViewer(images, startIndex = 0) {
     }
   }, { passive: true });
   document.addEventListener("keydown", activeImageViewerKeyHandler);
-  activeImageViewerCleanup = () => clearTimeout(imageTransitionTimer);
+  activeImageViewerCleanup = () => {
+    clearTimeout(imageTransitionTimer);
+    window.removeEventListener("resize", updateImageFitClass);
+  };
   updateImage(false);
 
   frame.appendChild(closeButton);
@@ -490,6 +503,7 @@ function openImageViewer(images, startIndex = 0) {
   frame.appendChild(thumbnails);
   overlay.appendChild(frame);
   document.body.appendChild(overlay);
+  requestAnimationFrame(updateImageFitClass);
 }
 
 function closeImageViewer() {
