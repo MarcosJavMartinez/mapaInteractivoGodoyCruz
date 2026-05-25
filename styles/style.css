@@ -165,7 +165,7 @@ body.navigation-mode-walk.is-over-marker::after {
   }
 }
 
-body.info-panel-open .touch-navigation-controls,
+body.info-panel-open:not(.info-panel-collapsed) .touch-navigation-controls,
 body.image-viewer-open .touch-navigation-controls {
   display: none !important;
 }
@@ -1313,6 +1313,9 @@ label {
   top: var(--info-panel-padding);
   right: var(--info-panel-padding);
   box-shadow: 0 0.45rem 1rem rgba(0, 0, 0, 0.24);
+}
+.info-panel-toggle {
+  display: none;
 }
 .info-panel p,
 .info-panel li {
@@ -2463,8 +2466,63 @@ label {
   }
 
   .info-panel {
-    width: min(77vw, 300px);
+    width: min(86vw, 340px);
     --info-panel-padding: 1rem;
+    top: calc(var(--site-header-height) + 0.45rem);
+    bottom: calc(var(--site-footer-height) + 0.45rem + env(safe-area-inset-bottom));
+    border-radius: 0 10px 10px 0;
+    overscroll-behavior: contain;
+  }
+
+  .info-panel-toggle {
+    position: absolute;
+    z-index: 2;
+    top: var(--info-panel-padding);
+    right: calc(var(--info-panel-padding) + 2.35rem);
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    color: #fff;
+    background: var(--button-background);
+    border: 1px solid var(--wine-accent-border);
+    border-radius: 999px;
+    box-shadow: 0 0.45rem 1rem rgba(74, 12, 58, 0.24);
+    font-size: 1.15rem;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .info-panel.is-collapsed {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 0.55rem;
+    width: 3.65rem;
+    min-height: 7.2rem;
+    bottom: auto;
+    padding: 0.55rem 0.45rem;
+    overflow: hidden;
+  }
+
+  .info-panel.is-collapsed > :not(.info-panel-toggle):not(.info-panel-close) {
+    display: none;
+  }
+
+  .info-panel.is-collapsed .info-panel-toggle,
+  .info-panel.is-collapsed .info-panel-close {
+    position: static;
+    display: grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  .info-panel.is-collapsed .info-panel-close {
+    color: var(--warm-brown-dark);
+    background: var(--paper-strong);
   }
 
   .image-viewer-frame {

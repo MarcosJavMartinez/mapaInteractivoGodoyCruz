@@ -8,6 +8,7 @@ let activeInfoPanelOutsideClickHandler = null;
 let activeInfoPanelOutsideClickTimer = null;
 
 const PANEL_CLOSE_ANIMATION_MS = 220;
+const MOBILE_PANEL_QUERY = "(max-width: 720px)";
 
 export { showContent, hideCurrentInfoPanel };
 
@@ -24,7 +25,12 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
 
   const panel = document.createElement("div");
   panel.className = "info-panel";
+  const shouldStartCollapsed = isMobileInfoPanel();
+  if (shouldStartCollapsed) {
+    panel.classList.add("is-collapsed");
+  }
 
+  panel.appendChild(createInfoPanelToggle(panel));
   panel.appendChild(createCloseButton("info-panel-close", hideCurrentInfoPanel));
 
   if (title) {
@@ -66,6 +72,7 @@ function showContent(title, imageUrl, text, exteriorImages, interiorImages) {
 
   document.body.appendChild(panel);
   document.body.classList.add("info-panel-open");
+  document.body.classList.toggle("info-panel-collapsed", shouldStartCollapsed);
   requestAnimationFrame(() => panel.classList.add("active"));
   currentInfoPanel = panel;
   watchInfoPanelOutsideClicks(panel);
@@ -98,6 +105,7 @@ function hideCurrentInfoPanel() {
   }
 
   document.body.classList.remove("info-panel-open");
+  document.body.classList.remove("info-panel-collapsed");
 }
 
 function createCloseButton(className, onClick) {
@@ -130,6 +138,7 @@ function watchInfoPanelOutsideClicks(panel) {
 
     activeInfoPanelOutsideClickHandler = (event) => {
       if (!currentInfoPanel || currentInfoPanel.contains(event.target)) return;
+      if (isMobileInfoPanel() && currentInfoPanel.classList.contains("is-collapsed")) return;
       hideCurrentInfoPanel();
     };
 
@@ -304,4 +313,35 @@ function closeImageViewer() {
 
   document.querySelectorAll(".image-viewer-overlay").forEach((viewer) => viewer.remove());
   document.body.classList.remove("image-viewer-open");
+}
+
+function createInfoPanelToggle(panel) {
+  const button = document.createElement("button");
+  button.className = "info-panel-toggle";
+  button.type = "button";
+  button.setAttribute("aria-label", "Desplegar información");
+  button.setAttribute("aria-expanded", "false");
+  button.textContent = ">";
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isCollapsed = panel.classList.toggle("is-collapsed");
+    setInfoPanelCollapsed(panel, isCollapsed);
+  });
+  return button;
+}
+
+function setInfoPanelCollapsed(panel, isCollapsed) {
+  panel.classList.toggle("is-collapsed", isCollapsed);
+  document.body.classList.toggle("info-panel-collapsed", isCollapsed);
+
+  const toggle = panel.querySelector(".info-panel-toggle");
+  if (!toggle) return;
+
+  toggle.textContent = isCollapsed ? ">" : "<";
+  toggle.setAttribute("aria-expanded", String(!isCollapsed));
+  toggle.setAttribute("aria-label", isCollapsed ? "Desplegar información" : "Plegar información");
+}
+
+function isMobileInfoPanel() {
+  return matchMedia(MOBILE_PANEL_QUERY).matches;
 }
