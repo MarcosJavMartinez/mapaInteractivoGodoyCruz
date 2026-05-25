@@ -6,18 +6,30 @@ const NAVIGATION_COLLIDERS_READY_EVENT = "navigation:colliders-ready";
 const WALK_GROUND_Y = -1.86;
 const PERSON_HEIGHT = 0.53;
 const PERSON_RADIUS = 0.38;
-const PERSON_SPEED = 2.1;
-const PERSON_JUMP_SPEED = 4.5;
-const PERSON_GRAVITY = 9.8;
+const PERSON_WALK_SPEED = 1.72;
+const PERSON_SPRINT_SPEED = 3.05;
+const PERSON_BACKPEDAL_FACTOR = 0.72;
+const PERSON_STRAFE_FACTOR = 0.88;
+const PERSON_ACCELERATION = 10.5;
+const PERSON_DECELERATION = 14;
+const PERSON_AIR_CONTROL = 3.25;
+const PERSON_JUMP_SPEED = 3.35;
+const PERSON_GRAVITY = 11.4;
 const GROUND_SNAP_DISTANCE = 0.35;
 const NEAR_OBSTACLE_RADIUS = 3.2;
 const COLLISION_STEP_DISTANCE = 0.12;
 const COLLISION_EPSILON = 0.035;
+const MAX_PENETRATION_RESOLVE_PASSES = 4;
+const WALK_BOB_FREQUENCY = 7.2;
+const SPRINT_BOB_FREQUENCY = 11.2;
+const WALK_BOB_HEIGHT = 0.017;
+const SPRINT_BOB_HEIGHT = 0.032;
+const BOB_RECOVER_SPEED = 9;
 const LOOK_SENSITIVITY = 0.0022;
 const MIN_X = -235;
-const MAX_X = 125;
-const MIN_Z = -150;
-const MAX_Z = 210;
+const MAX_X = 145;
+const MIN_Z = -300;
+const MAX_Z = 245;
 const MIN_PITCH = degreesToRadians(-72);
 const MAX_PITCH = degreesToRadians(62);
 const WALK_READY_TITLE = "WASD para moverse, espacio para saltar, mouse para mirar";
@@ -39,6 +51,9 @@ export function setupNavigationModes(camera, renderer, scene) {
     scene,
     isGrounded: false,
     groundY: WALK_GROUND_Y,
+    planarVelocity: new Vector3(),
+    viewBobOffset: 0,
+    walkCycle: 0,
     collidersReady: Boolean(scene.userData.navigationCollidersReady),
   };
 
@@ -99,6 +114,7 @@ function setNavigationMode(mode, { camera, renderer, modeButtons, state }) {
 
   const controls = camera.userData.controls;
   if (state.mode !== MODE_ORBIT && mode === MODE_ORBIT) {
+    removeViewBob(camera, state);
     restoreOrbitControls(camera, state);
   }
 
@@ -118,6 +134,9 @@ function setNavigationMode(mode, { camera, renderer, modeButtons, state }) {
   }));
   state.keys.clear();
   state.velocityY = 0;
+  state.planarVelocity.set(0, 0, 0);
+  state.viewBobOffset = 0;
+  state.walkCycle = 0;
   state.lastTime = performance.now();
 
   if (mode === MODE_ORBIT) {
@@ -165,22 +184,41 @@ function setupFreeCamera(camera, state, mode) {
   camera.position.y = Math.max(camera.position.y, floorHeight + 0.02);
   state.isGrounded = false;
   state.velocityY = 0;
+  state.planarVelocity.set(0, 0, 0);
+  state.viewBobOffset = 0;
+  state.walkCycle = 0;
   clampCameraPosition(camera.position);
   camera.rotation.order = "YXZ";
   applyFirstPersonRotation(camera, state);
 }
 
 function updateWalkMode(camera, state, delta) {
+  removeViewBob(camera, state);
   resolveCurrentPenetration(camera.position, state, PERSON_RADIUS);
 
-  const movement = getPlanarMovement(state);
-  const speed = state.keys.has("ShiftLeft") || state.keys.has("ShiftRight")
-    ? PERSON_SPEED * 1.55
-    : PERSON_SPEED;
+  const input = getPlanarMovement(state);
+  const isMoving = input.lengthSq() > 0;
+  const isSprinting = isSprintRequested(state) && hasKey(state, "KeyW", "w", "ArrowUp") && !hasKey(state, "KeyS", "s", "ArrowDown");
+  const targetSpeed = getTargetPlanarSpeed(state, isSprinting);
+  const targetVelocity = input.lengthSq() > 0
+    ? input.normalize().multiplyScalar(targetSpeed)
+    : new Vector3();
 
-  if (movement.lengthSq() > 0) {
-    movement.normalize().multiplyScalar(speed * delta);
+  const acceleration = isMoving
+    ? (state.isGrounded ? PERSON_ACCELERATION : PERSON_AIR_CONTROL)
+    : PERSON_DECELERATION;
+  state.planarVelocity.lerp(targetVelocity, 1 - Math.exp(-acceleration * delta));
+  if (!isMoving && state.planarVelocity.lengthSq() < 0.0001) {
+    state.planarVelocity.set(0, 0, 0);
+  }
+
+  if (state.planarVelocity.lengthSq() > 0) {
+    const previousX = camera.position.x;
+    const previousZ = camera.position.z;
+    const movement = state.planarVelocity.clone().multiplyScalar(delta);
     moveWithCollision(camera.position, movement, state, PERSON_RADIUS);
+    state.planarVelocity.x = (camera.position.x - previousX) / Math.max(delta, 0.0001);
+    state.planarVelocity.z = (camera.position.z - previousZ) / Math.max(delta, 0.0001);
   }
 
   if (hasKey(state, "Space", " ") && state.isGrounded) {
@@ -193,7 +231,20 @@ function updateWalkMode(camera, state, delta) {
   resolveGround(camera.position, state);
 
   clampCameraPosition(camera.position);
+  applyViewBob(camera, state, delta, isMoving, isSprinting);
   applyFirstPersonRotation(camera, state);
+}
+
+function getTargetPlanarSpeed(state, isSprinting) {
+  let speed = isSprinting ? PERSON_SPRINT_SPEED : PERSON_WALK_SPEED;
+  const movingBackward = hasKey(state, "KeyS", "s", "ArrowDown") && !hasKey(state, "KeyW", "w", "ArrowUp");
+  const strafingOnly = (hasKey(state, "KeyA", "a", "ArrowLeft") || hasKey(state, "KeyD", "d", "ArrowRight"))
+    && !hasKey(state, "KeyW", "w", "ArrowUp")
+    && !hasKey(state, "KeyS", "s", "ArrowDown");
+
+  if (movingBackward) speed *= PERSON_BACKPEDAL_FACTOR;
+  if (strafingOnly) speed *= PERSON_STRAFE_FACTOR;
+  return speed;
 }
 
 function getPlanarMovement(state) {
@@ -213,6 +264,32 @@ function getForwardVector(yaw) {
   return new Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
 }
 
+function applyViewBob(camera, state, delta, isMoving, isSprinting) {
+  const horizontalSpeed = Math.hypot(state.planarVelocity.x, state.planarVelocity.z);
+  const shouldBob = state.isGrounded && isMoving && horizontalSpeed > 0.08;
+
+  if (shouldBob) {
+    const speedRatio = clamp(horizontalSpeed / PERSON_SPRINT_SPEED, 0, 1);
+    const frequency = isSprinting ? SPRINT_BOB_FREQUENCY : WALK_BOB_FREQUENCY;
+    const height = isSprinting ? SPRINT_BOB_HEIGHT : WALK_BOB_HEIGHT;
+    state.walkCycle += delta * frequency * (0.45 + speedRatio * 0.55);
+    state.viewBobOffset = Math.abs(Math.sin(state.walkCycle)) * height * (0.35 + speedRatio * 0.65);
+  } else {
+    state.walkCycle = 0;
+    state.viewBobOffset += (0 - state.viewBobOffset) * (1 - Math.exp(-BOB_RECOVER_SPEED * delta));
+    if (Math.abs(state.viewBobOffset) < 0.0005) {
+      state.viewBobOffset = 0;
+    }
+  }
+
+  camera.position.y += state.viewBobOffset;
+}
+
+function removeViewBob(camera, state) {
+  if (!state.viewBobOffset) return;
+  camera.position.y -= state.viewBobOffset;
+}
+
 function applyFirstPersonRotation(camera, state) {
   camera.rotation.set(state.pitch, state.yaw, 0, "YXZ");
 }
@@ -225,7 +302,7 @@ function resolveGround(position, state) {
   state.groundY = WALK_GROUND_Y;
   const groundY = WALK_GROUND_Y;
   const desiredY = groundY + PERSON_HEIGHT;
-  const fallingOrClose = state.velocityY <= 0 || position.y < desiredY + GROUND_SNAP_DISTANCE;
+  const fallingOrClose = state.velocityY <= 0;
 
   if (fallingOrClose && position.y <= desiredY + GROUND_SNAP_DISTANCE) {
     position.y = desiredY;
@@ -289,10 +366,6 @@ function moveWithCollisionStep(position, movement, state, radius) {
   if (!collidesAt(zOnly, state, radius)) {
     position.z = zOnly.z;
     moved = true;
-  }
-
-  if (!moved) {
-    state.keys.clear();
   }
 
   return moved;
@@ -364,13 +437,15 @@ function isCircleTouchingBox(position, radius, box) {
 }
 
 function resolveCurrentPenetration(position, state, radius) {
-  const obstacle = getBlockingObstacle(position, state, radius);
-  if (!obstacle || !isInsideObstacle(position, obstacle)) return;
+  for (let pass = 0; pass < MAX_PENETRATION_RESOLVE_PASSES; pass += 1) {
+    const obstacle = getBlockingObstacle(position, state, radius);
+    if (!obstacle || !isInsideObstacle(position, obstacle)) return;
 
-  const pushedPosition = getNearestPositionOutsideObstacle(position, obstacle, radius);
-  position.x = pushedPosition.x;
-  position.z = pushedPosition.z;
-  clampCameraPosition(position);
+    const pushedPosition = getNearestPositionOutsideObstacle(position, obstacle, radius);
+    position.x = pushedPosition.x;
+    position.z = pushedPosition.z;
+    clampCameraPosition(position);
+  }
 }
 
 function getNearestPositionOutsideObstacle(position, obstacle, radius) {
@@ -508,6 +583,10 @@ function isKeyboardMode(mode) {
 
 function hasKey(state, ...keys) {
   return keys.some((key) => state.keys.has(key));
+}
+
+function isSprintRequested(state) {
+  return state.keys.has("ShiftLeft") || state.keys.has("ShiftRight");
 }
 
 function clamp(value, min, max) {

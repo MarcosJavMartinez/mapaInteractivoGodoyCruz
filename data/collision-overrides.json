@@ -47,21 +47,6 @@
       "rotationY": -0.253073
     },
     {
-      "path": "models/M09 Arcanco.glb",
-      "min": [
-        71.456002,
-        -2.000046,
-        -23.841525
-      ],
-      "max": [
-        128.599571,
-        8.457666,
-        28.939141
-      ],
-      "enabled": true,
-      "rotationY": -0.061087
-    },
-    {
       "path": "models/Base.glb",
       "min": [
         -261.561329,
@@ -75,6 +60,21 @@
       ],
       "enabled": false,
       "rotationY": 0
+    },
+    {
+      "path": "models/M09 Arcanco.glb",
+      "min": [
+        71.456002,
+        -2.000046,
+        -23.841525
+      ],
+      "max": [
+        128.599571,
+        8.457666,
+        28.939141
+      ],
+      "enabled": true,
+      "rotationY": -0.061087
     },
     {
       "path": "models/M06.glb",
@@ -94,17 +94,17 @@
     {
       "path": "models/M07 Galpones FFRR.glb",
       "min": [
-        -4.059688,
+        9.22461,
         -2.089984,
-        -97.245435
+        -84.993091
       ],
       "max": [
-        125.22426,
+        138.508558,
         0.387157,
-        48.890285
+        61.142629
       ],
       "enabled": false,
-      "rotationY": 0
+      "rotationY": -0.226893
     },
     {
       "path": "models/M00 Plaza.glb",
@@ -118,7 +118,7 @@
         0.158252,
         70.124248
       ],
-      "enabled": true,
+      "enabled": false,
       "rotationY": -0.218166
     },
     {
@@ -129,7 +129,7 @@
         29.650868
       ],
       "max": [
-        -72.504824,
+        -82.504824,
         2.308591,
         65.77805
       ],
@@ -272,21 +272,6 @@
       "rotationY": -0.200713
     },
     {
-      "path": "models/M17 HCD.glb",
-      "min": [
-        -29.978399,
-        -2.180026,
-        48.58543
-      ],
-      "max": [
-        7.148995,
-        0.731993,
-        84.665789
-      ],
-      "enabled": true,
-      "rotationY": -0.235619
-    },
-    {
       "path": "models/M49 ECSAL.glb",
       "min": [
         64.190523,
@@ -300,6 +285,21 @@
       ],
       "enabled": true,
       "rotationY": 0
+    },
+    {
+      "path": "models/M17 HCD.glb",
+      "min": [
+        -29.978399,
+        -2.180026,
+        48.58543
+      ],
+      "max": [
+        7.148995,
+        0.731993,
+        84.665789
+      ],
+      "enabled": true,
+      "rotationY": -0.235619
     },
     {
       "path": "models/M04 Casa Olaya.glb",
@@ -332,21 +332,6 @@
       "rotationY": 0
     },
     {
-      "path": "models/Bloques Entorno.glb",
-      "min": [
-        -261.561329,
-        -14.000083,
-        -396.308689
-      ],
-      "max": [
-        294.923671,
-        -0.499938,
-        277.146446
-      ],
-      "enabled": false,
-      "rotationY": 0
-    },
-    {
       "path": "models/M25 Iglesia 2.glb",
       "min": [
         -77.298936,
@@ -359,6 +344,21 @@
         93.886499
       ],
       "enabled": true,
+      "rotationY": 0
+    },
+    {
+      "path": "models/Bloques Entorno.glb",
+      "min": [
+        -261.561329,
+        -14.000083,
+        -396.308689
+      ],
+      "max": [
+        294.923671,
+        -0.499938,
+        277.146446
+      ],
+      "enabled": false,
       "rotationY": 0
     }
   ]

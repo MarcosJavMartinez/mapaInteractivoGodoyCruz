@@ -10,10 +10,9 @@ import {
   Vector2,
   Vector3,
 } from "../vendor/three/build/three.module.js";
-import { saveCollisionOverrides } from "./apiClient.js";
+import { requireEditorAccess, saveCollisionOverrides } from "./apiClient.js";
 import { setupControlPanWhileEditing } from "./editorControlPanModule.js";
 
-const EDITOR_PASSWORD = "muvi1950";
 const VISUAL_OFFSET_Y = 0.01;
 const SLIDER_CENTER = 0;
 const MOVE_RANGE = 80;
@@ -72,7 +71,7 @@ export function setupCollisionEditor(scene, camera, renderer) {
     closeEditor(panel, state);
   });
 
-  document.addEventListener("keydown", (event) => {
+  document.addEventListener("keydown", async (event) => {
     if (!isCollisionEditorShortcut(event)) return;
 
     event.preventDefault();
@@ -81,8 +80,7 @@ export function setupCollisionEditor(scene, camera, renderer) {
       return;
     }
 
-    const password = window.prompt("Clave del editor de colisiones");
-    if (password !== EDITOR_PASSWORD) return;
+    if (!await requireEditorAccess("Clave de administrador")) return;
     openEditor(panel, state);
   });
 

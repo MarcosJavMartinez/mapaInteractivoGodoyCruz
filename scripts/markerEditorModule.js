@@ -1,4 +1,4 @@
-import { createPlace, deletePlace, savePlace } from "./apiClient.js";
+import { createPlace, deletePlace, requireEditorAccess, savePlace } from "./apiClient.js";
 import {
   addContentBlock,
   addImagePath,
@@ -45,7 +45,6 @@ import {
 } from "./vectorTextUtils.js";
 import { setupControlPanWhileEditing } from "./editorControlPanModule.js";
 
-const EDITOR_PASSWORD = "muvi1950";
 const MARKER_MIN_Y = 0;
 const MARKER_MIN_Z = -74;
 const EDITOR_STAGE_IDLE = "idle";
@@ -1041,7 +1040,7 @@ function updatePlacedPositionPreview(preview, position) {
 }
 
 function setupEditorShortcut(panel, onOpen, onClose) {
-  document.addEventListener("keydown", (event) => {
+  document.addEventListener("keydown", async (event) => {
     if (event.key === "Escape" && !panel.hidden) {
       onClose?.();
       hideEditor(panel);
@@ -1057,11 +1056,9 @@ function setupEditorShortcut(panel, onOpen, onClose) {
       return;
     }
 
-    const password = window.prompt("Clave del editor");
-    if (password === EDITOR_PASSWORD) {
-      onOpen();
-      showEditor(panel);
-    }
+    if (!await requireEditorAccess("Clave de administrador")) return;
+    onOpen();
+    showEditor(panel);
   });
 }
 

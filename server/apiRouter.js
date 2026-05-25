@@ -7,6 +7,7 @@ const UPLOAD_DIR = path.join(process.cwd(), "images", "uploads");
 const UPLOAD_ROUTE = "images/uploads";
 const COLLISION_OVERRIDES_PATH = path.join(process.cwd(), "data", "collision-overrides.json");
 const MAX_UPLOAD_BODY_BYTES = 30 * 1024 * 1024;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 const ALLOWED_IMAGE_TYPES = new Map([
   ["image/jpeg", ".jpg"],
   ["image/png", ".png"],
@@ -43,6 +44,21 @@ async function routeApiRequest(req, res, pathname, places) {
 
   if (req.method === "GET" && pathname === "/api/collision-overrides") {
     sendJson(res, 200, readCollisionOverrides());
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/api/admin/verify") {
+    if (!isAuthorizedAdminRequest(req)) {
+      sendJson(res, ADMIN_TOKEN ? 401 : 503, { error: ADMIN_TOKEN ? "Unauthorized" : "Admin token is not configured" });
+      return;
+    }
+
+    sendJson(res, 200, { ok: true });
+    return;
+  }
+
+  if (isMutationRequest(req) && !isAuthorizedAdminRequest(req)) {
+    sendJson(res, ADMIN_TOKEN ? 401 : 503, { error: ADMIN_TOKEN ? "Unauthorized" : "Admin token is not configured" });
     return;
   }
 
@@ -165,6 +181,15 @@ function sendJson(res, statusCode, payload) {
     "Cache-Control": "no-store",
   });
   res.end(JSON.stringify(payload));
+}
+
+function isMutationRequest(req) {
+  return req.method === "POST" || req.method === "PUT" || req.method === "DELETE";
+}
+
+function isAuthorizedAdminRequest(req) {
+  if (!ADMIN_TOKEN) return false;
+  return req.headers["x-admin-token"] === ADMIN_TOKEN;
 }
 
 function readCollisionOverrides() {

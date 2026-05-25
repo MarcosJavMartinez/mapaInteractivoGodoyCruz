@@ -1,4 +1,4 @@
-import { savePlaceCameraView } from "./apiClient.js";
+import { requireEditorAccess, savePlaceCameraView } from "./apiClient.js";
 import {
   parseNumberList,
   vectorToNumberArray,
@@ -7,7 +7,6 @@ import {
 import { setupControlPanWhileEditing } from "./editorControlPanModule.js";
 
 const UPDATE_INTERVAL_MS = 120;
-const EDITOR_PASSWORD = "muvi1950";
 const CAMERA_VIEW_SAVE_IDLE_TEXT = "Guardar vista";
 const CAMERA_VIEW_SAVE_BUSY_TEXT = "Guardando...";
 const CAMERA_VIEW_SAVE_SAVED_TEXT = "\u2713 Guardado";
@@ -120,7 +119,7 @@ export function setupCameraViewEditor(camera) {
 }
 
 function setupEditorAccessShortcut(panel, controlPan) {
-  document.addEventListener("keydown", (event) => {
+  document.addEventListener("keydown", async (event) => {
     if (event.key === "Escape" && !panel.hidden) {
       hideEditor(panel, controlPan);
       return;
@@ -134,10 +133,8 @@ function setupEditorAccessShortcut(panel, controlPan) {
       return;
     }
 
-    const password = window.prompt("Clave del editor de vistas");
-    if (password === EDITOR_PASSWORD) {
-      showEditor(panel);
-    }
+    if (!await requireEditorAccess("Clave de administrador")) return;
+    showEditor(panel);
   });
 }
 

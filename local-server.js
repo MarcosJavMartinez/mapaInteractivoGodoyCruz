@@ -5,6 +5,8 @@ const { handleApiRequest } = require("./server/apiRouter");
 
 const root = process.cwd();
 const port = Number(process.env.PORT || 8000);
+const host = process.env.HOST || "127.0.0.1";
+const publicRoots = new Set(["images", "models", "scripts", "styles", "vendor"]);
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -39,7 +41,7 @@ const server = http.createServer((req, res) => {
   }
 
   const filePath = resolveStaticPath(requestPath);
-  if (!isPathInsideRoot(filePath)) {
+  if (!isPathInsideRoot(filePath) || !isPublicStaticPath(requestPath)) {
     sendText(res, 403, "Forbidden");
     return;
   }
@@ -53,6 +55,8 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(filePath).toLowerCase();
     const headers = {
       "Content-Type": mimeTypes[ext] || "application/octet-stream",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "same-origin",
     };
 
     if (noCacheExtensions.has(ext)) {
@@ -77,8 +81,8 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(port, "127.0.0.1", () => {
-  console.log(`Proyecto disponible en http://127.0.0.1:${port}`);
+server.listen(port, host, () => {
+  console.log(`Proyecto disponible en http://${host}:${port}`);
 });
 
 function parseRequestPath(url) {
@@ -99,9 +103,18 @@ function isPathInsideRoot(filePath) {
   return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
 }
 
+function isPublicStaticPath(requestPath) {
+  const normalizedPath = requestPath.replace(/^\/+/, "").replace(/\\/g, "/");
+  if (!normalizedPath || normalizedPath === "index.html") return true;
+
+  const [firstSegment] = normalizedPath.split("/");
+  return publicRoots.has(firstSegment);
+}
+
 function sendText(res, statusCode, message) {
   res.writeHead(statusCode, {
     "Content-Type": "text/plain; charset=utf-8",
+    "X-Content-Type-Options": "nosniff",
   });
   res.end(message);
 }

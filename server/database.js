@@ -4,13 +4,17 @@ const Database = require("better-sqlite3");
 
 const root = path.resolve(__dirname, "..");
 const dataDir = path.join(root, "data");
-const databasePath = path.join(dataDir, "muvi.sqlite");
+const bundledDatabasePath = path.join(dataDir, "muvi.sqlite");
+const databasePath = process.env.VERCEL
+  ? path.join("/tmp", "muvi.sqlite")
+  : bundledDatabasePath;
 
 let database;
 
 function getDatabase() {
   if (!database) {
     fs.mkdirSync(dataDir, { recursive: true });
+    prepareRuntimeDatabase();
     database = new Database(databasePath);
     database.pragma("journal_mode = WAL");
     database.pragma("foreign_keys = ON");
@@ -18,6 +22,13 @@ function getDatabase() {
   }
 
   return database;
+}
+
+function prepareRuntimeDatabase() {
+  if (!process.env.VERCEL || fs.existsSync(databasePath)) return;
+  if (fs.existsSync(bundledDatabasePath)) {
+    fs.copyFileSync(bundledDatabasePath, databasePath);
+  }
 }
 
 function migrate(db) {
