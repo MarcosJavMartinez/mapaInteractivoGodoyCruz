@@ -1410,9 +1410,12 @@ label {
   margin: 0 2.25rem 0.85rem 0;
 }
 .info-panel-close {
+  z-index: 6;
   top: var(--info-panel-padding);
   right: var(--info-panel-padding);
   box-shadow: 0 0.45rem 1rem rgba(0, 0, 0, 0.24);
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 .info-panel-toggle {
   position: absolute;
