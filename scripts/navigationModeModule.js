@@ -26,6 +26,11 @@ const WALK_BOB_HEIGHT = 0.017;
 const SPRINT_BOB_HEIGHT = 0.032;
 const BOB_RECOVER_SPEED = 9;
 const LOOK_SENSITIVITY = 0.0022;
+const TOUCH_LOOK_SENSITIVITY = 0.0042;
+const TOUCH_JOYSTICK_RADIUS = 54;
+const TOUCH_JOYSTICK_DEADZONE = 0.16;
+const TOUCH_JOYSTICK_RUN_THRESHOLD = 0.82;
+const TOUCH_NAVIGATION_MAX_WIDTH = 900;
 const MIN_X = -235;
 const MAX_X = 145;
 const MIN_Z = -300;
@@ -55,6 +60,7 @@ export function setupNavigationModes(camera, renderer, scene) {
     viewBobOffset: 0,
     walkCycle: 0,
     collidersReady: Boolean(scene.userData.navigationCollidersReady),
+    touchControls: createTouchControls(),
   };
 
   modeButtons.forEach((button) => {
@@ -92,9 +98,14 @@ export function setupNavigationModes(camera, renderer, scene) {
   });
 
   renderer.domElement.addEventListener("click", () => {
-    if (state.mode === MODE_WALK && document.pointerLockElement !== renderer.domElement) {
+    if (state.mode === MODE_WALK && !isTouchNavigationActive(state) && document.pointerLockElement !== renderer.domElement) {
       renderer.domElement.requestPointerLock?.();
     }
+  });
+
+  bindTouchNavigationControls(camera, state);
+  window.addEventListener("resize", () => {
+    updateTouchNavigationClass(state);
   });
 
   document.addEventListener(NAVIGATION_COLLIDERS_READY_EVENT, (event) => {
@@ -129,6 +140,7 @@ function setNavigationMode(mode, { camera, renderer, modeButtons, state }) {
 
   state.mode = mode;
   document.body.classList.toggle("navigation-mode-walk", mode === MODE_WALK);
+  updateTouchNavigationClass(state);
   document.dispatchEvent(new CustomEvent("navigation:mode-changed", {
     detail: { mode },
   }));
@@ -137,6 +149,7 @@ function setNavigationMode(mode, { camera, renderer, modeButtons, state }) {
   state.planarVelocity.set(0, 0, 0);
   state.viewBobOffset = 0;
   state.walkCycle = 0;
+  resetTouchNavigation(state);
   state.lastTime = performance.now();
 
   if (mode === MODE_ORBIT) {
@@ -200,8 +213,9 @@ function updateWalkMode(camera, state, delta) {
   const isMoving = input.lengthSq() > 0;
   const isSprinting = isSprintRequested(state) && hasKey(state, "KeyW", "w", "ArrowUp") && !hasKey(state, "KeyS", "s", "ArrowDown");
   const targetSpeed = getTargetPlanarSpeed(state, isSprinting);
+  const inputStrength = clamp(input.length(), 0, 1);
   const targetVelocity = input.lengthSq() > 0
-    ? input.normalize().multiplyScalar(targetSpeed)
+    ? input.normalize().multiplyScalar(targetSpeed * inputStrength)
     : new Vector3();
 
   const acceleration = isMoving
@@ -237,10 +251,14 @@ function updateWalkMode(camera, state, delta) {
 
 function getTargetPlanarSpeed(state, isSprinting) {
   let speed = isSprinting ? PERSON_SPRINT_SPEED : PERSON_WALK_SPEED;
-  const movingBackward = hasKey(state, "KeyS", "s", "ArrowDown") && !hasKey(state, "KeyW", "w", "ArrowUp");
-  const strafingOnly = (hasKey(state, "KeyA", "a", "ArrowLeft") || hasKey(state, "KeyD", "d", "ArrowRight"))
+  const touchInput = state.touchControls?.movement || { x: 0, y: 0 };
+  const movingBackward = (hasKey(state, "KeyS", "s", "ArrowDown") || touchInput.y < 0)
     && !hasKey(state, "KeyW", "w", "ArrowUp")
-    && !hasKey(state, "KeyS", "s", "ArrowDown");
+    && touchInput.y <= 0;
+  const strafingOnly = (hasKey(state, "KeyA", "a", "ArrowLeft") || hasKey(state, "KeyD", "d", "ArrowRight") || Math.abs(touchInput.x) > TOUCH_JOYSTICK_DEADZONE)
+    && !hasKey(state, "KeyW", "w", "ArrowUp")
+    && !hasKey(state, "KeyS", "s", "ArrowDown")
+    && Math.abs(touchInput.y) <= TOUCH_JOYSTICK_DEADZONE;
 
   if (movingBackward) speed *= PERSON_BACKPEDAL_FACTOR;
   if (strafingOnly) speed *= PERSON_STRAFE_FACTOR;
@@ -251,11 +269,14 @@ function getPlanarMovement(state) {
   const forward = getForwardVector(state.yaw);
   const right = new Vector3(-forward.z, 0, forward.x);
   const movement = new Vector3();
+  const touchInput = state.touchControls?.movement || { x: 0, y: 0 };
 
   if (hasKey(state, "KeyW", "w", "ArrowUp")) movement.add(forward);
   if (hasKey(state, "KeyS", "s", "ArrowDown")) movement.sub(forward);
   if (hasKey(state, "KeyD", "d", "ArrowRight")) movement.add(right);
   if (hasKey(state, "KeyA", "a", "ArrowLeft")) movement.sub(right);
+  if (touchInput.y) movement.addScaledVector(forward, touchInput.y);
+  if (touchInput.x) movement.addScaledVector(right, touchInput.x);
 
   return movement;
 }
@@ -586,7 +607,9 @@ function hasKey(state, ...keys) {
 }
 
 function isSprintRequested(state) {
-  return state.keys.has("ShiftLeft") || state.keys.has("ShiftRight");
+  return state.keys.has("ShiftLeft")
+    || state.keys.has("ShiftRight")
+    || (state.touchControls?.movement?.strength || 0) >= TOUCH_JOYSTICK_RUN_THRESHOLD;
 }
 
 function clamp(value, min, max) {
@@ -602,4 +625,178 @@ function isTypingTarget(target) {
     || target instanceof HTMLTextAreaElement
     || target instanceof HTMLSelectElement
     || target?.isContentEditable;
+}
+
+function createTouchControls() {
+  const root = document.createElement("div");
+  root.className = "touch-navigation-controls";
+  root.setAttribute("aria-hidden", "true");
+  root.innerHTML = `
+    <div class="touch-joystick" data-touch-joystick>
+      <span class="touch-joystick-knob"></span>
+    </div>
+    <div class="touch-look-pad" data-touch-look-pad></div>
+    <button class="touch-action-button touch-action-button-interact" type="button" data-touch-interact>Ver ficha</button>
+  `;
+  document.body.appendChild(root);
+
+  return {
+    root,
+    joystick: root.querySelector("[data-touch-joystick]"),
+    knob: root.querySelector(".touch-joystick-knob"),
+    lookPad: root.querySelector("[data-touch-look-pad]"),
+    interactButton: root.querySelector("[data-touch-interact]"),
+    movement: { x: 0, y: 0, strength: 0 },
+    joystickPointerId: null,
+    lookPointerId: null,
+    joystickCenter: { x: 0, y: 0 },
+    lastLookPoint: { x: 0, y: 0 },
+  };
+}
+
+function bindTouchNavigationControls(camera, state) {
+  const controls = state.touchControls;
+  if (!controls?.root) return;
+
+  controls.joystick?.addEventListener("pointerdown", (event) => {
+    if (state.mode !== MODE_WALK) return;
+    event.preventDefault();
+    controls.joystickPointerId = event.pointerId;
+    controls.joystick.setPointerCapture?.(event.pointerId);
+    const rect = controls.joystick.getBoundingClientRect();
+    controls.joystickCenter.x = rect.left + rect.width / 2;
+    controls.joystickCenter.y = rect.top + rect.height / 2;
+    updateTouchMovement(event, controls);
+  });
+
+  controls.joystick?.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== controls.joystickPointerId) return;
+    event.preventDefault();
+    updateTouchMovement(event, controls);
+  });
+
+  document.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== controls.joystickPointerId) return;
+    event.preventDefault();
+    updateTouchMovement(event, controls);
+  });
+
+  ["pointerup", "pointercancel"].forEach((eventName) => {
+    controls.joystick?.addEventListener(eventName, (event) => {
+      if (event.pointerId !== controls.joystickPointerId) return;
+      resetTouchMovement(controls);
+    });
+  });
+
+  ["pointerup", "pointercancel"].forEach((eventName) => {
+    document.addEventListener(eventName, (event) => {
+      if (event.pointerId !== controls.joystickPointerId) return;
+      resetTouchMovement(controls);
+    });
+  });
+
+  controls.lookPad?.addEventListener("pointerdown", (event) => {
+    if (state.mode !== MODE_WALK) return;
+    event.preventDefault();
+    controls.lookPointerId = event.pointerId;
+    controls.lookPad.setPointerCapture?.(event.pointerId);
+    controls.lastLookPoint.x = event.clientX;
+    controls.lastLookPoint.y = event.clientY;
+  });
+
+  controls.lookPad?.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== controls.lookPointerId) return;
+    event.preventDefault();
+    const deltaX = event.clientX - controls.lastLookPoint.x;
+    const deltaY = event.clientY - controls.lastLookPoint.y;
+    controls.lastLookPoint.x = event.clientX;
+    controls.lastLookPoint.y = event.clientY;
+    state.yaw -= deltaX * TOUCH_LOOK_SENSITIVITY;
+    state.pitch = clampPitch(state.pitch - deltaY * TOUCH_LOOK_SENSITIVITY);
+    applyFirstPersonRotation(camera, state);
+  });
+
+  document.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== controls.lookPointerId) return;
+    event.preventDefault();
+    updateTouchLook(event, camera, state, controls);
+  });
+
+  ["pointerup", "pointercancel"].forEach((eventName) => {
+    controls.lookPad?.addEventListener(eventName, (event) => {
+      if (event.pointerId !== controls.lookPointerId) return;
+      controls.lookPointerId = null;
+    });
+  });
+
+  ["pointerup", "pointercancel"].forEach((eventName) => {
+    document.addEventListener(eventName, (event) => {
+      if (event.pointerId !== controls.lookPointerId) return;
+      controls.lookPointerId = null;
+    });
+  });
+
+  controls.interactButton?.addEventListener("click", () => {
+    if (state.mode !== MODE_WALK) return;
+    document.dispatchEvent(new CustomEvent("navigation:interact-centered"));
+  });
+}
+
+function updateTouchMovement(event, controls) {
+  const deltaX = event.clientX - controls.joystickCenter.x;
+  const deltaY = event.clientY - controls.joystickCenter.y;
+  const distance = Math.min(Math.hypot(deltaX, deltaY), TOUCH_JOYSTICK_RADIUS);
+  const angle = Math.atan2(deltaY, deltaX);
+  const knobX = Math.cos(angle) * distance;
+  const knobY = Math.sin(angle) * distance;
+  const movementX = knobX / TOUCH_JOYSTICK_RADIUS;
+  const movementY = -(knobY / TOUCH_JOYSTICK_RADIUS);
+  controls.movement.x = Math.abs(movementX) > TOUCH_JOYSTICK_DEADZONE
+    ? movementX
+    : 0;
+  controls.movement.y = Math.abs(movementY) > TOUCH_JOYSTICK_DEADZONE
+    ? movementY
+    : 0;
+  controls.movement.strength = Math.hypot(controls.movement.x, controls.movement.y);
+  if (controls.knob) {
+    controls.knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+  }
+}
+
+function updateTouchLook(event, camera, state, controls) {
+  const deltaX = event.clientX - controls.lastLookPoint.x;
+  const deltaY = event.clientY - controls.lastLookPoint.y;
+  controls.lastLookPoint.x = event.clientX;
+  controls.lastLookPoint.y = event.clientY;
+  state.yaw -= deltaX * TOUCH_LOOK_SENSITIVITY;
+  state.pitch = clampPitch(state.pitch - deltaY * TOUCH_LOOK_SENSITIVITY);
+  applyFirstPersonRotation(camera, state);
+}
+
+function resetTouchMovement(controls) {
+  controls.joystickPointerId = null;
+  controls.movement.x = 0;
+  controls.movement.y = 0;
+  controls.movement.strength = 0;
+  if (controls.knob) {
+    controls.knob.style.transform = "translate(0, 0)";
+  }
+}
+
+function resetTouchNavigation(state) {
+  const controls = state.touchControls;
+  if (!controls) return;
+  resetTouchMovement(controls);
+  controls.lookPointerId = null;
+}
+
+function isTouchNavigationActive(state) {
+  return Boolean(
+    state.touchControls?.root
+    && (matchMedia("(pointer: coarse)").matches || window.innerWidth <= TOUCH_NAVIGATION_MAX_WIDTH)
+  );
+}
+
+function updateTouchNavigationClass(state) {
+  document.body.classList.toggle("navigation-mode-touch", state.mode === MODE_WALK && isTouchNavigationActive(state));
 }

@@ -24,6 +24,9 @@ export function setupEventListeners(buttons, camera, scene, quality = getQuality
   document.body.addEventListener("pointermove", (event) => onPointerMove(event, buttons, camera, scene, quality));
   document.addEventListener("marker:deselected", clearActiveMarker);
   document.addEventListener("navigation:mode-changed", clearHoveredMarker);
+  document.addEventListener("navigation:interact-centered", () => {
+    handleSceneInteraction(getCenterPointer(), buttons, camera, scene, { keepCameraPosition: true });
+  });
   setupCenteredMarkerRaycast(buttons, camera, scene, quality);
 }
 
@@ -126,7 +129,7 @@ function setupCenteredMarkerRaycast(buttons, camera, scene, quality) {
   function updateCenteredMarker(now) {
     requestAnimationFrame(updateCenteredMarker);
 
-    if (!isWalkPointerMode() || !(document.pointerLockElement instanceof HTMLCanvasElement)) return;
+    if (!isWalkPointerMode() || !isCenteredWalkInteractionAvailable()) return;
     if (now - lastCenteredRaycast < quality.pointerRaycastInterval) return;
     lastCenteredRaycast = now;
 
@@ -160,6 +163,11 @@ function getCenterPointer() {
 
 function isWalkPointerMode() {
   return document.body.classList.contains("navigation-mode-walk");
+}
+
+function isCenteredWalkInteractionAvailable() {
+  return document.pointerLockElement instanceof HTMLCanvasElement
+    || document.body.classList.contains("navigation-mode-touch");
 }
 
 function getClosestMarkerOccluderDistance(scene) {

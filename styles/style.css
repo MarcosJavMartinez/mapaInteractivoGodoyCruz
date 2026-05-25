@@ -83,6 +83,98 @@ body.navigation-mode-walk.is-over-marker::after {
     0 0.2rem 0.7rem rgba(63, 43, 33, 0.32);
 }
 
+.touch-navigation-controls {
+  position: fixed;
+  z-index: 1180;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+}
+.touch-joystick,
+.touch-look-pad,
+.touch-action-button {
+  pointer-events: auto;
+  touch-action: none;
+}
+.touch-joystick {
+  position: absolute;
+  left: max(1rem, env(safe-area-inset-left));
+  bottom: calc(var(--site-footer-height) + 1.25rem);
+  display: grid;
+  place-items: center;
+  width: 7.1rem;
+  height: 7.1rem;
+  background: rgba(255, 249, 239, 0.28);
+  border: 1px solid rgba(255, 252, 244, 0.38);
+  border-radius: 50%;
+  box-shadow: 0 0.85rem 1.9rem rgba(47, 31, 22, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(10px) saturate(1.08);
+  -webkit-backdrop-filter: blur(10px) saturate(1.08);
+}
+.touch-joystick::before {
+  content: "";
+  width: 3.1rem;
+  height: 3.1rem;
+  border: 1px dashed rgba(122, 20, 95, 0.3);
+  border-radius: inherit;
+}
+.touch-joystick-knob {
+  position: absolute;
+  width: 3.15rem;
+  height: 3.15rem;
+  background: var(--button-background);
+  border: 1px solid rgba(255, 249, 239, 0.46);
+  border-radius: 50%;
+  box-shadow: 0 0.5rem 1.05rem rgba(74, 12, 58, 0.32);
+  transition: transform 80ms ease-out;
+}
+.touch-look-pad {
+  position: absolute;
+  right: 0;
+  top: var(--site-header-height);
+  bottom: var(--site-footer-height);
+  width: 52vw;
+}
+.touch-look-pad::after {
+  content: "Mirar";
+  position: absolute;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: 1.15rem;
+  color: rgba(255, 249, 239, 0.68);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-subtitle);
+  text-shadow: 0 1px 0 rgba(47, 31, 22, 0.42);
+}
+.touch-action-button {
+  position: absolute;
+  right: max(1rem, env(safe-area-inset-right));
+  min-width: 4.6rem;
+  min-height: 2.55rem;
+  color: #fff;
+  background: rgba(122, 20, 95, 0.82);
+  border: 1px solid rgba(255, 249, 239, 0.38);
+  border-radius: 999px;
+  box-shadow: 0 0.65rem 1.2rem rgba(47, 31, 22, 0.26);
+  font-size: var(--font-size-small);
+  line-height: 1;
+  padding: 0.6rem 0.8rem;
+  backdrop-filter: blur(8px) saturate(1.08);
+  -webkit-backdrop-filter: blur(8px) saturate(1.08);
+}
+.touch-action-button-interact {
+  bottom: calc(var(--site-footer-height) + 1.25rem);
+}
+
+@media (pointer: coarse), (max-width: 900px) {
+  body.navigation-mode-walk.navigation-mode-touch .touch-navigation-controls {
+    display: block;
+  }
+
+  body.navigation-mode-walk.navigation-mode-touch {
+    cursor: default;
+  }
+}
+
 button,
 input,
 textarea,
