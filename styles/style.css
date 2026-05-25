@@ -89,7 +89,7 @@ body.navigation-mode-walk.is-over-marker::after {
   left: 0;
   top: 0;
   pointer-events: none;
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, -50%);
   transition: opacity 160ms ease;
 }
 .marker-selection-feedback.is-hidden {
@@ -98,24 +98,27 @@ body.navigation-mode-walk.is-over-marker::after {
 .marker-selection-ring {
   position: absolute;
   left: 50%;
-  top: 100%;
-  width: 2.15rem;
-  height: 2.15rem;
-  border: 2px solid var(--wine-accent);
+  top: 50%;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 2px solid rgba(255, 252, 244, 0.96);
   border-radius: 50%;
-  box-shadow: 0 0 0 0.35rem var(--wine-accent-soft);
+  box-shadow:
+    0 0 0 1px rgba(122, 20, 95, 0.24),
+    0 0 0 0.35rem rgba(255, 252, 244, 0.18),
+    0 0.35rem 0.95rem rgba(58, 38, 27, 0.24);
   transform: translate(-50%, -50%);
   animation: marker-selection-pulse 1.65s ease-out infinite;
 }
 .marker-selection-card {
   position: absolute;
-  left: 0.85rem;
-  bottom: 0.8rem;
+  left: 50%;
+  bottom: 1.85rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.12rem 0.45rem;
   min-width: 9.4rem;
-  max-width: min(16rem, 58vw);
+  max-width: min(16rem, 72vw);
   color: var(--warm-brown-dark);
   background: var(--panel-background);
   border: 1px solid var(--glass-border);
@@ -124,6 +127,7 @@ body.navigation-mode-walk.is-over-marker::after {
   padding: 0.55rem 0.65rem;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+  transform: translateX(-50%);
 }
 .marker-selection-card strong,
 .marker-selection-card span {
@@ -153,12 +157,15 @@ body.navigation-mode-walk.is-over-marker::after {
 }
 @keyframes marker-selection-pulse {
   0% {
-    opacity: 0.85;
-    transform: translate(-50%, -50%) scale(0.78);
+    opacity: 0.92;
+    transform: translate(-50%, -50%) scale(0.68);
+  }
+  58% {
+    opacity: 0.46;
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(1.65);
+    transform: translate(-50%, -50%) scale(1.75);
   }
 }
 

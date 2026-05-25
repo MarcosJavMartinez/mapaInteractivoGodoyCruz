@@ -41,6 +41,8 @@ function createMarker(scene, buttons, place) {
   });
 
   const sprite = new Sprite(material);
+  const activeOutline = createActiveMarkerOutline();
+
   sprite.center.set(0.5, 0);
   sprite.renderOrder = 999;
   sprite.frustumCulled = false;
@@ -50,6 +52,8 @@ function createMarker(scene, buttons, place) {
   sprite.userData.markerMinScale = 1.1;
   sprite.userData.markerMaxScale = 11;
   sprite.userData.isHovered = false;
+  sprite.userData.isActive = false;
+  sprite.userData.activeOutline = activeOutline;
   sprite.userData.title = place.title;
   sprite.userData.imageUrl = place.imageUrl;
   sprite.userData.text = place.text;
@@ -58,9 +62,33 @@ function createMarker(scene, buttons, place) {
   sprite.userData.cameraView = place.cameraView;
   sprite.userData.placeId = place.placeId;
   sprite.userData.slug = place.slug;
+  sprite.add(activeOutline);
   scene.add(sprite);
   buttons.push(sprite);
   return sprite;
+}
+
+function createActiveMarkerOutline() {
+  const material = new SpriteMaterial({
+    map: getMarkerTexture(),
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    alphaTest: 0.08,
+    depthTest: true,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false,
+  });
+
+  const outline = new Sprite(material);
+  outline.center.set(0.5, 0);
+  outline.renderOrder = 998;
+  outline.frustumCulled = false;
+  outline.visible = false;
+  outline.scale.setScalar(1.16);
+  outline.userData.ignoreMarkerInteractionOcclusion = true;
+  return outline;
 }
 
 function getMarkerTexture() {

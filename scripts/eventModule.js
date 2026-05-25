@@ -15,7 +15,7 @@ const FACADE_VIEW_DISTANCE = 42;
 const FACADE_VIEW_HEIGHT = 18;
 const CAMERA_ANIMATION_DURATION = 900;
 const DEFAULT_MARKER_COLOR = 0xffffff;
-const ACTIVE_MARKER_COLOR = 0xffd35a;
+const ACTIVE_MARKER_COLOR = 0xffffff;
 const CENTER_POINTER = { clientX: 0, clientY: 0 };
 const MARKER_OCCLUSION_MARGIN = 0.55;
 
@@ -81,10 +81,12 @@ function handleSceneInteraction(event, buttons, camera, scene, options = {}) {
 
 function setActiveMarker(marker) {
   if (activeMarker && activeMarker !== marker) {
+    activeMarker.userData.isActive = false;
     activeMarker.material?.color?.setHex(DEFAULT_MARKER_COLOR);
   }
 
   activeMarker = marker;
+  activeMarker.userData.isActive = true;
   activeMarker.material?.color?.setHex(ACTIVE_MARKER_COLOR);
   document.dispatchEvent(new CustomEvent("marker:selected", {
     detail: {
@@ -98,6 +100,7 @@ function setActiveMarker(marker) {
 
 function clearActiveMarker() {
   if (activeMarker) {
+    activeMarker.userData.isActive = false;
     activeMarker.material?.color?.setHex(DEFAULT_MARKER_COLOR);
   }
   activeMarker = null;

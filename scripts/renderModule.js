@@ -12,6 +12,8 @@ import { getQualitySettings } from "./qualityModule.js";
 const IDLE_AUTO_ROTATE_DELAY = 22000;
 const IDLE_AUTO_ROTATE_SPEED = 0.18;
 const MARKER_HOVER_SCALE = 0.14;
+const MARKER_ACTIVE_OUTLINE_SCALE = 1.16;
+const MARKER_ACTIVE_OUTLINE_PULSE_SCALE = 0.18;
 
 export function setupRenderer(quality = getQualitySettings()) {
   const renderer = new WebGLRenderer({
@@ -104,6 +106,8 @@ function updateMarkerScales(markers, camera, now) {
     const scale = baseScale * (1 + pulse);
 
     marker.scale.setScalar(scale);
+    updateMarkerActiveOutline(marker, now);
+
     if (marker.material) {
       marker.material.opacity = marker.userData.isHovered
         ? 0.78 + (pulse / MARKER_HOVER_SCALE) * 0.22
@@ -111,6 +115,23 @@ function updateMarkerScales(markers, camera, now) {
       marker.material.transparent = true;
     }
   }
+}
+
+function updateMarkerActiveOutline(marker, now) {
+  const outline = marker.userData.activeOutline;
+  if (!outline?.material) return;
+
+  const isActive = Boolean(marker.userData.isActive);
+  outline.visible = isActive;
+  if (!isActive) {
+    outline.material.opacity = 0;
+    return;
+  }
+
+  const pulse = (Math.sin(now * 0.0052) + 1) * 0.5;
+  outline.scale.setScalar(MARKER_ACTIVE_OUTLINE_SCALE + pulse * MARKER_ACTIVE_OUTLINE_PULSE_SCALE);
+  outline.material.opacity = 0.36 + pulse * 0.28;
+  outline.material.transparent = true;
 }
 
 function clamp(value, min, max) {
