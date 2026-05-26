@@ -18,6 +18,7 @@ const DEFAULT_MARKER_COLOR = 0xffffff;
 const ACTIVE_MARKER_COLOR = 0xffffff;
 const CENTER_POINTER = { clientX: 0, clientY: 0 };
 const MARKER_OCCLUSION_MARGIN = 0.55;
+const CAMERA_UPDATED_EVENT = "scene:camera-updated";
 
 export function setupEventListeners(buttons, camera, scene, quality = getQualitySettings()) {
   document.body.addEventListener("click", (event) => onClick(event, buttons, camera, scene));
@@ -254,6 +255,7 @@ function setupMarkerSelectionFeedback(camera) {
     title.textContent = event.detail?.title || "Edificio seleccionado";
     markerFeedback.hidden = false;
     markerFeedback.classList.add("active");
+    updateFeedbackPosition();
   });
 
   const markerPosition = new Vector3();
@@ -262,7 +264,6 @@ function setupMarkerSelectionFeedback(camera) {
   const projectedMarkerTopPosition = new Vector3();
   const cameraUp = new Vector3();
   const updateFeedbackPosition = () => {
-    requestAnimationFrame(updateFeedbackPosition);
     if (!markerFeedback || markerFeedback.hidden || !activeMarker) return;
 
     activeMarker.getWorldPosition(markerPosition);
@@ -285,7 +286,8 @@ function setupMarkerSelectionFeedback(camera) {
     markerFeedback.style.top = `${markerScreenY}px`;
   };
 
-  requestAnimationFrame(updateFeedbackPosition);
+  document.addEventListener(CAMERA_UPDATED_EVENT, updateFeedbackPosition);
+  window.addEventListener("resize", updateFeedbackPosition);
 }
 
 function hideMarkerSelectionFeedback() {
@@ -319,6 +321,7 @@ function focusCameraOnMarker(camera, marker) {
     } else {
       camera.lookAt(target);
     }
+    document.dispatchEvent(new Event(CAMERA_UPDATED_EVENT));
 
     if (progress < 1) {
       activeCameraAnimation = requestAnimationFrame(animateCamera);

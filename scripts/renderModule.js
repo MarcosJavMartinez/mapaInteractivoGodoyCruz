@@ -15,6 +15,7 @@ const MARKER_HOVER_SCALE = 0.14;
 const MARKER_ACTIVE_GLOW_OPACITY = 0.92;
 const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 0.82;
 const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 0.85;
+const CAMERA_UPDATED_EVENT = "scene:camera-updated";
 
 export function setupRenderer(quality = getQualitySettings()) {
   const renderer = new WebGLRenderer({
@@ -78,6 +79,7 @@ export function render(scene, camera, renderer, quality = getQualitySettings(), 
         controls?.update();
       }
       updateMarkerScales(markers, camera, now);
+      document.dispatchEvent(new Event(CAMERA_UPDATED_EVENT));
       renderer.render(scene, camera);
     }
   }

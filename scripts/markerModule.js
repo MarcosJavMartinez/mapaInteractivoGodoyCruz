@@ -87,7 +87,7 @@ function createActiveMarkerOutline() {
     color: 0xffffff,
     transparent: true,
     opacity: 0,
-    alphaTest: 0.04,
+    alphaTest: 0.01,
     depthTest: true,
     depthWrite: false,
     fog: false,
@@ -180,17 +180,21 @@ function updateMarkerGlowTexture(image) {
   maskContext.fillRect(0, 0, width, height);
 
   context.clearRect(0, 0, width, height);
-  drawGlowCopies(context, maskCanvas, width, height, 0.034, 0.24, 16);
-  drawGlowCopies(context, maskCanvas, width, height, 0.018, 0.74, 12);
-  context.globalAlpha = 0.14;
+  drawGlowLayer(context, maskCanvas, width, height, 0.052, 0.34, 18, 0.032);
+  drawGlowLayer(context, maskCanvas, width, height, 0.028, 0.62, 14, 0.018);
+  context.filter = "blur(1.5px)";
+  context.globalAlpha = 0.1;
   context.drawImage(maskCanvas, 0, 0);
+  context.filter = "none";
   context.globalAlpha = 1;
 
   markerGlowTexture.needsUpdate = true;
 }
 
-function drawGlowCopies(context, maskCanvas, width, height, sizeRatio, alpha, steps) {
+function drawGlowLayer(context, maskCanvas, width, height, sizeRatio, alpha, steps, blurRatio) {
   const offset = Math.max(1, Math.round(Math.min(width, height) * sizeRatio));
+  const blur = Math.max(1, Math.round(Math.min(width, height) * blurRatio));
+  context.filter = `blur(${blur}px)`;
   context.globalAlpha = alpha;
 
   for (let step = 0; step < steps; step += 1) {
@@ -201,6 +205,8 @@ function drawGlowCopies(context, maskCanvas, width, height, sizeRatio, alpha, st
       Math.sin(angle) * offset
     );
   }
+
+  context.filter = "none";
 }
 
 function configureMarkerTexture(texture) {
