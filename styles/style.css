@@ -116,7 +116,7 @@ body.navigation-mode-walk.is-over-marker::after {
   --marker-selection-card-background: rgb(255, 249, 239);
   --marker-selection-card-border: rgba(63, 43, 33, 0.2);
   --marker-selection-card-shadow: drop-shadow(0 0.72rem 1.25rem rgba(58, 38, 27, 0.28));
-  --marker-selection-card-gap: 0.75rem;
+  --marker-selection-card-gap: 1.35rem;
   position: absolute;
   z-index: 1;
   left: 0;
@@ -134,7 +134,7 @@ body.navigation-mode-walk.is-over-marker::after {
   filter: var(--marker-selection-card-shadow);
   padding: 0.55rem 0.65rem;
   transform: translate(-50%, calc(-100% - var(--marker-selection-card-gap)));
-  transition: opacity 160ms ease, transform 160ms ease;
+  transition: opacity 160ms ease;
 }
 .marker-selection-card::after {
   content: "";
@@ -180,7 +180,6 @@ body.navigation-mode-walk.is-over-marker::after {
 }
 body.info-panel-open:not(.info-panel-collapsed) .marker-selection-card {
   opacity: 0;
-  transform: translate(-50%, calc(-100% - var(--marker-selection-card-gap) + 0.45rem));
 }
 @keyframes marker-selection-pulse {
   0% {

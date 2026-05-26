@@ -19,6 +19,7 @@ const ACTIVE_MARKER_COLOR = 0xffffff;
 const CENTER_POINTER = { clientX: 0, clientY: 0 };
 const MARKER_OCCLUSION_MARGIN = 0.55;
 const CAMERA_UPDATED_EVENT = "scene:camera-updated";
+const MARKER_LABEL_HEIGHT_OFFSET = 1.2;
 
 export function setupEventListeners(buttons, camera, scene, quality = getQualitySettings()) {
   document.body.addEventListener("click", (event) => onClick(event, buttons, camera, scene));
@@ -268,7 +269,7 @@ function setupMarkerSelectionFeedback(camera) {
 
     activeMarker.getWorldPosition(markerPosition);
     cameraUp.copy(camera.up).normalize();
-    markerTopPosition.copy(markerPosition).addScaledVector(cameraUp, activeMarker.scale.y);
+    markerTopPosition.copy(markerPosition).addScaledVector(cameraUp, activeMarker.scale.y * MARKER_LABEL_HEIGHT_OFFSET);
     projectedMarkerPosition.copy(markerPosition).project(camera);
     projectedMarkerTopPosition.copy(markerTopPosition).project(camera);
 
