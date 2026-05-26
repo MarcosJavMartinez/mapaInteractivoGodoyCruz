@@ -12,7 +12,8 @@ import { getQualitySettings } from "./qualityModule.js";
 const IDLE_AUTO_ROTATE_DELAY = 22000;
 const IDLE_AUTO_ROTATE_SPEED = 0.18;
 const MARKER_HOVER_SCALE = 0.14;
-const MARKER_ACTIVE_GLOW_OPACITY = 0.92;
+const MARKER_ACTIVE_GLOW_BASE_OPACITY = 0.48;
+const MARKER_ACTIVE_GLOW_PULSE_OPACITY = 0.28;
 const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 0.82;
 const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 0.85;
 const CAMERA_UPDATED_EVENT = "scene:camera-updated";
@@ -143,8 +144,9 @@ function updateMarkerActiveEffects(marker, now) {
   }
 
   if (outline?.material) {
+    const glowPulse = (Math.sin(now * 0.004) + 1) * 0.5;
     outline.scale.setScalar(1);
-    outline.material.opacity = MARKER_ACTIVE_GLOW_OPACITY;
+    outline.material.opacity = MARKER_ACTIVE_GLOW_BASE_OPACITY + glowPulse * MARKER_ACTIVE_GLOW_PULSE_OPACITY;
     outline.material.transparent = true;
   }
 
