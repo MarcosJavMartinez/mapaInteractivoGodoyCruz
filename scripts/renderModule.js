@@ -15,10 +15,10 @@ const MARKER_HOVER_SCALE = 0.14;
 const MARKER_ACTIVE_GLOW_BASE_OPACITY = 0.34;
 const MARKER_ACTIVE_GLOW_PULSE_OPACITY = 0.44;
 const MARKER_ACTIVE_RIPPLE_COUNT = 3;
-const MARKER_ACTIVE_RIPPLE_SPEED = 0.00042;
+const MARKER_ACTIVE_RIPPLE_SPEED = 0.00028;
 const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 1.05;
-const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 0.85;
-const MARKER_ACTIVE_RIPPLE_MAX_OPACITY = 0.46;
+const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 0.72;
+const MARKER_ACTIVE_RIPPLE_MAX_OPACITY = 0.32;
 const CAMERA_UPDATED_EVENT = "scene:camera-updated";
 
 export function setupRenderer(quality = getQualitySettings()) {
@@ -162,9 +162,10 @@ function updateMarkerActiveEffects(marker, now) {
     if (!ripple?.material) return;
 
     const ripplePhase = getRipplePhase(now, index, ripples.length);
-    const rippleScale = MARKER_ACTIVE_RIPPLE_MIN_SCALE + ripplePhase * MARKER_ACTIVE_RIPPLE_PULSE_SCALE;
+    const easedRipplePhase = easeOutCubic(ripplePhase);
+    const rippleScale = MARKER_ACTIVE_RIPPLE_MIN_SCALE + easedRipplePhase * MARKER_ACTIVE_RIPPLE_PULSE_SCALE;
     ripple.scale.set(rippleScale, rippleScale, rippleScale);
-    ripple.material.opacity = MARKER_ACTIVE_RIPPLE_MAX_OPACITY * Math.pow(1 - ripplePhase, 1.25);
+    ripple.material.opacity = MARKER_ACTIVE_RIPPLE_MAX_OPACITY * Math.pow(1 - ripplePhase, 2.25);
     ripple.material.transparent = true;
   });
 }
@@ -184,6 +185,10 @@ function getRippleStartPulse(now, count) {
 function getRipplePhase(now, index, count) {
   const cycle = (now * MARKER_ACTIVE_RIPPLE_SPEED) % 1;
   return (cycle - index / count + 1) % 1;
+}
+
+function easeOutCubic(progress) {
+  return 1 - Math.pow(1 - progress, 3);
 }
 
 function clamp(value, min, max) {
