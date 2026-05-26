@@ -268,7 +268,7 @@ function setupMarkerSelectionFeedback(camera) {
 
     activeMarker.getWorldPosition(markerPosition);
     cameraUp.copy(camera.up).normalize();
-    markerTopPosition.copy(markerPosition).addScaledVector(cameraUp, activeMarker.scale.y * 1.08);
+    markerTopPosition.copy(markerPosition).addScaledVector(cameraUp, activeMarker.scale.y);
     projectedMarkerPosition.copy(markerPosition).project(camera);
     projectedMarkerTopPosition.copy(markerTopPosition).project(camera);
 
@@ -276,14 +276,10 @@ function setupMarkerSelectionFeedback(camera) {
     markerFeedback.classList.toggle("is-hidden", !isVisible);
     if (!isVisible) return;
 
-    const markerScreenY = ((-projectedMarkerPosition.y + 1) / 2) * window.innerHeight;
+    const markerTopScreenX = ((projectedMarkerTopPosition.x + 1) / 2) * window.innerWidth;
     const markerTopScreenY = ((-projectedMarkerTopPosition.y + 1) / 2) * window.innerHeight;
-    const markerScreenHeight = Math.max(0, markerScreenY - markerTopScreenY);
-    const cardLift = clamp(markerScreenHeight + 18, 72, Math.max(72, markerScreenY - 64));
 
-    markerFeedback.style.setProperty("--marker-card-lift", `${cardLift}px`);
-    markerFeedback.style.left = `${((projectedMarkerPosition.x + 1) / 2) * window.innerWidth}px`;
-    markerFeedback.style.top = `${markerScreenY}px`;
+    markerFeedback.style.transform = `translate3d(${markerTopScreenX}px, ${markerTopScreenY}px, 0)`;
   };
 
   document.addEventListener(CAMERA_UPDATED_EVENT, updateFeedbackPosition);
@@ -379,8 +375,4 @@ function easeInOutCubic(progress) {
   return progress < 0.5
     ? 4 * progress * progress * progress
     : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-}
-
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
 }

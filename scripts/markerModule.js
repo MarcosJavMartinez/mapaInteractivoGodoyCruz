@@ -180,10 +180,10 @@ function updateMarkerGlowTexture(image) {
   maskContext.fillRect(0, 0, width, height);
 
   context.clearRect(0, 0, width, height);
-  drawGlowLayer(context, maskCanvas, width, height, 0.036, 0.3, 18, 0.05);
-  drawGlowLayer(context, maskCanvas, width, height, 0.018, 0.5, 14, 0.03);
+  drawGlowLayer(context, maskCanvas, width, height, 0.018, 0.26, 18, 0.034);
+  drawGlowLayer(context, maskCanvas, width, height, 0.008, 0.44, 14, 0.022);
   context.filter = "blur(1.5px)";
-  context.globalAlpha = 0.06;
+  context.globalAlpha = 0.04;
   context.drawImage(maskCanvas, 0, 0);
   context.filter = "none";
   context.globalAlpha = 1;
