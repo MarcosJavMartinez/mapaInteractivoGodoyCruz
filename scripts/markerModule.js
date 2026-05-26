@@ -134,7 +134,7 @@ function createActiveMarkerRipple(index) {
 
 function getActiveRippleGeometry() {
   if (!activeRippleGeometry) {
-    activeRippleGeometry = new RingGeometry(0.51, 0.56, 64);
+    activeRippleGeometry = new RingGeometry(0.535, 0.56, 96);
   }
 
   return activeRippleGeometry;
