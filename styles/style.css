@@ -112,7 +112,11 @@ body.navigation-mode-walk.is-over-marker::after {
   animation: marker-selection-pulse 1.65s ease-out infinite;
 }
 .marker-selection-card {
+  --marker-selection-card-background: rgb(255, 249, 239);
+  --marker-selection-card-border: rgba(63, 43, 33, 0.2);
+  --marker-selection-card-shadow: drop-shadow(0 0.72rem 1.25rem rgba(58, 38, 27, 0.28));
   position: absolute;
+  z-index: 1;
   left: 50%;
   bottom: var(--marker-card-lift, 4.5rem);
   display: block;
@@ -120,26 +124,28 @@ body.navigation-mode-walk.is-over-marker::after {
   min-width: 0;
   max-width: min(16rem, 72vw);
   color: var(--warm-brown-dark);
-  background: var(--panel-background);
-  border: 1px solid var(--glass-border);
+  background-color: var(--marker-selection-card-background);
+  background-image: none;
+  border: 1px solid var(--marker-selection-card-border);
   border-radius: 9px;
-  box-shadow: 0 0.75rem 1.6rem rgba(58, 38, 27, 0.22);
+  box-shadow: none;
+  filter: var(--marker-selection-card-shadow);
   padding: 0.55rem 0.65rem;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   transform: translateX(-50%);
   transition: opacity 160ms ease, transform 160ms ease;
 }
 .marker-selection-card::after {
   content: "";
   position: absolute;
+  z-index: -1;
   left: 50%;
   bottom: -0.42rem;
   width: 0.72rem;
   height: 0.72rem;
-  background: var(--panel-background);
-  border-right: 1px solid var(--glass-border);
-  border-bottom: 1px solid var(--glass-border);
+  background-color: var(--marker-selection-card-background);
+  background-image: none;
+  border-right: 1px solid var(--marker-selection-card-border);
+  border-bottom: 1px solid var(--marker-selection-card-border);
   transform: translateX(-50%) rotate(45deg);
 }
 .marker-selection-card strong,
