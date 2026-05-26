@@ -12,10 +12,13 @@ import { getQualitySettings } from "./qualityModule.js";
 const IDLE_AUTO_ROTATE_DELAY = 22000;
 const IDLE_AUTO_ROTATE_SPEED = 0.18;
 const MARKER_HOVER_SCALE = 0.14;
-const MARKER_ACTIVE_GLOW_BASE_OPACITY = 0.48;
-const MARKER_ACTIVE_GLOW_PULSE_OPACITY = 0.28;
+const MARKER_ACTIVE_GLOW_BASE_OPACITY = 0.34;
+const MARKER_ACTIVE_GLOW_PULSE_OPACITY = 0.44;
+const MARKER_ACTIVE_RIPPLE_COUNT = 3;
+const MARKER_ACTIVE_RIPPLE_SPEED = 0.0008;
 const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 0.82;
 const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 0.85;
+const MARKER_ACTIVE_RIPPLE_MAX_OPACITY = 0.46;
 const CAMERA_UPDATED_EVENT = "scene:camera-updated";
 
 export function setupRenderer(quality = getQualitySettings()) {
@@ -123,40 +126,64 @@ function updateMarkerScales(markers, camera, now) {
 
 function updateMarkerActiveEffects(marker, now) {
   const outline = marker.userData.activeOutline;
-  const ripple = marker.userData.activeRipple;
+  const ripples = marker.userData.activeRipples
+    || (marker.userData.activeRipple ? [marker.userData.activeRipple] : []);
 
   const isActive = Boolean(marker.userData.isActive);
   if (outline?.material) {
     outline.visible = isActive;
   }
-  if (ripple?.material) {
-    ripple.visible = isActive;
-  }
+  ripples.forEach((ripple) => {
+    if (ripple?.material) {
+      ripple.visible = isActive;
+    }
+  });
 
   if (!isActive) {
     if (outline?.material) {
       outline.material.opacity = 0;
     }
-    if (ripple?.material) {
-      ripple.material.opacity = 0;
-    }
+    ripples.forEach((ripple) => {
+      if (ripple?.material) {
+        ripple.material.opacity = 0;
+      }
+    });
     return;
   }
 
   if (outline?.material) {
-    const glowPulse = (Math.sin(now * 0.004) + 1) * 0.5;
+    const glowPulse = getRippleStartPulse(now, ripples.length || MARKER_ACTIVE_RIPPLE_COUNT);
     outline.scale.setScalar(1);
     outline.material.opacity = MARKER_ACTIVE_GLOW_BASE_OPACITY + glowPulse * MARKER_ACTIVE_GLOW_PULSE_OPACITY;
     outline.material.transparent = true;
   }
 
-  if (ripple?.material) {
-    const ripplePulse = (now * 0.00125) % 1;
-    const rippleScale = MARKER_ACTIVE_RIPPLE_MIN_SCALE + ripplePulse * MARKER_ACTIVE_RIPPLE_PULSE_SCALE;
+  ripples.forEach((ripple, index) => {
+    if (!ripple?.material) return;
+
+    const ripplePhase = getRipplePhase(now, index, ripples.length);
+    const rippleScale = MARKER_ACTIVE_RIPPLE_MIN_SCALE + ripplePhase * MARKER_ACTIVE_RIPPLE_PULSE_SCALE;
     ripple.scale.set(rippleScale, rippleScale, rippleScale);
-    ripple.material.opacity = 0.54 * (1 - ripplePulse);
+    ripple.material.opacity = MARKER_ACTIVE_RIPPLE_MAX_OPACITY * Math.pow(1 - ripplePhase, 1.25);
     ripple.material.transparent = true;
+  });
+}
+
+function getRippleStartPulse(now, count) {
+  let pulse = 0;
+
+  for (let index = 0; index < count; index += 1) {
+    const phase = getRipplePhase(now, index, count);
+    if (phase > 0.34) continue;
+    pulse = Math.max(pulse, Math.pow(1 - phase / 0.34, 2));
   }
+
+  return pulse;
+}
+
+function getRipplePhase(now, index, count) {
+  const cycle = (now * MARKER_ACTIVE_RIPPLE_SPEED) % 1;
+  return (cycle - index / count + 1) % 1;
 }
 
 function clamp(value, min, max) {

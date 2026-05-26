@@ -13,6 +13,7 @@ import {
 } from "../vendor/three/build/three.module.js";
 
 const MARKER_TEXTURE_PATH = "images/marcador-de-alfiler-01.png";
+const ACTIVE_RIPPLE_COUNT = 3;
 
 let markerTexture = null;
 let markerGlowTexture = null;
@@ -52,7 +53,7 @@ function createMarker(scene, buttons, place) {
 
   const sprite = new Sprite(material);
   const activeOutline = createActiveMarkerOutline();
-  const activeRipple = createActiveMarkerRipple();
+  const activeRipples = createActiveMarkerRipples();
 
   sprite.center.set(0.5, 0);
   sprite.renderOrder = 999;
@@ -65,7 +66,7 @@ function createMarker(scene, buttons, place) {
   sprite.userData.isHovered = false;
   sprite.userData.isActive = false;
   sprite.userData.activeOutline = activeOutline;
-  sprite.userData.activeRipple = activeRipple;
+  sprite.userData.activeRipples = activeRipples;
   sprite.userData.title = place.title;
   sprite.userData.imageUrl = place.imageUrl;
   sprite.userData.text = place.text;
@@ -75,7 +76,7 @@ function createMarker(scene, buttons, place) {
   sprite.userData.placeId = place.placeId;
   sprite.userData.slug = place.slug;
   sprite.add(activeOutline);
-  sprite.add(activeRipple);
+  activeRipples.forEach((ripple) => sprite.add(ripple));
   scene.add(sprite);
   buttons.push(sprite);
   return sprite;
@@ -104,7 +105,11 @@ function createActiveMarkerOutline() {
   return outline;
 }
 
-function createActiveMarkerRipple() {
+function createActiveMarkerRipples() {
+  return Array.from({ length: ACTIVE_RIPPLE_COUNT }, (_item, index) => createActiveMarkerRipple(index));
+}
+
+function createActiveMarkerRipple(index) {
   const material = new MeshBasicMaterial({
     color: 0xfffcf4,
     transparent: true,
@@ -119,9 +124,10 @@ function createActiveMarkerRipple() {
   const ripple = new Mesh(getActiveRippleGeometry(), material);
   ripple.position.y = 0.02;
   ripple.rotation.x = -Math.PI / 2;
-  ripple.renderOrder = 997;
+  ripple.renderOrder = 997 - index;
   ripple.frustumCulled = false;
   ripple.visible = false;
+  ripple.userData.activeRippleIndex = index;
   ripple.userData.ignoreMarkerInteractionOcclusion = true;
   return ripple;
 }
