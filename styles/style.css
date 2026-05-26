@@ -178,9 +178,6 @@ body.navigation-mode-walk.is-over-marker::after {
   font-style: normal;
   font-weight: var(--font-weight-action);
 }
-body.info-panel-open:not(.info-panel-collapsed) .marker-selection-card {
-  opacity: 0;
-}
 @keyframes marker-selection-pulse {
   0% {
     opacity: 0.92;
