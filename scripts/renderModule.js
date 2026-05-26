@@ -17,10 +17,10 @@ const MARKER_ACTIVE_GLOW_PULSE_OPACITY = 0.24;
 const MARKER_ACTIVE_GLOW_SPEED = 0.00105;
 const MARKER_ACTIVE_RIPPLE_COUNT = 3;
 const MARKER_ACTIVE_RIPPLE_SPEED = 0.00016;
-const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 0.42;
-const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 1.3;
-const MARKER_ACTIVE_RIPPLE_MIN_OPACITY = 0.16;
-const MARKER_ACTIVE_RIPPLE_MAX_OPACITY = 0.62;
+const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 0.58;
+const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 1.02;
+const MARKER_ACTIVE_RIPPLE_MIN_OPACITY = 0.24;
+const MARKER_ACTIVE_RIPPLE_MAX_OPACITY = 0.58;
 const CAMERA_UPDATED_EVENT = "scene:camera-updated";
 
 export function setupRenderer(quality = getQualitySettings()) {
@@ -167,8 +167,9 @@ function updateMarkerActiveEffects(marker, now) {
     const easedRipplePhase = easeOutCubic(ripplePhase);
     const rippleScale = MARKER_ACTIVE_RIPPLE_MIN_SCALE + easedRipplePhase * MARKER_ACTIVE_RIPPLE_PULSE_SCALE;
     ripple.scale.set(rippleScale, rippleScale, rippleScale);
+    const rippleVisibility = 0.5 + Math.cos((ripplePhase - 0.12) * Math.PI * 2) * 0.5;
     ripple.material.opacity = MARKER_ACTIVE_RIPPLE_MIN_OPACITY
-      + (MARKER_ACTIVE_RIPPLE_MAX_OPACITY - MARKER_ACTIVE_RIPPLE_MIN_OPACITY) * Math.pow(1 - ripplePhase, 1.7);
+      + (MARKER_ACTIVE_RIPPLE_MAX_OPACITY - MARKER_ACTIVE_RIPPLE_MIN_OPACITY) * rippleVisibility;
     ripple.material.transparent = true;
   });
 }
