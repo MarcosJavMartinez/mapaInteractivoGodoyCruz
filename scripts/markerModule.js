@@ -14,7 +14,7 @@ import {
 
 const MARKER_TEXTURE_PATH = "images/marcador-de-alfiler-01.png";
 const ACTIVE_RIPPLE_COUNT = 3;
-const ACTIVE_RIPPLE_OFFSET_Y = -0.18;
+const ACTIVE_RIPPLE_OFFSET_Y = -0.3;
 
 let markerTexture = null;
 let markerGlowTexture = null;
@@ -61,9 +61,9 @@ function createMarker(scene, buttons, place) {
   sprite.frustumCulled = false;
   sprite.position.copy(place.position);
   sprite.scale.set(2, 2, 2);
-  sprite.userData.markerScreenScale = 0.032;
-  sprite.userData.markerMinScale = 1.1;
-  sprite.userData.markerMaxScale = 11;
+  sprite.userData.markerScreenScale = 0.028;
+  sprite.userData.markerMinScale = 0.95;
+  sprite.userData.markerMaxScale = 9.6;
   sprite.userData.isHovered = false;
   sprite.userData.isActive = false;
   sprite.userData.activeOutline = activeOutline;
@@ -135,7 +135,7 @@ function createActiveMarkerRipple(index) {
 
 function getActiveRippleGeometry() {
   if (!activeRippleGeometry) {
-    activeRippleGeometry = new RingGeometry(0.24, 0.265, 96);
+    activeRippleGeometry = new RingGeometry(0.29, 0.315, 96);
   }
 
   return activeRippleGeometry;
