@@ -12,8 +12,9 @@ import { getQualitySettings } from "./qualityModule.js";
 const IDLE_AUTO_ROTATE_DELAY = 22000;
 const IDLE_AUTO_ROTATE_SPEED = 0.18;
 const MARKER_HOVER_SCALE = 0.14;
-const MARKER_ACTIVE_GLOW_BASE_OPACITY = 0.34;
-const MARKER_ACTIVE_GLOW_PULSE_OPACITY = 0.44;
+const MARKER_ACTIVE_GLOW_BASE_OPACITY = 0.42;
+const MARKER_ACTIVE_GLOW_PULSE_OPACITY = 0.24;
+const MARKER_ACTIVE_GLOW_SPEED = 0.00105;
 const MARKER_ACTIVE_RIPPLE_COUNT = 3;
 const MARKER_ACTIVE_RIPPLE_SPEED = 0.00016;
 const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 1.05;
@@ -152,7 +153,7 @@ function updateMarkerActiveEffects(marker, now) {
   }
 
   if (outline?.material) {
-    const glowPulse = getRippleStartPulse(now, ripples.length || MARKER_ACTIVE_RIPPLE_COUNT);
+    const glowPulse = (Math.sin(now * MARKER_ACTIVE_GLOW_SPEED) + 1) * 0.5;
     outline.scale.setScalar(1);
     outline.material.opacity = MARKER_ACTIVE_GLOW_BASE_OPACITY + glowPulse * MARKER_ACTIVE_GLOW_PULSE_OPACITY;
     outline.material.transparent = true;
@@ -168,18 +169,6 @@ function updateMarkerActiveEffects(marker, now) {
     ripple.material.opacity = MARKER_ACTIVE_RIPPLE_MAX_OPACITY * Math.pow(1 - ripplePhase, 2.25);
     ripple.material.transparent = true;
   });
-}
-
-function getRippleStartPulse(now, count) {
-  let pulse = 0;
-
-  for (let index = 0; index < count; index += 1) {
-    const phase = getRipplePhase(now, index, count);
-    if (phase > 0.34) continue;
-    pulse = Math.max(pulse, Math.pow(1 - phase / 0.34, 2));
-  }
-
-  return pulse;
 }
 
 function getRipplePhase(now, index, count) {
