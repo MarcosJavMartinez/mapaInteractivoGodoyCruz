@@ -13,6 +13,8 @@ const IDLE_AUTO_ROTATE_DELAY = 22000;
 const IDLE_AUTO_ROTATE_SPEED = 0.18;
 const MARKER_HOVER_SCALE = 0.14;
 const MARKER_ACTIVE_GLOW_OPACITY = 0.92;
+const MARKER_ACTIVE_RIPPLE_MIN_SCALE = 0.82;
+const MARKER_ACTIVE_RIPPLE_PULSE_SCALE = 0.85;
 
 export function setupRenderer(quality = getQualitySettings()) {
   const renderer = new WebGLRenderer({
@@ -105,7 +107,7 @@ function updateMarkerScales(markers, camera, now) {
     const scale = baseScale * (1 + pulse);
 
     marker.scale.setScalar(scale);
-    updateMarkerActiveEffects(marker);
+    updateMarkerActiveEffects(marker, now);
 
     if (marker.material) {
       marker.material.opacity = marker.userData.isHovered
@@ -116,17 +118,24 @@ function updateMarkerScales(markers, camera, now) {
   }
 }
 
-function updateMarkerActiveEffects(marker) {
+function updateMarkerActiveEffects(marker, now) {
   const outline = marker.userData.activeOutline;
+  const ripple = marker.userData.activeRipple;
 
   const isActive = Boolean(marker.userData.isActive);
   if (outline?.material) {
     outline.visible = isActive;
   }
+  if (ripple?.material) {
+    ripple.visible = isActive;
+  }
 
   if (!isActive) {
     if (outline?.material) {
       outline.material.opacity = 0;
+    }
+    if (ripple?.material) {
+      ripple.material.opacity = 0;
     }
     return;
   }
@@ -135,6 +144,14 @@ function updateMarkerActiveEffects(marker) {
     outline.scale.setScalar(1);
     outline.material.opacity = MARKER_ACTIVE_GLOW_OPACITY;
     outline.material.transparent = true;
+  }
+
+  if (ripple?.material) {
+    const ripplePulse = (now * 0.00125) % 1;
+    const rippleScale = MARKER_ACTIVE_RIPPLE_MIN_SCALE + ripplePulse * MARKER_ACTIVE_RIPPLE_PULSE_SCALE;
+    ripple.scale.set(rippleScale, rippleScale, rippleScale);
+    ripple.material.opacity = 0.54 * (1 - ripplePulse);
+    ripple.material.transparent = true;
   }
 }
 

@@ -1,7 +1,11 @@
 import {
   CanvasTexture,
   ClampToEdgeWrapping,
+  DoubleSide,
   LinearFilter,
+  Mesh,
+  MeshBasicMaterial,
+  RingGeometry,
   Sprite,
   SpriteMaterial,
   TextureLoader,
@@ -13,6 +17,7 @@ const MARKER_TEXTURE_PATH = "images/marcador-de-alfiler-01.png";
 let markerTexture = null;
 let markerGlowTexture = null;
 let markerGlowCanvas = null;
+let activeRippleGeometry = null;
 
 export function createMarkersFromPlaces(scene, buttons, places) {
   places.forEach((place) => {
@@ -47,6 +52,7 @@ function createMarker(scene, buttons, place) {
 
   const sprite = new Sprite(material);
   const activeOutline = createActiveMarkerOutline();
+  const activeRipple = createActiveMarkerRipple();
 
   sprite.center.set(0.5, 0);
   sprite.renderOrder = 999;
@@ -59,6 +65,7 @@ function createMarker(scene, buttons, place) {
   sprite.userData.isHovered = false;
   sprite.userData.isActive = false;
   sprite.userData.activeOutline = activeOutline;
+  sprite.userData.activeRipple = activeRipple;
   sprite.userData.title = place.title;
   sprite.userData.imageUrl = place.imageUrl;
   sprite.userData.text = place.text;
@@ -68,6 +75,7 @@ function createMarker(scene, buttons, place) {
   sprite.userData.placeId = place.placeId;
   sprite.userData.slug = place.slug;
   sprite.add(activeOutline);
+  sprite.add(activeRipple);
   scene.add(sprite);
   buttons.push(sprite);
   return sprite;
@@ -94,6 +102,36 @@ function createActiveMarkerOutline() {
   outline.scale.setScalar(1);
   outline.userData.ignoreMarkerInteractionOcclusion = true;
   return outline;
+}
+
+function createActiveMarkerRipple() {
+  const material = new MeshBasicMaterial({
+    color: 0xfffcf4,
+    transparent: true,
+    opacity: 0,
+    side: DoubleSide,
+    depthTest: true,
+    depthWrite: false,
+    fog: false,
+    toneMapped: false,
+  });
+
+  const ripple = new Mesh(getActiveRippleGeometry(), material);
+  ripple.position.y = 0.02;
+  ripple.rotation.x = -Math.PI / 2;
+  ripple.renderOrder = 997;
+  ripple.frustumCulled = false;
+  ripple.visible = false;
+  ripple.userData.ignoreMarkerInteractionOcclusion = true;
+  return ripple;
+}
+
+function getActiveRippleGeometry() {
+  if (!activeRippleGeometry) {
+    activeRippleGeometry = new RingGeometry(0.48, 0.56, 64);
+  }
+
+  return activeRippleGeometry;
 }
 
 function getMarkerTexture() {
